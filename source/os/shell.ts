@@ -208,6 +208,10 @@ module TSOS {
 
         public shellVer(args) {
             _StdOut.putText(APP_NAME + " version " + APP_VERSION);
+            _StdOut.advanceLine();
+            _StdOut.putText("Author: " + AUTHOR);
+            _StdOut.advanceLine();
+            _StdOut.putText("Framework Author (Instructor): " + FRAME_AUTHOR);
         }
 
         public shellHelp(args) {
@@ -230,12 +234,56 @@ module TSOS {
             _StdOut.resetXY();
         }
 
+        // Note: I used advanceLine() as word wrap is not yet implementd.
+        // Will remove advanceLines() one word wrap completed.
         public shellMan(args) {
             if (args.length > 0) {
                 var topic = args[0];
                 switch (topic) {
                     case "help":
                         _StdOut.putText("Help displays a list of (hopefully) valid commands.");
+                        break;
+                    case "ver":
+                        _StdOut.putText("Ver displays the running version of the OS.");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Also shows author information.")
+                        break;
+                    case "shutdown":
+                        _StdOut.putText("Shutdown the command line interface (shell), but leaves ");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("the kernal running. Click the Reset button then the ");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("Start button to restart the OS to access the command line.");
+                        break;
+                    case "cls":
+                        _StdOut.putText("Clears display of all previously entered commands and ");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("messages. Displays and empty command prompt ready for ");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("input.");
+                        break;
+                    // Line Width ---------------------------------------------------------------->
+                    case "trace":
+                        _StdOut.putText("Trace 'on' or 'off' enables or disables kernal status ");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("messages, displayed in the 'Host Log' display.");
+                        break;
+                    case "rot13":
+                        _StdOut.putText("Performs a rot13 encryption/decryption on given text. ");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("This is a Caesar type cypher, which replaces each ");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("letter with one 13 places ahead in the alphabet.");
+                        break;
+                    case "prompt":
+                        _StdOut.putText("Replaces current command prompt character or text ");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("(default '>'), with given character or text.");
+                        break;
+                    case "man":
+                        _StdOut.putText("Display manual info of given command, which is more ");
+                        _StdOut.advanceLine();
+                        _StdOut.putText("detailed then command description in help.");
                         break;
                     // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
                     default:
