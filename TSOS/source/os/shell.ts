@@ -91,9 +91,9 @@ module TSOS {
                 "- Displays users current location...");
             this.commandList[this.commandList.length] = sc;
 
-            // openthepodbaydoors
+            // openthepodbaydoorshal
             sc = new ShellCommand(this.shellOpenThePodBayDoors,
-                "openthepodbaydoors",
+                "openthepodbaydoorshal",
                 "- Command HAL 9000...");
             this.commandList[this.commandList.length] = sc;
 
@@ -309,7 +309,7 @@ module TSOS {
                     case "whereami":
                         _StdOut.putText("A joke command, which displays user location.");
                         break;
-                    case "openthepodbaydoors":
+                    case "openthepodbaydoorshal":
                         _StdOut.putText("A joke command, which relives a famous scene from ");
                         _StdOut.advanceLine();
                         _StdOut.putText("'2001: A Space Odyssey'.");

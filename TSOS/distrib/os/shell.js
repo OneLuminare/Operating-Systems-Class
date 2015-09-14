@@ -55,8 +55,8 @@ var TSOS;
             // whereami
             sc = new TSOS.ShellCommand(this.shellWhereAmI, "whereami", "- Displays users current location...");
             this.commandList[this.commandList.length] = sc;
-            // openthepodbaydoors
-            sc = new TSOS.ShellCommand(this.shellOpenThePodBayDoors, "openthepodbaydoors", "- Command HAL 9000...");
+            // openthepodbaydoorshal
+            sc = new TSOS.ShellCommand(this.shellOpenThePodBayDoors, "openthepodbaydoorshal", "- Command HAL 9000...");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -258,7 +258,7 @@ var TSOS;
                     case "whereami":
                         _StdOut.putText("A joke command, which displays user location.");
                         break;
-                    case "openthepodbaydoors":
+                    case "openthepodbaydoorshal":
                         _StdOut.putText("A joke command, which relives a famous scene from ");
                         _StdOut.advanceLine();
                         _StdOut.putText("'2001: A Space Odyssey'.");

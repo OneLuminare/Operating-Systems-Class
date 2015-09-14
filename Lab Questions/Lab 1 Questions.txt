@@ -1,0 +1,13 @@
+Lab 1 Questions
+
+1. Some advantages of using the different system call interfaces for files and device are:
+	- Devices and file system calls can have varying execution times do to down time in I/O, so
+	  each system call interface can be executed parallel to increase performance.
+	- Encapsulates functionality which is better programming practice.
+   Some disadvantages are:
+    - Would require specifying which system call interface to be called to be specified, or have
+	  a piece of code in between determine it.
+2. Yes, a new shell could be programmed  using the system call interface provided by the operating system. It would not be
+   much different then writing any other application, as long as one had knowledge to set up the appropriate parameters for each
+   system call, knowing the sequence of systems calls to make, then make the call to enter kernel mode and execute it. 
+   By editing the bootstrap, the new shell could be set up to run at boot up.
