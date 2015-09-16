@@ -49,6 +49,11 @@ module TSOS {
                 chr = String.fromCharCode(keyCode);
                 _KernelInputQueue.enqueue(chr);
             }
+            else if( keyCode == 8 ) // Backspace
+            {
+                chr = String.fromCharCode(8);;
+                _KernelInputQueue.enqueue(chr);
+            }
         }
     }
 }

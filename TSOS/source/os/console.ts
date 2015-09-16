@@ -45,7 +45,16 @@ module TSOS {
                     _OsShell.handleInput(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
-                } else {
+                }
+                else if( chr == String.fromCharCode(8))
+                {
+                    // Call backspace
+                    this.backSpace();
+
+                    // Remove backspace char from buffer
+                    this.buffer = this.buffer.substr(0, this.buffer.length - 1);
+                }
+                else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
                     this.putText(chr);
@@ -56,7 +65,7 @@ module TSOS {
             }
         }
 
-        public putText(text): void {
+        public putText(text : String): void {
             // My first inclination here was to write two functions: putChar() and putString().
             // Then I remembered that JavaScript is (sadly) untyped and it won't differentiate
             // between the two.  So rather than be like PHP and write two (or more) functions that
@@ -65,12 +74,40 @@ module TSOS {
             //
             // UPDATE: Even though we are now working in TypeScript, char and string remain undistinguished.
             //         Consider fixing that.
-            if (text !== "") {
+            if (text !== "")
+            {
+                // Get size of text
+                var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+                var extraText : String = "";
+
+                // Check if drawn text will go over width of canvas
+                while( (this.currentXPosition + offset) > _Canvas.width)
+                {
+                    // Copy last character from text, and store for later input
+                    extraText = text.charAt(text.length - 1) + extraText;
+
+                    // Remove last char from text
+                    text = text.substr(0,text.length - 1);
+
+                    // Recalculate offset
+                    offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+                }
+
                 // Draw the text at the current X and Y coordinates.
                 _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
+
                 // Move the current X position.
-                var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 this.currentXPosition = this.currentXPosition + offset;
+
+                // Check if more text to print (on new line)
+                if( extraText.length > 0)
+                {
+                    // Advance line
+                    this.advanceLine();
+
+                    // call putText on leftover text
+                    this.putText(extraText);
+                }
             }
          }
 
@@ -85,7 +122,48 @@ module TSOS {
                                      _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                                      _FontHeightMargin;
 
-            // TODO: Handle scrolling. (iProject 1)
+            // Get line height
+            var lineHeight : number = _DefaultFontSize +
+                _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                _FontHeightMargin;
+
+            // Check if current Y position is greater than height of canvas
+            if( _Canvas.height < this.currentYPosition )
+            {
+                // Decrease Y position to previous
+                this.currentYPosition -= lineHeight;
+
+                // Copy whats on canvas, starting on line down from top
+                var imgData = _DrawingContext.getImageData(0,lineHeight,_Canvas.width,this.currentYPosition);
+
+                // Clear the screen
+                this.clearScreen();
+
+                // Put copyied image back on start of canvas
+                _DrawingContext.putImageData(imgData,0,0);
+            }
+        }
+
+        public backSpace() : void
+        {
+            /*
+            if( 1) {
+                // Get width of last char
+                var eraseWidth:number = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
+                var yWidth:number = _DefaultFontSize +
+                    _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                    _FontHeightMargin;
+
+                // Move current x pos
+                this.currentXPosition -= eraseWidth;
+
+
+                // Erase block
+                _DrawingContext.fillStyle("rgb(223,219,195)");
+                _DrawingContext.fillRect(this.currentXPosition, this.currentYPosition - yWidth, eraseWidth, yWidth + _DrawingContext.fontDescent());
+                _DrawingContext.fillStyle("black");
+            }
+            */
         }
     }
  }

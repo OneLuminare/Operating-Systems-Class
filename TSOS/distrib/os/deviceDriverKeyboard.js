@@ -52,6 +52,11 @@ var TSOS;
                 chr = String.fromCharCode(keyCode);
                 _KernelInputQueue.enqueue(chr);
             }
+            else if (keyCode == 8) {
+                chr = String.fromCharCode(8);
+                ;
+                _KernelInputQueue.enqueue(chr);
+            }
         };
         return DeviceDriverKeyboard;
     })(TSOS.DeviceDriver);
