@@ -51,6 +51,8 @@ var TSOS;
                     // Remove backspace char from buffer
                     this.buffer = this.buffer.substr(0, this.buffer.length - 1);
                 }
+                else if (chr == String.fromCharCode(9)) {
+                }
                 else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
@@ -122,22 +124,42 @@ var TSOS;
             }
         };
         Console.prototype.backSpace = function () {
+            // Get dimensions. If buffer only contains backspace, clear rect will have 0 size stopping overwritting prompt
+            var eraseWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
+            var yWidth = _DefaultFontSize + (2 * _DrawingContext.fontDescent(this.currentFont, this.currentFontSize));
+            // Move current x pos
+            this.currentXPosition -= eraseWidth;
+            // Erase block
+            _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - _DefaultFontSize, eraseWidth, yWidth);
+        };
+        // Completes command, searches for match in order their added to command list
+        Console.prototype.completeCommand = function () {
+            // Inits
+            var found = false;
+            var sc = null;
+            // Return if empty buffer
+            if (this.buffer == "")
+                return;
+            // Cycle through shell commands
+            for (var i = 0; (i < _OsShell.commandList.length) && !found; i++) {
+                // Get command
+                sc = _OsShell.commandList[i];
+                // Check if matches start of command string
+                // then set found flag if true
+                if (sc.command.search(this.buffer) == 0) {
+                    found = true;
+                }
+            }
+            // If found, put text and set buffer
+            if (found) {
+                this.putText(sc.command.substr(this.buffer.length));
+                this.buffer = sc.command;
+            }
             /*
-            if( 1) {
-                // Get width of last char
-                var eraseWidth:number = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
-                var yWidth:number = _DefaultFontSize +
-                    _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
-                    _FontHeightMargin;
-
-                // Move current x pos
-                this.currentXPosition -= eraseWidth;
-
-
-                // Erase block
-                _DrawingContext.fillStyle("rgb(223,219,195)");
-                _DrawingContext.fillRect(this.currentXPosition, this.currentYPosition - yWidth, eraseWidth, yWidth + _DrawingContext.fontDescent());
-                _DrawingContext.fillStyle("black");
+            else
+            {
+                // Remove tab char from buffer
+                this.buffer = this.buffer.substr(0, this.buffer.length - 1);
             }
             */
         };
