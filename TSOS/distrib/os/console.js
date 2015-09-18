@@ -10,21 +10,37 @@
 var TSOS;
 (function (TSOS) {
     var Console = (function () {
-        function Console(currentFont, currentFontSize, currentXPosition, currentYPosition, buffer) {
+        function Console(currentFont, currentFontSize, currentXPosition, currentYPosition, buffer, commandQueue, cmdIndex, movingIndex) {
             if (currentFont === void 0) { currentFont = _DefaultFontFamily; }
             if (currentFontSize === void 0) { currentFontSize = _DefaultFontSize; }
             if (currentXPosition === void 0) { currentXPosition = 0; }
             if (currentYPosition === void 0) { currentYPosition = _DefaultFontSize; }
             if (buffer === void 0) { buffer = ""; }
+            if (commandQueue === void 0) { commandQueue = []; }
+            if (cmdIndex === void 0) { cmdIndex = -1; }
+            if (movingIndex === void 0) { movingIndex = 0; }
             this.currentFont = currentFont;
             this.currentFontSize = currentFontSize;
             this.currentXPosition = currentXPosition;
             this.currentYPosition = currentYPosition;
             this.buffer = buffer;
+            this.commandQueue = commandQueue;
+            this.cmdIndex = cmdIndex;
+            this.movingIndex = movingIndex;
         }
         Console.prototype.init = function () {
             this.clearScreen();
             this.resetXY();
+            this.commandQueue[0] = "NULL";
+            this.commandQueue[1] = "NULL";
+            this.commandQueue[2] = "NULL";
+            this.commandQueue[3] = "NULL";
+            this.commandQueue[4] = "NULL";
+            this.commandQueue[5] = "NULL";
+            this.commandQueue[6] = "NULL";
+            this.commandQueue[7] = "NULL";
+            this.commandQueue[8] = "NULL";
+            this.commandQueue[9] = "NULL";
         };
         Console.prototype.clearScreen = function () {
             _DrawingContext.clearRect(0, 0, _Canvas.width, _Canvas.height);
@@ -42,16 +58,32 @@ var TSOS;
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
+                    //Add command to history
+                    this.AddCommandToHistory(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
                 }
                 else if (chr == String.fromCharCode(8)) {
                     // Call backspace
                     this.backSpace();
-                    // Remove backspace char from buffer
-                    this.buffer = this.buffer.substr(0, this.buffer.length - 1);
                 }
                 else if (chr == String.fromCharCode(9)) {
+                    // CANT PUT TAB ON BUFFER!!!!
+                    // I HAD TO CALL COMPLETE COMMAND IN DEVICE DRIVER!!!!
+                    // ALL OTHER KEYS USED UP, AND FOR SOME REAS ONLY
+                    // UP AND DOWN KEYS WILL GO ON QUEUE, NOT FORWARD AND
+                    // BACK WHICH I COULD HAVE USED IN STEAD. FRUSTRATED
+                    // WITH THIS LANGUAGE!!!
+                    this.completeCommand();
+                    this.removeLastCharInQueue();
+                }
+                else if (chr == String.fromCharCode(38)) {
+                    //this.buffer = this.buffer.substr(0,this.buffer.length - 1);
+                    this.RetrieveCommandHistory(true);
+                }
+                else if (chr == String.fromCharCode(40)) {
+                    //this.buffer = this.buffer.substr(0,this.buffer.length - 1);
+                    this.RetrieveCommandHistory(false);
                 }
                 else {
                     // This is a "normal" character, so ...
@@ -61,6 +93,87 @@ var TSOS;
                     this.buffer += chr;
                 }
             }
+        };
+        // Removes last char in queue
+        Console.prototype.removeLastCharInQueue = function () {
+            // Remove last command in buffer
+            this.buffer = this.buffer.substr(0, this.buffer.length - 1);
+        };
+        // Retrieve command history going back(up), or foward(down).
+        // Params: moveUp - true for up, false for down
+        Console.prototype.RetrieveCommandHistory = function (moveUp) {
+            // Inits
+            var found = false;
+            var startIndex = this.movingIndex;
+            var foundIndex = 0;
+            // Check if up key
+            if (moveUp) {
+                // Cycle through commands, but make sure you end if emtpy history
+                do {
+                    // Check if non null command
+                    if (this.commandQueue[this.movingIndex] != "NULL") {
+                        // Set found flag true
+                        found = true;
+                        // Capture found index
+                        foundIndex = this.movingIndex;
+                    }
+                    // Decrement moving index
+                    this.movingIndex--;
+                    // Cycle index if less than 0
+                    if (this.movingIndex < 0)
+                        this.movingIndex = 9;
+                } while ((this.movingIndex != startIndex) && !found);
+            }
+            else {
+                // Cycle through commands, but make sure you end if emtpy history
+                do {
+                    if (this.commandQueue[this.movingIndex] != "NULL") {
+                        // Set found flag true
+                        found = true;
+                        // Capture found index
+                        foundIndex = this.movingIndex;
+                    }
+                    // Increment moving index
+                    this.movingIndex++;
+                    // Cycle index if greater than 9
+                    if (this.movingIndex > 9)
+                        this.movingIndex = 0;
+                } while ((this.movingIndex != startIndex) && !found);
+            }
+            // Check if found
+            if (found) {
+                // Clear line
+                this.ClearLine();
+                // Put command in buffer
+                this.buffer = this.commandQueue[foundIndex];
+                // Print text
+                this.putText(this.commandQueue[foundIndex]);
+            }
+        };
+        // Adds command to history. Keeps 10.
+        // Params: cmd - command to add to history.
+        Console.prototype.AddCommandToHistory = function (cmd) {
+            // Increment command index (inits at -1)
+            this.cmdIndex++;
+            // Cycle index if over 9
+            if (this.cmdIndex > 9)
+                this.cmdIndex = 0;
+            // Set moving index to command index
+            this.movingIndex = this.cmdIndex;
+            // Set cmd in array
+            this.commandQueue[this.cmdIndex] = cmd;
+        };
+        // Clears line to prompt
+        Console.prototype.ClearLine = function () {
+            // Get dimensions. If buffer only contains backspace, clear rect will have 0 size stopping overwritting prompt
+            var eraseWidth = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer);
+            var yWidth = _DefaultFontSize + (2 * _DrawingContext.fontDescent(this.currentFont, this.currentFontSize));
+            // Move current x pos
+            this.currentXPosition -= eraseWidth;
+            // Erase block
+            _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - _DefaultFontSize, eraseWidth, yWidth);
+            // Remove backspace char from buffer
+            this.buffer = "";
         };
         Console.prototype.putText = function (text) {
             // My first inclination here was to write two functions: putChar() and putString().
@@ -131,6 +244,8 @@ var TSOS;
             this.currentXPosition -= eraseWidth;
             // Erase block
             _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - _DefaultFontSize, eraseWidth, yWidth);
+            // Remove backspace char from buffer
+            this.buffer = this.buffer.substr(0, this.buffer.length - 1);
         };
         // Completes command, searches for match in order their added to command list
         Console.prototype.completeCommand = function () {

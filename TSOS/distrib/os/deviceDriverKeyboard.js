@@ -163,13 +163,17 @@ var TSOS;
                 _KernelInputQueue.enqueue(chr);
             }
             else if (keyCode == 9) {
-                // Had to call from the driver, as 
+                // Had to call from the driver, as
                 // I can't put the tab key code in the buffer
                 _Console.completeCommand();
             }
             else if (keyCode == 38) {
+                chr = String.fromCharCode(38);
+                _KernelInputQueue.enqueue(chr);
             }
             else if (keyCode == 40) {
+                chr = String.fromCharCode(40);
+                _KernelInputQueue.enqueue(chr);
             }
         };
         return DeviceDriverKeyboard;

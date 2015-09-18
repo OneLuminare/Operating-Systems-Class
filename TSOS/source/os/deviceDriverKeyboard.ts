@@ -182,11 +182,13 @@ module TSOS {
             }
             else if( keyCode == 38 ) // Up arrow
             {
-
+                chr = String.fromCharCode(38);
+                _KernelInputQueue.enqueue(chr);
             }
             else if( keyCode == 40 ) // Up arrow
             {
-
+                chr = String.fromCharCode(40);
+                _KernelInputQueue.enqueue(chr);
             }
         }
     }
