@@ -65,7 +65,7 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellError, "error", "<string> - Triggers an OS error.");
             this.commandList[this.commandList.length] = sc;
             // error
-            sc = new TSOS.ShellCommand(this.shellLoad, "load", "<number> - Loads validates and loads program input into memory.");
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Loads validates and loads program input into memory.");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -281,7 +281,7 @@ var TSOS;
                         _StdOut.putText("Triggers an os error, with given message. For testing purposes.");
                         break;
                     case "load":
-                        _StdOut.putText("Loads and validates program input into memory. Specify program by given number id. Example, load 1 .");
+                        _StdOut.putText("Loads and validates program input into memory..");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");

@@ -1,0 +1,6 @@
+Lab 2 Questions
+----------------
+
+1. Our console is similar to the UNIX / Mac TTY system in that the console instance is seperate 
+from the kernel, and communicates with it via the shell. The shell is like the line discipline, 
+an interface between the kernel and then the hardware. 

@@ -199,20 +199,21 @@ var TSOS;
                     offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 }
                 /*
-                // Now cycle until beginning of word
-                while(text.charAt(text.length - 1) != ' ')
-                {
-                    // Copy last character from text, and store for later input
-                    extraText = text.charAt(text.length - 1) + extraText;
-
-                    // Remove last char from text
-                    text = text.substr(0,text.length - 1);
-                }
-
-                // Recalculate offset
-                offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
-
-*/
+                                // Now cycle until beginning of word
+                                while(text.length > 0 && text.charAt(text.length - 1) != ' ')
+                                {
+                                    // Copy last character from text, and store for later input
+                                    extraText = text.charAt(text.length - 1) + extraText;
+                
+                                    // Remove last char from text
+                                    text = text.substr(0,text.length - 1);
+                                }
+                
+                                // Recalculate offset
+                                offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+                
+                
+                */
                 // Draw the text at the current X and Y coordinates.
                 _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
                 // Move the current X position.

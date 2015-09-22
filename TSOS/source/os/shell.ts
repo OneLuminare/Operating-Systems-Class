@@ -112,7 +112,7 @@ module TSOS {
             // error
             sc = new ShellCommand(this.shellLoad,
                 "load",
-                "<number> - Loads validates and loads program input into memory.");
+                "- Loads validates and loads program input into memory.");
             this.commandList[this.commandList.length] = sc;
 
 
@@ -345,7 +345,7 @@ module TSOS {
                         _StdOut.putText("Triggers an os error, with given message. For testing purposes.");
                         break;
                     case "load":
-                        _StdOut.putText("Loads and validates program input into memory. Specify program by given number id. Example, load 1 .");
+                        _StdOut.putText("Loads and validates program input into memory..");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
