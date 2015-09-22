@@ -11,12 +11,15 @@
 
 module TSOS {
 
+
     // Char map for punctuations
-    var charMap  = [];
+    var charMap = [];
 
     // Extends DeviceDriver
     export class DeviceDriverKeyboard extends DeviceDriver
     {
+
+
         constructor() {
             // Override the base method pointers.
             super(this.krnKbdDriverEntry, this.krnKbdDispatchKeyPress);
@@ -25,6 +28,7 @@ module TSOS {
         // Creates charmap symbol array
         public createCharMap()
         {
+
             charMap[48] = ')';
             charMap[49] = '!';
             charMap[50] = '@';

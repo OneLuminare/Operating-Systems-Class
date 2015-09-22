@@ -50,7 +50,7 @@ var TSOS;
             this.currentYPosition = this.currentFontSize;
         };
         Console.prototype.handleInput = function () {
-            while (_KernelInputQueue.getSize() > 0) {
+            while (_KernelInputQueue.getSize() > 0 || _KernelTabInput) {
                 // Get the next character from the kernel input queue.
                 var chr = _KernelInputQueue.dequeue();
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" (anything else that the keyboard device driver gave us).
@@ -198,22 +198,18 @@ var TSOS;
                     // Recalculate offset
                     offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 }
-                /*
-                                // Now cycle until beginning of word
-                                while(text.length > 0 && text.charAt(text.length - 1) != ' ')
-                                {
-                                    // Copy last character from text, and store for later input
-                                    extraText = text.charAt(text.length - 1) + extraText;
-                
-                                    // Remove last char from text
-                                    text = text.substr(0,text.length - 1);
-                                }
-                
-                                // Recalculate offset
-                                offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
-                
-                
-                */
+                // Check if wrap was started
+                if (extraText.length > 0) {
+                    // Now cycle until beginning of word
+                    while (text.length > 1 && (text.charAt(text.length - 1) != " ")) {
+                        // Copy last character from text, and store for later input
+                        extraText = text.charAt(text.length - 1) + extraText;
+                        // Remove last char from text
+                        text = text.substr(0, text.length - 1);
+                    }
+                    // Recalculate offset
+                    offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+                }
                 // Draw the text at the current X and Y coordinates.
                 _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
                 // Move the current X position.
@@ -295,10 +291,12 @@ var TSOS;
             }
             */
         };
+        // Display blue screen of death
         Console.prototype.BSODMessage = function (msg) {
+            // Color canvas blue
             _DrawingContext.fillStyle = "blue";
             _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
-            // Draw the text at the current X and Y coordinates.
+            // Draw error text
             _DrawingContext.drawText(this.currentFont, this.currentFontSize + 5, 5, 20, "Fatal System Error!", "white");
             _DrawingContext.drawText(this.currentFont, this.currentFontSize, 5, 40, "Kernel crashed, all is lost!", "white");
             _DrawingContext.drawText(this.currentFont, this.currentFontSize, 5, 58, "Error: " + msg, "white");
