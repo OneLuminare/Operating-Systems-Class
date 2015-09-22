@@ -97,6 +97,25 @@ module TSOS {
                 "- Command HAL 9000...");
             this.commandList[this.commandList.length] = sc;
 
+            // shell
+            sc = new ShellCommand(this.shellStatus,
+                "status",
+                "<string> - Updates status message in host status bar.");
+            this.commandList[this.commandList.length] = sc;
+
+            // error
+            sc = new ShellCommand(this.shellError,
+                "error",
+                "<string> - Triggers an OS error.");
+            this.commandList[this.commandList.length] = sc;
+
+            // error
+            sc = new ShellCommand(this.shellLoad,
+                "load",
+                "<number> - Loads validates and loads program input into memory.");
+            this.commandList[this.commandList.length] = sc;
+
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -158,8 +177,11 @@ module TSOS {
             if (_StdOut.currentXPosition > 0) {
                 _StdOut.advanceLine();
             }
-            // ... and finally write the prompt again.
-            this.putPrompt();
+
+            // Dont draw prompt on kernel crash
+            if( !_KernelCrash)
+                // ... and finally write the prompt again.
+                this.putPrompt();
         }
 
         public parseInput(buffer): UserCommand {
@@ -252,6 +274,8 @@ module TSOS {
             _StdOut.resetXY();
         }
 
+
+
         // Note: I used advanceLine() as word wrap is not yet implementd.
         // Will remove advanceLines() one word wrap completed.
         public shellMan(args) {
@@ -314,6 +338,15 @@ module TSOS {
                         _StdOut.advanceLine();
                         _StdOut.putText("'2001: A Space Odyssey'.");
                         break;
+                    case "status":
+                        _StdOut.putText("Updates message in status bar with given text. Will not change until OS status changes, or another status command is entered.");
+                        break;
+                    case "error":
+                        _StdOut.putText("Triggers an os error, with given message. For testing purposes.");
+                        break;
+                    case "load":
+                        _StdOut.putText("Loads and validates program input into memory. Specify program by given number id. Example, load 1 .");
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -367,9 +400,7 @@ module TSOS {
         public shellDate(args)
         {
             var curDate = new Date();
-            _StdOut.putText(curDate.toDateString());
-            _StdOut.advanceLine();
-            _StdOut.putText(curDate.toTimeString());
+            _StdOut.putText(Utils.dateString());
         }
 
         // whereami command method
@@ -384,6 +415,36 @@ module TSOS {
             _StdOut.putText("I am sorry dave, I am afraid I can't do that.");
             _StdOut.advanceLine();
             _StdOut.putText("This mission is too important to allow me to jeopardize it.");
+        }
+
+        // Updates host status bar message
+        public shellStatus(args)
+        {
+            if( args.length > 0)
+                Control.updateHostStatus(args.join(' '));
+            else
+                _StdOut.putText("Usage: status <string> - Please provide a string status message.");
+        }
+
+        public shellError(args)
+        {
+            if( args.length > 0)
+                _Kernel.krnTrapError(args.join(' '));
+            else
+                _StdOut.putText("Usage: error <string> - Please provide a string error message.");
+        }
+
+        public shellLoad(args)
+        {
+            var programInput : string = (<HTMLInputElement>document.getElementById("taProgramInput")).value;
+
+            if( programInput.length == 0 )
+                _StdOut.putText("Empty program input.")
+            else if( programInput.match("[^a-f|A-F|0-9| ]+") )
+                _StdOut.putText("Invalid program input, only hex values and spaces allowed.");
+            else
+                _StdOut.putText("Valid program input.");
+
         }
 
     }

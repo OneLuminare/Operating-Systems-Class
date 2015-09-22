@@ -27,6 +27,8 @@ module TSOS {
 
     export class Control {
 
+        public static msg : string;
+
         public static hostInit(): void {
             // This is called from index.html's onLoad event via the onDocumentLoad function pointer.
 
@@ -46,6 +48,11 @@ module TSOS {
             // Set focus on the start button.
             // Use the TypeScript cast to HTMLInputElement
             (<HTMLInputElement> document.getElementById("btnStartOS")).focus();
+
+
+            // update host status bar
+            this.updateHostStatus("OS not running.");
+
 
             // Check for our testing and enrichment core, which
             // may be referenced here (from index.html) as function Glados().
@@ -97,6 +104,10 @@ module TSOS {
             _hardwareClockID = setInterval(Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
             // .. and call the OS Kernel Bootstrap routine.
             _Kernel = new Kernel();
+
+            // Set status
+            this.updateHostStatus("OS running.");
+
             _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
         }
 
@@ -107,6 +118,11 @@ module TSOS {
             _Kernel.krnShutdown();
             // Stop the interval that's simulating our clock pulse.
             clearInterval(_hardwareClockID);
+
+            this.updateHostStatus("OS halted.");
+
+            (<HTMLButtonElement>document.getElementById("btnStartOS")).disabled = false;
+            btn.disabled = true;
             // TODO: Is there anything else we need to do here?
         }
 
@@ -117,5 +133,23 @@ module TSOS {
             // be reloaded from the server. If it is false or not specified the browser may reload the
             // page from its cache, which is not what we want.
         }
+
+        // Updates status bar with msg
+        public static updateHostStatus(msg : string ) : void
+        {
+            // Update internal msg
+            this.msg = msg;
+
+            // Update status bar
+            document.getElementById("lblHostStatusBar").innerHTML = Utils.dateString() + " - " + msg;
+        }
+
+        // Update status bar time
+        public static updateHostStatusTime() : void
+        {
+            // Update status bar
+            document.getElementById("lblHostStatusBar").innerHTML = Utils.dateString() + " - " + this.msg;
+        }
+
     }
 }

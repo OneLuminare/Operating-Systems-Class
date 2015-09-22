@@ -81,6 +81,8 @@ var TSOS;
             else {
                 this.krnTrace("Idle");
             }
+            // Update status bar time
+            TSOS.Control.updateHostStatusTime();
         };
         //
         // Interrupt Handling
@@ -154,7 +156,10 @@ var TSOS;
         };
         Kernel.prototype.krnTrapError = function (msg) {
             TSOS.Control.hostLog("OS ERROR - TRAP: " + msg);
-            // TODO: Display error on console, perhaps in some sort of colored screen. (Maybe blue?)
+            // Flag to tell shell not to draw prompt anymore
+            _KernelCrash = true;
+            // Call blue screen of death in console
+            _Console.BSODMessage(msg);
             this.krnShutdown();
         };
         return Kernel;

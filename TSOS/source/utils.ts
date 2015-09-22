@@ -43,5 +43,41 @@ module TSOS {
             }
             return retVal;
         }
+
+        public static dateString() : string
+        {
+            var date = new Date();
+            var Day = date.getDay().toString();
+            var Month = date.getMonth().toString();
+            var Year = date.getFullYear().toString();
+            var Hours  = date.getHours().toString();
+            var HoursNum = date.getHours();
+            var Minutes = date.getMinutes().toString();
+            var AMPM = "AM";
+
+            if( HoursNum >= 12 )
+            {
+                AMPM = "PM";
+
+            }
+
+            if( HoursNum > 12)
+                Hours = (HoursNum % 12).toString();
+
+            if( Day.length == 1 )
+                Day = '0' + Day;
+
+            if( Month.length == 1 )
+                Month = '0' + Month;
+
+            if( Hours.length == 1 )
+                Hours = '0' + Hours;
+
+            if( Minutes.length == 1 )
+                Minutes = '0' + Minutes;
+
+
+            return (Month + '/' + Day + '/' + Year + ' ' + Hours + ':' + Minutes + ' ' + AMPM);
+        }
     }
 }

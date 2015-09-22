@@ -187,6 +187,7 @@ var TSOS;
             if (text !== "") {
                 // Get size of text
                 var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+                var inWord = true;
                 var extraText = "";
                 // Check if drawn text will go over width of canvas
                 while ((this.currentXPosition + offset) > _Canvas.width) {
@@ -197,6 +198,21 @@ var TSOS;
                     // Recalculate offset
                     offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 }
+                /*
+                // Now cycle until beginning of word
+                while(text.charAt(text.length - 1) != ' ')
+                {
+                    // Copy last character from text, and store for later input
+                    extraText = text.charAt(text.length - 1) + extraText;
+
+                    // Remove last char from text
+                    text = text.substr(0,text.length - 1);
+                }
+
+                // Recalculate offset
+                offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+
+*/
                 // Draw the text at the current X and Y coordinates.
                 _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
                 // Move the current X position.
@@ -277,6 +293,14 @@ var TSOS;
                 this.buffer = this.buffer.substr(0, this.buffer.length - 1);
             }
             */
+        };
+        Console.prototype.BSODMessage = function (msg) {
+            _DrawingContext.fillStyle = "blue";
+            _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);
+            // Draw the text at the current X and Y coordinates.
+            _DrawingContext.drawText(this.currentFont, this.currentFontSize + 5, 5, 20, "Fatal System Error!", "white");
+            _DrawingContext.drawText(this.currentFont, this.currentFontSize, 5, 40, "Kernel crashed, all is lost!", "white");
+            _DrawingContext.drawText(this.currentFont, this.currentFontSize, 5, 58, "Error: " + msg, "white");
         };
         return Console;
     })();

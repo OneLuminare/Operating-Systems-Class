@@ -36,6 +36,7 @@ var _Kernel;
 var _KernelInterruptQueue; // Initializing this to null (which I would normally do) would then require us to specify the 'any' type, as below.
 var _KernelInputQueue = null; // Is this better? I don't like uninitialized variables. But I also don't like using the type specifier 'any'
 var _KernelBuffers = null; // when clearly 'any' is not what we want. There is likely a better way, but what is it?
+var _KernelCrash = false; // A flag basicly to stop shell from drawing prompt in BDOD after a crash
 // Standard input and output
 var _StdIn; // Same "to null or not to null" issue as above.
 var _StdOut;

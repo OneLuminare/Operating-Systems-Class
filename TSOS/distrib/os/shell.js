@@ -58,6 +58,15 @@ var TSOS;
             // openthepodbaydoorshal
             sc = new TSOS.ShellCommand(this.shellOpenThePodBayDoors, "openthepodbaydoorshal", "- Command HAL 9000...");
             this.commandList[this.commandList.length] = sc;
+            // shell
+            sc = new TSOS.ShellCommand(this.shellStatus, "status", "<string> - Updates status message in host status bar.");
+            this.commandList[this.commandList.length] = sc;
+            // error
+            sc = new TSOS.ShellCommand(this.shellError, "error", "<string> - Triggers an OS error.");
+            this.commandList[this.commandList.length] = sc;
+            // error
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "<number> - Loads validates and loads program input into memory.");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             //
@@ -119,8 +128,10 @@ var TSOS;
             if (_StdOut.currentXPosition > 0) {
                 _StdOut.advanceLine();
             }
-            // ... and finally write the prompt again.
-            this.putPrompt();
+            // Dont draw prompt on kernel crash
+            if (!_KernelCrash)
+                // ... and finally write the prompt again.
+                this.putPrompt();
         };
         Shell.prototype.parseInput = function (buffer) {
             var retVal = new TSOS.UserCommand();
@@ -263,6 +274,15 @@ var TSOS;
                         _StdOut.advanceLine();
                         _StdOut.putText("'2001: A Space Odyssey'.");
                         break;
+                    case "status":
+                        _StdOut.putText("Updates message in status bar with given text. Will not change until OS status changes, or another status command is entered.");
+                        break;
+                    case "error":
+                        _StdOut.putText("Triggers an os error, with given message. For testing purposes.");
+                        break;
+                    case "load":
+                        _StdOut.putText("Loads and validates program input into memory. Specify program by given number id. Example, load 1 .");
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -316,9 +336,7 @@ var TSOS;
         // date command method
         Shell.prototype.shellDate = function (args) {
             var curDate = new Date();
-            _StdOut.putText(curDate.toDateString());
-            _StdOut.advanceLine();
-            _StdOut.putText(curDate.toTimeString());
+            _StdOut.putText(TSOS.Utils.dateString());
         };
         // whereami command method
         Shell.prototype.shellWhereAmI = function (args) {
@@ -329,6 +347,28 @@ var TSOS;
             _StdOut.putText("I am sorry dave, I am afraid I can't do that.");
             _StdOut.advanceLine();
             _StdOut.putText("This mission is too important to allow me to jeopardize it.");
+        };
+        // Updates host status bar message
+        Shell.prototype.shellStatus = function (args) {
+            if (args.length > 0)
+                TSOS.Control.updateHostStatus(args.join(' '));
+            else
+                _StdOut.putText("Usage: status <string> - Please provide a string status message.");
+        };
+        Shell.prototype.shellError = function (args) {
+            if (args.length > 0)
+                _Kernel.krnTrapError(args.join(' '));
+            else
+                _StdOut.putText("Usage: error <string> - Please provide a string error message.");
+        };
+        Shell.prototype.shellLoad = function (args) {
+            var programInput = document.getElementById("taProgramInput").value;
+            if (programInput.length == 0)
+                _StdOut.putText("Empty program input.");
+            else if (programInput.match("[^a-f|A-F|0-9| ]+"))
+                _StdOut.putText("Invalid program input, only hex values and spaces allowed.");
+            else
+                _StdOut.putText("Valid program input.");
         };
         return Shell;
     })();
