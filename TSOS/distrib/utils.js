@@ -68,6 +68,15 @@ var TSOS;
                 Minutes = '0' + Minutes;
             return (Month + '/' + Day + '/' + Year + ' ' + Hours + ':' + Minutes + ' ' + AMPM);
         };
+        Utils.padString = function (str, num) {
+            var ret = str;
+            if (str.length < num) {
+                while (ret.length < num) {
+                    ret = '0' + ret;
+                }
+            }
+            return ret;
+        };
         return Utils;
     })();
     TSOS.Utils = Utils;

@@ -30,6 +30,14 @@ h3 {
   font-style: normal;
 }
 
+table
+{
+  border-collapse: collapse;
+}
+table, th, td
+{
+  border: 1px solid black;
+}
 #display {
   background-color:#DFDBC3;
   border: 2px solid red;

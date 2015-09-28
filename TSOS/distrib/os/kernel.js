@@ -1,5 +1,6 @@
 ///<reference path="../globals.ts" />
 ///<reference path="queue.ts" />
+///<reference path="ProcessScheduler.ts" />
 /* ------------
      Kernel.ts
 
@@ -25,6 +26,8 @@ var TSOS;
             _KernelInterruptQueue = new TSOS.Queue(); // A (currently) non-priority queue for interrupt requests (IRQs).
             _KernelBuffers = new Array(); // Buffers... for the kernel.
             _KernelInputQueue = new TSOS.Queue(); // Where device input lands before being processed out somewhere.
+            // Initialize process scheduler
+            _ProcessScheduler = new TSOS.ProcessScheduler();
             // Initialize the console.
             _Console = new TSOS.Console(); // The command line interface / console I/O device.
             _Console.init();
@@ -112,6 +115,26 @@ var TSOS;
                 case KEYBOARD_IRQ:
                     _krnKeyboardDriver.isr(params); // Kernel mode device driver
                     _StdIn.handleInput();
+                    break;
+                case CREATE_PROCESS_IRQ:
+                    _ProcessScheduler.createProcess(params);
+                    // I wanted this in timer ISR, but nothing routinly calling
+                    // timer isr. Will add later.
+                    _ProcessScheduler.executeProcess();
+                    break;
+                case EXIT_PROCESS_IRQ:
+                    _ProcessScheduler.exitProcess();
+                    _ProcessScheduler.executeProcess();
+                    break;
+                case UNKNOWN_OP_CODE_IRQ:
+                    this.krnTrace("Unknown op code at 0x" + params.toString(16));
+                    _ProcessScheduler.exitProcess();
+                    _ProcessScheduler.executeProcess();
+                    break;
+                case MEMORY_ACCESS_VIOLATION_IRQ:
+                    this.krnTrace("Memory access violation at 0x" + params.toString(16));
+                    _ProcessScheduler.exitProcess();
+                    _ProcessScheduler.executeProcess();
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");

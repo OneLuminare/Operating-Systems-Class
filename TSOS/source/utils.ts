@@ -79,5 +79,19 @@ module TSOS {
 
             return (Month + '/' + Day + '/' + Year + ' ' + Hours + ':' + Minutes + ' ' + AMPM);
         }
+
+        public static padString(str : string, num : number)
+        {
+            var ret : string = str;
+
+            if( str.length < num )
+            {
+                while (ret.length < num) {
+                    ret = '0' + ret;
+                }
+            }
+
+            return ret;
+        }
     }
 }

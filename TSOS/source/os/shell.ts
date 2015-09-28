@@ -442,8 +442,10 @@ module TSOS {
                 _StdOut.putText("Empty program input.")
             else if( programInput.match("[^a-f|A-F|0-9| ]+") )
                 _StdOut.putText("Invalid program input, only hex values and spaces allowed.");
-            else
+            else {
                 _StdOut.putText("Valid program input.");
+                _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ,programInput));
+            }
 
         }
 
