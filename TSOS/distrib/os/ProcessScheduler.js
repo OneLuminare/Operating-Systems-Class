@@ -33,19 +33,21 @@ var TSOS;
         ProcessScheduler.prototype.init = function () {
         };
         ProcessScheduler.prototype.createProcess = function (processCode) {
-            _Kernel.krnTrace("cp1");
-            var pcb = new TSOS.ProcessControlBlock(this.nextPID, 0, 256);
-            _Kernel.krnTrace("cpx");
-            this.contextSwitch = true;
+            var pcb = new TSOS.ProcessControlBlock(0, 0, 256);
+            //this.contextSwitch = true;
             this.runningProcess = pcb;
             this.nextPID++;
             _Memory.loadMemory(processCode);
             TSOS.Control.updateMemoryDisplay();
             _Kernel.krnTrace("Creating process PID: " + this.runningProcess.pid);
+            return pcb;
         };
-        ProcessScheduler.prototype.executeProcess = function () {
-            if (this.contextSwitch) {
-                if (this.runningProcess != null) {
+        ProcessScheduler.prototype.executeProcess = function (pid) {
+            var ret = false;
+            //if( this.contextSwitch )
+            //{
+            if (this.runningProcess != null) {
+                if (this.runningProcess.pid == pid) {
                     _Kernel.krnTrace("Executing process PID: " + this.runningProcess.pid);
                     _CPU.PC = 0;
                     _CPU.Acc = 0;
@@ -56,11 +58,10 @@ var TSOS;
                     _CPU.limit = this.runningProcess.limit;
                     _CPU.isExecuting = true;
                     TSOS.Control.updateCPUDisplay();
+                    ret = true;
                 }
-                else {
-                }
-                this.contextSwitch = false;
             }
+            return ret;
         };
         ProcessScheduler.prototype.handleReadyQueue = function () {
             /*
@@ -72,12 +73,13 @@ var TSOS;
         };
         ProcessScheduler.prototype.updateRunningProcess = function () {
         };
-        ProcessScheduler.prototype.exitProcess = function () {
-            var pid = this.runningProcess.pid;
+        ProcessScheduler.prototype.exitProcess = function (base) {
+            var pcb = this.runningProcess;
             this.runningProcess = null;
             this.nextPID--;
             this.contextSwitch = true;
-            _Kernel.krnTrace("Terminating process PID: " + pid);
+            _Kernel.krnTrace("Terminating process PID: " + pcb.pid);
+            return pcb;
         };
         return ProcessScheduler;
     })();

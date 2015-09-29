@@ -97,7 +97,7 @@ module TSOS {
                 "- Command HAL 9000...");
             this.commandList[this.commandList.length] = sc;
 
-            // shell
+            // status
             sc = new ShellCommand(this.shellStatus,
                 "status",
                 "<string> - Updates status message in host status bar.");
@@ -109,10 +109,16 @@ module TSOS {
                 "<string> - Triggers an OS error.");
             this.commandList[this.commandList.length] = sc;
 
-            // error
+            // load
             sc = new ShellCommand(this.shellLoad,
                 "load",
                 "- Loads validates and loads program input into memory.");
+            this.commandList[this.commandList.length] = sc;
+
+            // run
+            sc = new ShellCommand(this.shellRun,
+                "run",
+                "<int> - Runs a process in memory.");
             this.commandList[this.commandList.length] = sc;
 
 
@@ -179,7 +185,7 @@ module TSOS {
             }
 
             // Dont draw prompt on kernel crash
-            if( !_KernelCrash)
+            if( !_KernelCrash && !_ShellWaitForMessage)
                 // ... and finally write the prompt again.
                 this.putPrompt();
         }
@@ -211,6 +217,18 @@ module TSOS {
                 }
             }
             return retVal;
+        }
+
+        public message(msg : string) : void
+        {
+            _StdOut.putText(msg);
+            _StdOut.advanceLine();
+
+            if( _ShellWaitForMessage )
+            {
+                _ShellWaitForMessage = false;
+                this.putPrompt();
+            }
         }
 
         //
@@ -345,7 +363,10 @@ module TSOS {
                         _StdOut.putText("Triggers an os error, with given message. For testing purposes.");
                         break;
                     case "load":
-                        _StdOut.putText("Loads and validates program input into memory..");
+                        _StdOut.putText("Loads and validates program input into memory. Displays PID of newly created PCB.");
+                        break;
+                    case "run":
+                        _StdOut.putText("Runs loaded process, identified by givin PID returned at load.");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -426,6 +447,7 @@ module TSOS {
                 _StdOut.putText("Usage: status <string> - Please provide a string status message.");
         }
 
+        // Forces an error for testing purposes
         public shellError(args)
         {
             if( args.length > 0)
@@ -434,6 +456,7 @@ module TSOS {
                 _StdOut.putText("Usage: error <string> - Please provide a string error message.");
         }
 
+        // Validates and loads a process in memory. When interrupt is processed pid is returned.
         public shellLoad(args)
         {
             var programInput : string = (<HTMLInputElement>document.getElementById("taProgramInput")).value;
@@ -443,11 +466,21 @@ module TSOS {
             else if( programInput.match("[^a-f|A-F|0-9| ]+") )
                 _StdOut.putText("Invalid program input, only hex values and spaces allowed.");
             else {
-                _StdOut.putText("Valid program input.");
                 _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ,programInput));
+                _ShellWaitForMessage = true;
             }
 
         }
 
+        // Runs a given process. If not a valid pid, later a message is returned.
+        public shellRun(args)
+        {
+            if( args.length > 0) {
+                _KernelInterruptQueue.enqueue(new Interrupt(EXECUTE_PROCESS_IRQ, args[0]));
+                _ShellWaitForMessage = true;
+            }
+            else
+                _StdOut.putText("usage: run <int> - Please provide a PID.");
+        }
     }
 }

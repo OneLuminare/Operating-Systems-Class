@@ -32,13 +32,11 @@ module TSOS {
 
         }
 
-        public createProcess(processCode : string)
+        public createProcess(processCode : string) : TSOS.ProcessControlBlock
         {
-            _Kernel.krnTrace("cp1");
-            var pcb : TSOS.ProcessControlBlock = new TSOS.ProcessControlBlock(this.nextPID,0,256);
-            _Kernel.krnTrace("cpx");
+            var pcb : TSOS.ProcessControlBlock = new TSOS.ProcessControlBlock(/*this.nextPID*/0,0,256);
 
-            this.contextSwitch = true;
+            //this.contextSwitch = true;
 
             this.runningProcess = pcb;
 
@@ -49,47 +47,37 @@ module TSOS {
             TSOS.Control.updateMemoryDisplay();
 
             _Kernel.krnTrace("Creating process PID: " + this.runningProcess.pid);
+
+            return pcb;
         }
 
-        public executeProcess() : void
+        public executeProcess(pid : number) : boolean
         {
+            var ret = false;
 
-            if( this.contextSwitch )
-            {
+            //if( this.contextSwitch )
+            //{
 
                 if( this.runningProcess != null)
                 {
 
-                    _Kernel.krnTrace("Executing process PID: " + this.runningProcess.pid);
-                    _CPU.PC = 0;
-                    _CPU.Acc = 0;
-                    _CPU.Xreg = 0;
-                    _CPU.Yreg = 0;
-                    _CPU.Zflag = 0;
-                    _CPU.base = this.runningProcess.base;
-                    _CPU.limit = this.runningProcess.limit;
-                    _CPU.isExecuting = true;
-                    Control.updateCPUDisplay();
-                }
-                else
-                {
+                    if( this.runningProcess.pid == pid) {
+                        _Kernel.krnTrace("Executing process PID: " + this.runningProcess.pid);
+                        _CPU.PC = 0;
+                        _CPU.Acc = 0;
+                        _CPU.Xreg = 0;
+                        _CPU.Yreg = 0;
+                        _CPU.Zflag = 0;
+                        _CPU.base = this.runningProcess.base;
+                        _CPU.limit = this.runningProcess.limit;
+                        _CPU.isExecuting = true;
+                        Control.updateCPUDisplay();
 
-                     /*
-                     _CPU.PC = 0;
-                     _CPU.Acc = 0;
-                     _CPU.Xreg = 0;
-                     _CPU.Yreg = 0;
-                     _CPU.Zflag = 0;
-                    _CPU.base = 0;
-                    _CPU.limit = 0;
-                     _CPU.isExecuting = false;
-                     Control.updateCPUDisplay();
-                         */
-
+                        ret = true;
+                    }
                 }
 
-                this.contextSwitch = false;
-            }
+            return ret;
         }
 
         public handleReadyQueue()
@@ -106,17 +94,19 @@ module TSOS {
 
         }
 
-        public exitProcess()
+        public exitProcess(base : number) : TSOS.ProcessControlBlock
         {
 
-            var pid = this.runningProcess.pid;
+            var pcb = this.runningProcess;
+
                 this.runningProcess = null;
                 this.nextPID--;
 
                 this.contextSwitch = true;
 
-                _Kernel.krnTrace("Terminating process PID: " + pid);
+                _Kernel.krnTrace("Terminating process PID: " + pcb.pid);
 
+            return pcb;
         }
     }
 }

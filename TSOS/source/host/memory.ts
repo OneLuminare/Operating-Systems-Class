@@ -84,7 +84,7 @@ module TSOS {
             if( address >= 0 && address < 256 )
                 ret = Utils.padString(this.programMemory[address].toString(16),2);
 
-            return ret;
+            return ret.toUpperCase();
         }
 
         public getDWordBigEndian( address : number ) : number

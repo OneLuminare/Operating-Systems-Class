@@ -112,7 +112,7 @@ module TSOS {
                     dword = _Memory.getDWordBigEndian(address + 1);
                     if( !this.LDA2(dword) )
                     {
-                        _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, dword));
+                        _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
                         this.isExecuting = false;
                     }
 
@@ -122,19 +122,19 @@ module TSOS {
                     dword = _Memory.getDWordBigEndian(address + 1);
                     if( !this.STA(dword) )
                     {
-                        _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, dword));
+                        _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ,new Array(this.base, dword)));
                         this.isExecuting = false;
                     }
                     break;
 
                 case "0":
                     _Kernel.krnTrace('Executing break.');
-                    _KernelInterruptQueue.enqueue(new Interrupt(EXIT_PROCESS_IRQ,this.PC));
+                    _KernelInterruptQueue.enqueue(new Interrupt(EXIT_PROCESS_IRQ,new Array(this.base,this.PC)));
                     this.isExecuting = false;
                     break;
 
                 default:
-                    _KernelInterruptQueue.enqueue(new Interrupt(UNKNOWN_OP_CODE_IRQ,this.base + this.PC));
+                    _KernelInterruptQueue.enqueue(new Interrupt(UNKNOWN_OP_CODE_IRQ,new Array(this.base ,this.PC)));
                     this.isExecuting = false;
                     break;
             }

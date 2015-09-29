@@ -20,10 +20,11 @@ var TIMER_IRQ = 0; // Pages 23 (timer), 9 (interrupts), and 561 (interrupt prior
 // NOTE: The timer is different from hardware/host clock pulses. Don't confuse these.
 var KEYBOARD_IRQ = 1;
 var CREATE_PROCESS_IRQ = 2;
-var EXIT_PROCESS_IRQ = 3;
-var WAIT_FOR_PROCESS_EXIT_IRQ = 4;
-var UNKNOWN_OP_CODE_IRQ = 5;
-var MEMORY_ACCESS_VIOLATION_IRQ = 6;
+var EXECUTE_PROCESS_IRQ = 3;
+var EXIT_PROCESS_IRQ = 4;
+var WAIT_FOR_PROCESS_EXIT_IRQ = 5;
+var UNKNOWN_OP_CODE_IRQ = 6;
+var MEMORY_ACCESS_VIOLATION_IRQ = 7;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
@@ -47,6 +48,8 @@ var _KernelTabInput = false; // A flag to take tab input, as cant put tab on inp
 var _KernelReadyQueue;
 var _KernelRunningProcesses = null;
 var _ProcessScheduler;
+// Flags
+var _ShellWaitForMessage = false; // Tells shell to wait for message from kernel after sending system call
 // Standard input and output
 var _StdIn; // Same "to null or not to null" issue as above.
 var _StdOut;

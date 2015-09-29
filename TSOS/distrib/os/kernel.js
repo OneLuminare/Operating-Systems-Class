@@ -101,6 +101,8 @@ var TSOS;
             // Put more here.
         };
         Kernel.prototype.krnInterruptHandler = function (irq, params) {
+            // Inits
+            var pcb = null;
             // This is the Interrupt Handler Routine.  See pages 8 and 560.
             // Trace our entrance here so we can compute Interrupt Latency by analyzing the log file later on. Page 766.
             this.krnTrace("Handling IRQ~" + irq);
@@ -117,24 +119,24 @@ var TSOS;
                     _StdIn.handleInput();
                     break;
                 case CREATE_PROCESS_IRQ:
-                    _ProcessScheduler.createProcess(params);
-                    // I wanted this in timer ISR, but nothing routinly calling
-                    // timer isr. Will add later.
-                    _ProcessScheduler.executeProcess();
+                    pcb = _ProcessScheduler.createProcess(params);
+                    _OsShell.message("Loaded process with PID " + pcb.pid.toString() + ".");
+                    break;
+                case EXECUTE_PROCESS_IRQ:
+                    if (!_ProcessScheduler.executeProcess(params))
+                        _OsShell.message("No process with PID " + params.toString() + ".");
                     break;
                 case EXIT_PROCESS_IRQ:
-                    _ProcessScheduler.exitProcess();
-                    _ProcessScheduler.executeProcess();
+                    pcb = _ProcessScheduler.exitProcess(params[0]);
+                    _OsShell.message("Exiting process with PID " + pcb.pid.toString() + ".");
                     break;
                 case UNKNOWN_OP_CODE_IRQ:
-                    this.krnTrace("Unknown op code at 0x" + params.toString(16));
-                    _ProcessScheduler.exitProcess();
-                    _ProcessScheduler.executeProcess();
+                    this.krnTrace("Unknown op code at 0x" + params[1].toString(16));
+                    _ProcessScheduler.exitProcess(params[0]);
                     break;
                 case MEMORY_ACCESS_VIOLATION_IRQ:
-                    this.krnTrace("Memory access violation at 0x" + params.toString(16));
-                    _ProcessScheduler.exitProcess();
-                    _ProcessScheduler.executeProcess();
+                    this.krnTrace("Memory access violation at 0x" + params[1].toString(16));
+                    _ProcessScheduler.exitProcess(params[0]);
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");

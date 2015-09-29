@@ -58,14 +58,17 @@ var TSOS;
             // openthepodbaydoorshal
             sc = new TSOS.ShellCommand(this.shellOpenThePodBayDoors, "openthepodbaydoorshal", "- Command HAL 9000...");
             this.commandList[this.commandList.length] = sc;
-            // shell
+            // status
             sc = new TSOS.ShellCommand(this.shellStatus, "status", "<string> - Updates status message in host status bar.");
             this.commandList[this.commandList.length] = sc;
             // error
             sc = new TSOS.ShellCommand(this.shellError, "error", "<string> - Triggers an OS error.");
             this.commandList[this.commandList.length] = sc;
-            // error
+            // load
             sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Loads validates and loads program input into memory.");
+            this.commandList[this.commandList.length] = sc;
+            // run
+            sc = new TSOS.ShellCommand(this.shellRun, "run", "<int> - Runs a process in memory.");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -129,7 +132,7 @@ var TSOS;
                 _StdOut.advanceLine();
             }
             // Dont draw prompt on kernel crash
-            if (!_KernelCrash)
+            if (!_KernelCrash && !_ShellWaitForMessage)
                 // ... and finally write the prompt again.
                 this.putPrompt();
         };
@@ -155,6 +158,14 @@ var TSOS;
                 }
             }
             return retVal;
+        };
+        Shell.prototype.message = function (msg) {
+            _StdOut.putText(msg);
+            _StdOut.advanceLine();
+            if (_ShellWaitForMessage) {
+                _ShellWaitForMessage = false;
+                this.putPrompt();
+            }
         };
         //
         // Shell Command Functions.  Kinda not part of Shell() class exactly, but
@@ -281,7 +292,10 @@ var TSOS;
                         _StdOut.putText("Triggers an os error, with given message. For testing purposes.");
                         break;
                     case "load":
-                        _StdOut.putText("Loads and validates program input into memory..");
+                        _StdOut.putText("Loads and validates program input into memory. Displays PID of newly created PCB.");
+                        break;
+                    case "run":
+                        _StdOut.putText("Runs loaded process, identified by givin PID returned at load.");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -355,12 +369,14 @@ var TSOS;
             else
                 _StdOut.putText("Usage: status <string> - Please provide a string status message.");
         };
+        // Forces an error for testing purposes
         Shell.prototype.shellError = function (args) {
             if (args.length > 0)
                 _Kernel.krnTrapError(args.join(' '));
             else
                 _StdOut.putText("Usage: error <string> - Please provide a string error message.");
         };
+        // Validates and loads a process in memory. When interrupt is processed pid is returned.
         Shell.prototype.shellLoad = function (args) {
             var programInput = document.getElementById("taProgramInput").value;
             if (programInput.length == 0)
@@ -368,9 +384,18 @@ var TSOS;
             else if (programInput.match("[^a-f|A-F|0-9| ]+"))
                 _StdOut.putText("Invalid program input, only hex values and spaces allowed.");
             else {
-                _StdOut.putText("Valid program input.");
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_PROCESS_IRQ, programInput));
+                _ShellWaitForMessage = true;
             }
+        };
+        // Runs a given process. If not a valid pid, later a message is returned.
+        Shell.prototype.shellRun = function (args) {
+            if (args.length > 0) {
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(EXECUTE_PROCESS_IRQ, args[0]));
+                _ShellWaitForMessage = true;
+            }
+            else
+                _StdOut.putText("usage: run <int> - Please provide a PID.");
         };
         return Shell;
     })();

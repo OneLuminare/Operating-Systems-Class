@@ -139,11 +139,11 @@ var TSOS;
         };
         Control.updateCPUDisplay = function () {
             var html = "<tr><th>PC</th><th>Acc</th><th>X Reg</th><th>Y Reg</th><th>Z Flag</th></tr><tr>";
-            html += "<td>" + _CPU.PC.toString(16) + "</td>";
-            html += "<td>" + _CPU.Acc.toString(16) + "</td>";
-            html += "<td>" + _CPU.Xreg.toString(16) + "</td>";
-            html += "<td>" + _CPU.Yreg.toString(16) + "</td>";
-            html += "<td>" + _CPU.Zflag.toString(16) + "</td></tr>";
+            html += "<td>" + _CPU.PC.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Acc.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Xreg.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Yreg.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Zflag.toString(16).toUpperCase() + "</td></tr>";
             document.getElementById("tblCPU").innerHTML = html;
         };
         return Control;

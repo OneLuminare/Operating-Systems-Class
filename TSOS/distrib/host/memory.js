@@ -58,7 +58,7 @@ var TSOS;
             var ret = "";
             if (address >= 0 && address < 256)
                 ret = TSOS.Utils.padString(this.programMemory[address].toString(16), 2);
-            return ret;
+            return ret.toUpperCase();
         };
         Memory.prototype.getDWordBigEndian = function (address) {
             var dword = -1;
