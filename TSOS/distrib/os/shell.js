@@ -378,20 +378,37 @@ var TSOS;
         };
         // Validates and loads a process in memory. When interrupt is processed pid is returned.
         Shell.prototype.shellLoad = function (args) {
+            // Inits
             var programInput = document.getElementById("taProgramInput").value;
+            // Check if empty input
             if (programInput.length == 0)
                 _StdOut.putText("Empty program input.");
-            else if (programInput.match("[^a-f|A-F|0-9| ]+"))
+            else if (programInput.match("[^a-f|A-F|0-9| |\n|\r]+"))
                 _StdOut.putText("Invalid program input, only hex values and spaces allowed.");
             else {
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_PROCESS_IRQ, programInput));
-                _ShellWaitForMessage = true;
+                // Remove white space and carrieg returns
+                var reg = new RegExp("[ |\n\r]+");
+                var hex = programInput.split(reg);
+                var input = hex.join('');
+                // Verify inputs not over 256 bytes
+                if (input.length > 512) {
+                    _StdOut.putText("Program is valid, but over 256 bytes.");
+                }
+                else {
+                    // Send create process interrupt
+                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_PROCESS_IRQ, input));
+                    // Set flag for shell to wait until kernel messages back
+                    _ShellWaitForMessage = true;
+                }
             }
         };
         // Runs a given process. If not a valid pid, later a message is returned.
         Shell.prototype.shellRun = function (args) {
+            // Verify at least one pid given
             if (args.length > 0) {
+                // Send interupt to run process
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(EXECUTE_PROCESS_IRQ, args[0]));
+                // Set flag for shell to wait until kernel messages back
                 _ShellWaitForMessage = true;
             }
             else

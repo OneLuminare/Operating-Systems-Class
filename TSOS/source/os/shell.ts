@@ -459,15 +459,38 @@ module TSOS {
         // Validates and loads a process in memory. When interrupt is processed pid is returned.
         public shellLoad(args)
         {
+            // Inits
             var programInput : string = (<HTMLInputElement>document.getElementById("taProgramInput")).value;
 
+
+            // Check if empty input
             if( programInput.length == 0 )
                 _StdOut.putText("Empty program input.")
-            else if( programInput.match("[^a-f|A-F|0-9| ]+") )
+            // Check if valid characters
+            else if( programInput.match("[^a-f|A-F|0-9| |\n|\r]+") )
                 _StdOut.putText("Invalid program input, only hex values and spaces allowed.");
-            else {
-                _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ,programInput));
-                _ShellWaitForMessage = true;
+            // Else valid input
+            else
+            {
+                // Remove white space and carrieg returns
+                var reg = new RegExp("[ |\n\r]+");
+                var hex = programInput.split(reg);
+                var input = hex.join('');
+
+                // Verify inputs not over 256 bytes
+                if( input.length > 512)
+                {
+                    _StdOut.putText("Program is valid, but over 256 bytes.")
+                }
+                // Else send create process interupt
+                else
+                {
+                    // Send create process interrupt
+                    _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ, input));
+
+                    // Set flag for shell to wait until kernel messages back
+                    _ShellWaitForMessage = true;
+                }
             }
 
         }
@@ -475,10 +498,16 @@ module TSOS {
         // Runs a given process. If not a valid pid, later a message is returned.
         public shellRun(args)
         {
-            if( args.length > 0) {
+            // Verify at least one pid given
+            if( args.length > 0)
+            {
+                // Send interupt to run process
                 _KernelInterruptQueue.enqueue(new Interrupt(EXECUTE_PROCESS_IRQ, args[0]));
+
+                // Set flag for shell to wait until kernel messages back
                 _ShellWaitForMessage = true;
             }
+            // Else message user of usage
             else
                 _StdOut.putText("usage: run <int> - Please provide a PID.");
         }

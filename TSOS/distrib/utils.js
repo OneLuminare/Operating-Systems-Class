@@ -44,6 +44,7 @@ var TSOS;
             }
             return retVal;
         };
+        // Get formated current date and time
         Utils.dateString = function () {
             var date = new Date();
             var Day = date.getDay().toString();
@@ -68,6 +69,27 @@ var TSOS;
                 Minutes = '0' + Minutes;
             return (Month + '/' + Day + '/' + Year + ' ' + Hours + ':' + Minutes + ' ' + AMPM);
         };
+        // Get time string from date object
+        Utils.timeString = function (date) {
+            var Hours = date.getHours().toString();
+            var HoursNum = date.getHours();
+            var Minutes = date.getMinutes().toString();
+            var Seconds = date.getSeconds().toString();
+            var AMPM = "AM";
+            if (HoursNum >= 12) {
+                AMPM = "PM";
+            }
+            if (HoursNum > 12)
+                Hours = (HoursNum % 12).toString();
+            if (Hours.length == 1)
+                Hours = '0' + Hours;
+            if (Minutes.length == 1)
+                Minutes = '0' + Minutes;
+            if (Seconds.length == 1)
+                Seconds = '0' + Seconds;
+            return (Hours + ':' + Minutes + ':' + Seconds + ' ' + AMPM);
+        };
+        // Pads string with 00 to length
         Utils.padString = function (str, num) {
             var ret = str;
             if (str.length < num) {

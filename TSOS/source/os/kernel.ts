@@ -151,12 +151,16 @@ module TSOS {
                     _OsShell.message("Exiting process with PID " + pcb.pid.toString() + ".");
                     break;
                 case UNKNOWN_OP_CODE_IRQ:
-                    this.krnTrace("Unknown op code at 0x" + params[1].toString(16));
+                    pcb =  _ProcessScheduler.runningProcess;
+                    this.krnTrace("Unknown op code at 0x" + params[1].toString(16) + " in process PID " + pcb.pid.toString() + ".");
                     _ProcessScheduler.exitProcess(params[0]);
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to unknown op code at 0x" + params[1].toString(16) + ".");
                     break;
                 case MEMORY_ACCESS_VIOLATION_IRQ:
-                    this.krnTrace("Memory access violation at 0x" + params[1].toString(16));
+                    pcb =  _ProcessScheduler.runningProcess;
+                    this.krnTrace("Memory access violation to address 0x" + params[1].toString(16) + " in process PID " + pcb.pid.toString() + ".");
                     _ProcessScheduler.exitProcess(params[0]);
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to memory access violation to address 0x" + params[1].toString(16) + ".");
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");

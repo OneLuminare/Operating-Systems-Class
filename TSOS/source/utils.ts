@@ -44,6 +44,7 @@ module TSOS {
             return retVal;
         }
 
+        // Get formated current date and time
         public static dateString() : string
         {
             var date = new Date();
@@ -80,6 +81,38 @@ module TSOS {
             return (Month + '/' + Day + '/' + Year + ' ' + Hours + ':' + Minutes + ' ' + AMPM);
         }
 
+        // Get time string from date object
+        public static timeString(date : Date) : string
+        {
+            var Hours  = date.getHours().toString();
+            var HoursNum = date.getHours();
+            var Minutes = date.getMinutes().toString();
+            var Seconds = date.getSeconds().toString();
+            var AMPM = "AM";
+
+            if( HoursNum >= 12 )
+            {
+                AMPM = "PM";
+
+            }
+
+            if( HoursNum > 12)
+                Hours = (HoursNum % 12).toString();
+
+            if( Hours.length == 1 )
+                Hours = '0' + Hours;
+
+            if( Minutes.length == 1 )
+                Minutes = '0' + Minutes;
+
+            if( Seconds.length == 1)
+                Seconds = '0' + Seconds;
+
+
+            return (Hours + ':' + Minutes + ':' + Seconds + ' ' + AMPM);
+        }
+
+        // Pads string with 00 to length
         public static padString(str : string, num : number)
         {
             var ret : string = str;
