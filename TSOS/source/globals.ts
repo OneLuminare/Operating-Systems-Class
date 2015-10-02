@@ -18,10 +18,17 @@ const FRAME_AUTHOR: string = "Alan Labouseur"; // Got to give instructor credit 
 
 const CPU_CLOCK_INTERVAL: number = 100;   // This is in ms (milliseconds) so 1000 = 1 second.
 
+// Interupts
 const TIMER_IRQ: number = 0;  // Pages 23 (timer), 9 (interrupts), and 561 (interrupt priority).
                               // NOTE: The timer is different from hardware/host clock pulses. Don't confuse these.
 const KEYBOARD_IRQ: number = 1;
 
+const CREATE_PROCESS_IRQ: number = 2;
+const EXECUTE_PROCESS_IRQ: number = 3;
+const EXIT_PROCESS_IRQ: number = 4;
+const WAIT_FOR_PROCESS_EXIT_IRQ: number = 5;
+const UNKNOWN_OP_CODE_IRQ: number = 6;
+const MEMORY_ACCESS_VIOLATION_IRQ: number = 7;
 
 //
 // Global Variables
@@ -48,6 +55,12 @@ var _KernelInputQueue: any = null;  // Is this better? I don't like uninitialize
 var _KernelBuffers: any[] = null;   // when clearly 'any' is not what we want. There is likely a better way, but what is it?
 var _KernelCrash: boolean = false;  // A flag basicly to stop shell from drawing prompt in BDOD after a crash
 var _KernelTabInput : boolean = false; // A flag to take tab input, as cant put tab on input buffer
+var _KernelReadyQueue;
+var _KernelRunningProcesses: any[] = null;
+var _ProcessScheduler : TSOS.ProcessScheduler;
+
+// Flags
+var _ShellWaitForMessage : boolean = false;  // Tells shell to wait for message from kernel after sending system call
 
 // Standard input and output
 var _StdIn;    // Same "to null or not to null" issue as above.
@@ -56,6 +69,10 @@ var _StdOut;
 // UI
 var _Console: TSOS.Console;
 var _OsShell: TSOS.Shell;
+
+// Memory
+var _MemoryMax : number = 256;
+var _Memory : TSOS.Memory;
 
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode: boolean = false;

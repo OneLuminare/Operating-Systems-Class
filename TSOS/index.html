@@ -15,8 +15,12 @@
    <script type="text/javascript" src="distrib/host/control.js"></script>
    <script type="text/javascript" src="distrib/host/devices.js"></script>
    <script type="text/javascript" src="distrib/host/cpu.js"></script>
+    <script type="text/javascript" src="distrib/host/memory.js"></script>
+    <script type="text/javascript" src="distrib/os/pcb.js"></script>
 
    <!-- Virtual OS Routines: Make sure Kernel code is last, since it needs those above it. -->
+
+    <script type="text/javascript" src="distrib/os/ProcessScheduler.js"></script>
    <script type="text/javascript" src="distrib/os/interrupt.js"></script>
    <script type="text/javascript" src="distrib/os/canvastext.js"></script>
    <script type="text/javascript" src="distrib/os/console.js"></script>
@@ -31,7 +35,7 @@
    <!-- Other Routines -->
    <script type="text/javascript" src="distrib/utils.js"></script>
    <!-- Uncomment this line below to enable GLaDOS testing -->
-   <script type="text/javascript" src="http://www.labouseur.com/courses/os/projects/glados.js"></script>
+   <!-- <script type="text/javascript" src="http://www.labouseur.com/courses/os/projects/glados.js"></script> -->
 </head>
 
 <body onload="onDocumentLoad()">
@@ -76,7 +80,8 @@
 
    </div>
 
-   <div id="divLog" style="margin-left:520px;">
+    <div style="margin-left:520px;overflow:hidden;">
+   <div id="divLog" style="float:left;">
       <label>
          Host Log
          <br>
@@ -90,7 +95,47 @@
        <label id="lblHostStatusBar" style="display:inline-block;border-style:solid;border-width:1px;border-color:gray;width:405px;background-color:white">
          OS not started.
        </label>
+
    </div>
+
+        <div id="divMemor" style="overflow:hidden;margin-left:420px;">
+            <label>
+                Memory
+                <br>
+                <div style="border-style:solid;border-width:1px;background-color:white;width:234px;height:208px;overflow:auto;">
+                    <table id="tblMemory" style="background-color:white;">
+
+                    </table>
+                </div>
+            </label>
+        </div>
+
+<br>
+        <div id="divCPU" style="margin-left:420px;">
+            <label>
+                CPU
+                <br>
+                <table id="tblCPU" rows="2" cols="5">
+                    <tr>
+                        <th>PC</th>
+                        <th>Acc</th>
+                        <th>X Reg</th>
+                        <th>Y Reg</th>
+                        <th>Z Flag</th>
+                    </tr>
+                    <tr>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </table>
+            </label>
+        </div>
+</div>
+
+
 
    <div id="divUserProgramInput" style="margin-left:520px;">
       <label>
@@ -103,6 +148,8 @@
          ></textarea>
       </label>
    </div>
+
+
 </div>
 
 <p class="footerText" style="clear:both;">

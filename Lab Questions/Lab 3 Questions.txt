@@ -1,0 +1,29 @@
+Lab 3 Questions
+===============
+
+1. Internal fragmentation occures only when dividing memory for process in equal sizes. The lost memory is the unused space in each block. 
+External fragmentation occures only when dynamicly dividing out memory for processes based on available space. The lost memory is the random 
+size pieces of memory between each dynamicly sized segment.
+2. 
+First Fit :
+100kb
+500kb  212kb
+200kb  112kb
+300kb  
+600kb  417kb   
+no room for 426kb (with set partition sizes)
+
+Best Fit:
+100kb
+500kb  417kb
+200kb  112kb
+300kb  212kb
+600kb  426kb
+
+Worst Fit:
+100kb
+500kb  417kb
+200kb 
+300kb  112kb
+600kb  212kb
+no room for 426kb (with set partition sizes)

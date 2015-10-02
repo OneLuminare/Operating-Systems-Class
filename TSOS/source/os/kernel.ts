@@ -1,5 +1,6 @@
 ///<reference path="../globals.ts" />
 ///<reference path="queue.ts" />
+///<reference path="ProcessScheduler.ts" />
 
 /* ------------
      Kernel.ts
@@ -26,6 +27,9 @@ module TSOS {
             _KernelInterruptQueue = new Queue();  // A (currently) non-priority queue for interrupt requests (IRQs).
             _KernelBuffers = new Array();         // Buffers... for the kernel.
             _KernelInputQueue = new Queue();      // Where device input lands before being processed out somewhere.
+
+            // Initialize process scheduler
+            _ProcessScheduler = new ProcessScheduler();
 
             // Initialize the console.
             _Console = new Console();          // The command line interface / console I/O device.
@@ -113,9 +117,14 @@ module TSOS {
         }
 
         public krnInterruptHandler(irq, params) {
+
+            // Inits
+            var pcb : TSOS.ProcessControlBlock = null;
+
             // This is the Interrupt Handler Routine.  See pages 8 and 560.
             // Trace our entrance here so we can compute Interrupt Latency by analyzing the log file later on. Page 766.
             this.krnTrace("Handling IRQ~" + irq);
+
 
             // Invoke the requested Interrupt Service Routine via Switch/Case rather than an Interrupt Vector.
             // TODO: Consider using an Interrupt Vector in the future.
@@ -129,6 +138,30 @@ module TSOS {
                     _krnKeyboardDriver.isr(params);   // Kernel mode device driver
                     _StdIn.handleInput();
                     break;
+                case CREATE_PROCESS_IRQ:
+                    pcb = _ProcessScheduler.createProcess(params);
+                    _OsShell.message("Loaded process with PID " + pcb.pid.toString() + ".");
+                    break;
+                case EXECUTE_PROCESS_IRQ:
+                    if( !_ProcessScheduler.executeProcess(params) )
+                        _OsShell.message("No process with PID " + params.toString() + ".");
+                    break;
+                case EXIT_PROCESS_IRQ:
+                    pcb = _ProcessScheduler.exitProcess(params[0]);
+                    _OsShell.message("Exiting process with PID " + pcb.pid.toString() + ".");
+                    break;
+                case UNKNOWN_OP_CODE_IRQ:
+                    pcb =  _ProcessScheduler.runningProcess;
+                    this.krnTrace("Unknown op code at 0x" + params[1].toString(16) + " in process PID " + pcb.pid.toString() + ".");
+                    _ProcessScheduler.exitProcess(params[0]);
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to unknown op code at 0x" + params[1].toString(16) + ".");
+                    break;
+                case MEMORY_ACCESS_VIOLATION_IRQ:
+                    pcb =  _ProcessScheduler.runningProcess;
+                    this.krnTrace("Memory access violation to address 0x" + params[1].toString(16) + " in process PID " + pcb.pid.toString() + ".");
+                    _ProcessScheduler.exitProcess(params[0]);
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to memory access violation to address 0x" + params[1].toString(16) + ".");
+                    break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }
@@ -137,6 +170,7 @@ module TSOS {
         public krnTimerISR() {
             // The built-in TIMER (not clock) Interrupt Service Routine (as opposed to an ISR coming from a device driver). {
             // Check multiprogramming parameters and enforce quanta here. Call the scheduler / context switch here if necessary.
+
         }
 
         //
@@ -153,6 +187,7 @@ module TSOS {
         // - ReadFile
         // - WriteFile
         // - CloseFile
+
 
 
         //

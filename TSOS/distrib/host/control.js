@@ -1,5 +1,7 @@
 ///<reference path="../globals.ts" />
 ///<reference path="../os/canvastext.ts" />
+///<reference path="memory.ts" />
+///<reference path="test.ts" />
 /* ------------
      Control.ts
 
@@ -78,6 +80,9 @@ var TSOS;
             // ... Create and initialize the CPU (because it's part of the hardware)  ...
             _CPU = new TSOS.Cpu(); // Note: We could simulate multi-core systems by instantiating more than one instance of the CPU here.
             _CPU.init(); //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
+            // Create new memory object
+            _Memory = new TSOS.Memory();
+            this.updateMemoryDisplay();
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(TSOS.Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
             // .. and call the OS Kernel Bootstrap routine.
@@ -116,6 +121,30 @@ var TSOS;
         Control.updateHostStatusTime = function () {
             // Update status bar
             document.getElementById("lblHostStatusBar").innerHTML = TSOS.Utils.dateString() + " - " + this.msg;
+        };
+        Control.updateMemoryDisplay = function () {
+            var header = 0;
+            document.getElementById("tblMemory").innerHTML = "";
+            var tbl = document.getElementById("tblMemory");
+            var row = tbl.insertRow();
+            row.insertCell(0).innerHTML = "<b>0x" + header.toString(16) + "</b>";
+            for (var i = 0; i < 256; i++) {
+                if (i % 8 == 0 && i != 0) {
+                    row = tbl.insertRow();
+                    header += 8;
+                    row.insertCell().innerHTML = "<b>0x" + header.toString(16) + "</b>";
+                }
+                row.insertCell().innerHTML = _Memory.getAddressHexStr(i);
+            }
+        };
+        Control.updateCPUDisplay = function () {
+            var html = "<tr><th>PC</th><th>Acc</th><th>X Reg</th><th>Y Reg</th><th>Z Flag</th></tr><tr>";
+            html += "<td>" + _CPU.PC.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Acc.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Xreg.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Yreg.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Zflag.toString(16).toUpperCase() + "</td></tr>";
+            document.getElementById("tblCPU").innerHTML = html;
         };
         return Control;
     })();

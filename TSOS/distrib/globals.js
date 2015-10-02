@@ -15,9 +15,16 @@ var APP_VERSION = "0.1.09"; // What did you expect?
 var AUTHOR = "Nathan D. Fahrner"; // Me, student author
 var FRAME_AUTHOR = "Alan Labouseur"; // Got to give instructor credit for starting frame work
 var CPU_CLOCK_INTERVAL = 100; // This is in ms (milliseconds) so 1000 = 1 second.
+// Interupts
 var TIMER_IRQ = 0; // Pages 23 (timer), 9 (interrupts), and 561 (interrupt priority).
 // NOTE: The timer is different from hardware/host clock pulses. Don't confuse these.
 var KEYBOARD_IRQ = 1;
+var CREATE_PROCESS_IRQ = 2;
+var EXECUTE_PROCESS_IRQ = 3;
+var EXIT_PROCESS_IRQ = 4;
+var WAIT_FOR_PROCESS_EXIT_IRQ = 5;
+var UNKNOWN_OP_CODE_IRQ = 6;
+var MEMORY_ACCESS_VIOLATION_IRQ = 7;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
@@ -38,12 +45,20 @@ var _KernelInputQueue = null; // Is this better? I don't like uninitialized vari
 var _KernelBuffers = null; // when clearly 'any' is not what we want. There is likely a better way, but what is it?
 var _KernelCrash = false; // A flag basicly to stop shell from drawing prompt in BDOD after a crash
 var _KernelTabInput = false; // A flag to take tab input, as cant put tab on input buffer
+var _KernelReadyQueue;
+var _KernelRunningProcesses = null;
+var _ProcessScheduler;
+// Flags
+var _ShellWaitForMessage = false; // Tells shell to wait for message from kernel after sending system call
 // Standard input and output
 var _StdIn; // Same "to null or not to null" issue as above.
 var _StdOut;
 // UI
 var _Console;
 var _OsShell;
+// Memory
+var _MemoryMax = 256;
+var _Memory;
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode = false;
 // Global Device Driver Objects - page 12
