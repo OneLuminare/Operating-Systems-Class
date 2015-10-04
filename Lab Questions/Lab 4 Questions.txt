@@ -1,0 +1,44 @@
+7.
+Read	
+  chapters	
+  2.3	
+  and	
+  2.4	
+  in	
+  our	
+  text.
+Ques,ons
+1.
+What	
+  is	
+  the	
+  relationship	
+  between	
+  a	
+  guest	
+  operating	
+  system	
+  and	
+  a	
+  host	
+  operating	
+  
+system	
+  in	
+  a	
+  system	
+  like	
+  VMware?	
+  What	
+  factors	
+  need	
+  to	
+  be	
+  considered	
+  in	
+  choosing	
+  the	
+  
+host	
+  operating	
+  system

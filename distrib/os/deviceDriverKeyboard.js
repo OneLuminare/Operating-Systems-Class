@@ -1,6 +1,11 @@
 ///<reference path="../globals.ts" />
 ///<reference path="deviceDriver.ts" />
-
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
 /* ----------------------------------
    DeviceDriverKeyboard.ts
 
@@ -8,26 +13,19 @@
 
    The Kernel Keyboard Device Driver.
    ---------------------------------- */
-
-module TSOS {
-
-
+var TSOS;
+(function (TSOS) {
     // Char map for punctuations
     var charMap = [];
-
     // Extends DeviceDriver
-    export class DeviceDriverKeyboard extends DeviceDriver
-    {
-
-
-        constructor() {
+    var DeviceDriverKeyboard = (function (_super) {
+        __extends(DeviceDriverKeyboard, _super);
+        function DeviceDriverKeyboard() {
             // Override the base method pointers.
-            super(this.krnKbdDriverEntry, this.krnKbdDispatchKeyPress);
-       }
-
+            _super.call(this, this.krnKbdDriverEntry, this.krnKbdDispatchKeyPress);
+        }
         // Creates charmap symbol array
-        public createCharMap() : void
-        {
+        DeviceDriverKeyboard.prototype.createCharMap = function () {
             charMap[48] = ')';
             charMap[49] = '!';
             charMap[50] = '@';
@@ -49,24 +47,22 @@ module TSOS {
             charMap[220] = '|';
             charMap[221] = '}';
             charMap[222] = '"';
-        }
-
-        public krnKbdDriverEntry() {
+        };
+        DeviceDriverKeyboard.prototype.krnKbdDriverEntry = function () {
             // Initialization routine for this, the kernel-mode Keyboard Device Driver.
             this.status = "loaded";
             // More?
-           this.createCharMap();
-        }
-
-        public krnKbdDispatchKeyPress(params) {
+            this.createCharMap();
+        };
+        DeviceDriverKeyboard.prototype.krnKbdDispatchKeyPress = function (params) {
             // Parse the params.    TODO: Check that the params are valid and osTrapError if not.
             var keyCode = params[0];
             var isShifted = params[1];
             _Kernel.krnTrace("Key code:" + keyCode + " shifted:" + isShifted);
-            var chr  = "";
+            var chr = "";
             // Check to see if we even want to deal with the key that was pressed.
-            if (((keyCode >= 65) && (keyCode <= 90)) ||   // A..Z
-                ((keyCode >= 97) && (keyCode <= 123))) {  // a..z {
+            if (((keyCode >= 65) && (keyCode <= 90)) ||
+                ((keyCode >= 97) && (keyCode <= 123))) {
                 // Determine the character we want to display.
                 // Assume it's lowercase...
                 chr = String.fromCharCode(keyCode + 32);
@@ -76,90 +72,82 @@ module TSOS {
                 }
                 // TODO: Check for caps-lock and handle as shifted if so.
                 _KernelInputQueue.enqueue(chr);
-            } else if (((keyCode >= 48) && (keyCode <= 57)) ||   // digits
-                        (keyCode == 32)                     ||   // space
-                        (keyCode == 13)                     ||  // enter
-                        (keyCode == 61))                        // equals
-            {
+            }
+            else if (((keyCode >= 48) && (keyCode <= 57)) ||
+                (keyCode == 32) ||
+                (keyCode == 13) ||
+                (keyCode == 61)) {
                 // If shifted use char from map
-                if( isShifted)
-                {
+                if (isShifted) {
                     chr = charMap[keyCode];
                 }
-                // Else use fromCharCode
                 else {
-
                     chr = String.fromCharCode(keyCode);
                 }
-
                 _KernelInputQueue.enqueue(chr);
             }
-            // Had to manually put in these symbols, as String.fromCharCode returns nothing
-            // for these keycodes
-            else if( ((keyCode >= 190) && (keyCode <= 192))  || // Punctuations
+            else if (((keyCode >= 190) && (keyCode <= 192)) ||
                 ((keyCode >= 219) && (keyCode <= 222)) ||
-                (keyCode == 173  ) ||
+                (keyCode == 173) ||
                 (keyCode == 188) ||
-                (keyCode == 59))
-            {
-
+                (keyCode == 59)) {
                 switch (keyCode) {
                     case 59:
-                        if( isShifted )
+                        if (isShifted)
                             chr = charMap[keyCode];
                         else
                             chr = ';';
                         break;
                     case 173:
-                        if( isShifted )
+                        if (isShifted)
                             chr = charMap[keyCode];
                         else
                             chr = '-';
                         break;
                     case 188:
-                        if( isShifted )
+                        if (isShifted)
                             chr = charMap[keyCode];
                         else
                             chr = ',';
                         break;
                     case 190:
-                        if( isShifted )
+                        if (isShifted)
                             chr = charMap[keyCode];
                         else
                             chr = '.';
                         break;
                     case 191:
-                        if( isShifted )
+                        if (isShifted)
                             chr = charMap[keyCode];
                         else
                             chr = '/';
                         break;
                     case 192:
-                        if( isShifted )
+                        if (isShifted)
                             chr = charMap[keyCode];
                         else
                             chr = '`';
                         break;
                     case 219:
-                        if( isShifted )
+                        if (isShifted)
                             chr = charMap[keyCode];
                         else
                             chr = '[';
                         break;
                     case 220:
-                        if( isShifted )
+                        if (isShifted)
                             chr = charMap[keyCode];
                         else
                             chr = '\\';
                         break;
                     case 221:
-                        if( isShifted )
+                        if (isShifted)
                             chr = charMap[keyCode];
                         else
                             chr = ']';
                         break;
                     case 222:
-                        if( isShifted )
+                        if (isShifted)
                             chr = charMap[keyCode];
                         else
                             chr = '\'';
@@ -168,32 +156,27 @@ module TSOS {
                         chr = '';
                         break;
                 }
-
                 _KernelInputQueue.enqueue(chr);
             }
-            else if( keyCode == 8 ) // Backspace
-            {
+            else if (keyCode == 8) {
                 chr = String.fromCharCode(8);
                 _KernelInputQueue.enqueue(chr);
             }
-            else if( keyCode == 9) // Tab
-            {
+            else if (keyCode == 9) {
                 // Had to call from the driver, as
                 // I can't put the tab key code in the buffer
                 _Console.completeCommand();
-                //chr = String.fromCharCode(9);
-                //_KernelInputQueue.engueue(chr);
             }
-            else if( keyCode == 38 ) // Up arrow
-            {
+            else if (keyCode == 38) {
                 chr = String.fromCharCode(38);
                 _KernelInputQueue.enqueue(chr);
             }
-            else if( keyCode == 40 ) // Up arrow
-            {
+            else if (keyCode == 40) {
                 chr = String.fromCharCode(40);
                 _KernelInputQueue.enqueue(chr);
             }
-        }
-    }
-}
+        };
+        return DeviceDriverKeyboard;
+    })(TSOS.DeviceDriver);
+    TSOS.DeviceDriverKeyboard = DeviceDriverKeyboard;
+})(TSOS || (TSOS = {}));

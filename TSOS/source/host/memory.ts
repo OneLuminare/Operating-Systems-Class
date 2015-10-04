@@ -45,9 +45,6 @@ module TSOS {
             // Set value
             this.programMemory[address] = value;
 
-            // Update memory display in hmtl
-            TSOS.Control.updateMemoryDisplay();
-
             // Return success
             return true;
         }
@@ -156,6 +153,56 @@ module TSOS {
                 this.programMemory[mem] = parseInt(val,16);
                 mem++;
             }
+        }
+
+        // Gets string from memory. Reads until 00.
+        //
+        // Params: address <number> - address to start reading from
+        // Returns: string in memory
+        // Throws: RangeError - on memory address out of range
+        //         Error - on read past end of partition
+        public getString(address : number, limit : number) : string
+        {
+            // Inits
+            var ret : string = "";
+            var found : boolean = false;
+            var curAddress : number = address;
+
+
+
+            // Check if address is out of range
+            if( address >= 0 && address < _MemoryMax )
+            {
+                // Cycle through addresss until 00 or end of partion
+                while(!found && (curAddress < limit))
+                {
+                    // Check for null character, and sound found flag
+                    if( this.programMemory[curAddress] == 0)
+                        found = true;
+                    // Else get char and inc address
+                    else
+                    {
+                        // Add char to string
+                        ret = ret + TSOS.Utils.getASCIIChar(this.programMemory[curAddress]);
+
+                        // Inc current address
+                        curAddress++;
+                    }
+                }
+
+
+
+                // If not found read past limit, throw exception
+                if(!found)
+                    throw new Error("Read past end of partion.");
+
+            }
+            // Else throw address out of range exception
+            else
+                throw new RangeError("Memory address out of bounds.");
+
+            // Return string, or null on error
+            return ret;
         }
     }
 }

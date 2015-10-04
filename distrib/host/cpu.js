@@ -219,7 +219,6 @@ var TSOS;
                 else {
                     this.Zflag = 0;
                 }
-                _Kernel.krnTrace('Value : ' + value.toString(16) + ' XReg :' + this.Xreg.toString(16) + ' ZFlag : ' + this.Zflag);
             }
             else
                 return false;
@@ -299,74 +298,7 @@ var TSOS;
                     ret = false;
                     break;
             }
-            this.PC += 1;
             return ret;
-        };
-        Cpu.prototype.getParamCount = function (inst) {
-            var count = 0;
-            // Switch on instruction
-            switch (inst) {
-                // LDA immediate
-                case "a9":
-                    count = 1;
-                    break;
-                // LDA indirect
-                case "ad":
-                    count = 2;
-                    break;
-                // STA
-                case "8d":
-                    count = 2;
-                    break;
-                // ADC
-                case "6d":
-                    count = 2;
-                    break;
-                // LDX immediate
-                case "a2":
-                    count = 1;
-                    break;
-                // LDX indirect
-                case "ae":
-                    count = 2;
-                    break;
-                // LDY immediate
-                case "a0":
-                    count = 1;
-                    break;
-                // LDY indirect
-                case "ac":
-                    count = 2;
-                    break;
-                // No op EA
-                case "ea":
-                    count = 0;
-                    break;
-                // CPX
-                case "ec":
-                    count = 2;
-                    break;
-                // BNE
-                case "d0":
-                    count = 1;
-                    break;
-                // INC
-                case "ee":
-                    count = 2;
-                    break;
-                case "ff":
-                    count = 0;
-                    break;
-                // Break instruction
-                case "0":
-                    count = 0;
-                    break;
-                // Else unknown op code
-                default:
-                    count = 0;
-                    break;
-            }
-            return count;
         };
         // Simulates clock cycle, process instruction based on registers and memory.
         Cpu.prototype.cycle = function () {
@@ -507,17 +439,6 @@ var TSOS;
                     this.isExecuting = false;
                     break;
             }
-            // Get next instruction address
-            address = this.base + this.PC;
-            // check if this address is with in memory, and update mem with highlight code
-            if (address < _MemoryMax) {
-                // Get insturction
-                inst = _Memory.getAddress(address).toString(16);
-                // Update memory display with highlighted code
-                TSOS.Control.updateMemoryDisplay(address, this.getParamCount(inst));
-            }
-            else
-                TSOS.Control.updateMemoryDisplay();
             // Update cput display
             TSOS.Control.updateCPUDisplay();
         };

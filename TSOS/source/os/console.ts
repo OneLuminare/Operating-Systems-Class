@@ -332,6 +332,11 @@ module TSOS {
             this.buffer = this.buffer.substr(0, this.buffer.length - 1);
         }
 
+        public reprintBuffer()
+        {
+            this.putText(this.buffer);
+        }
+
         // Completes command, searches for match in order their added to command list
         public completeCommand() : void
         {

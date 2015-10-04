@@ -79,7 +79,12 @@ var TSOS;
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             }
             else if (_CPU.isExecuting) {
-                _CPU.cycle();
+                // Execute if not (trace mode on, and next instruction false)
+                if (!(_TraceMode && !_NextInstruction)) {
+                    _CPU.cycle();
+                    // Set next instruction to false, for next step
+                    _NextInstruction = false;
+                }
             }
             else {
                 this.krnTrace("Idle");
@@ -115,8 +120,14 @@ var TSOS;
                     this.krnTimerISR(); // Kernel built-in routine for timers (not the clock).
                     break;
                 case KEYBOARD_IRQ:
-                    _krnKeyboardDriver.isr(params); // Kernel mode device driver
-                    _StdIn.handleInput();
+                    // This will change. Right now it waits until program execution terminates
+                    // untill allowing input, due to output messages forcing me to
+                    // constantly redraw prompt and current input, or draw output
+                    // above input
+                    if (!_ShellWaitForMessage) {
+                        _krnKeyboardDriver.isr(params); // Kernel mode device driver
+                        _StdIn.handleInput();
+                    }
                     break;
                 case CREATE_PROCESS_IRQ:
                     pcb = _ProcessScheduler.createProcess(params);
@@ -125,8 +136,10 @@ var TSOS;
                 case EXECUTE_PROCESS_IRQ:
                     if (!_ProcessScheduler.executeProcess(params))
                         _OsShell.message("No process with PID " + params.toString() + ".");
+                    //else
+                    //_ShellWaitForMessage = true;
                     break;
-                case EXIT_PROCESS_IRQ:
+                case TERMINATE_PROCESS_IRQ:
                     pcb = _ProcessScheduler.exitProcess(params[0]);
                     _OsShell.message("Exiting process with PID " + pcb.pid.toString() + ".");
                     break;
@@ -141,6 +154,34 @@ var TSOS;
                     this.krnTrace("Memory access violation to address 0x" + params[1].toString(16) + " in process PID " + pcb.pid.toString() + ".");
                     _ProcessScheduler.exitProcess(params[0]);
                     _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to memory access violation to address 0x" + params[1].toString(16) + ".");
+                    break;
+                case ARITHMATIC_OVERFLOW_IRQ:
+                    pcb = _ProcessScheduler.runningProcess;
+                    this.krnTrace("Arithimatic overflow in instruction 0x" + (params[0] + params[1]).toString(16) + " in process PID " + pcb.pid.toString() + ".");
+                    _ProcessScheduler.exitProcess(params[0]);
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to arithmatic overflow in instruction 0x" + (params[0] + params[1]).toString(16) + ".");
+                    break;
+                case UNKNOWN_SYSCALL_IRQ:
+                    pcb = _ProcessScheduler.runningProcess;
+                    this.krnTrace("Arithimatic overflow in instruction 0x" + (params[0] + params[1]).toString(16) + " in process PID " + pcb.pid.toString() + ".");
+                    _ProcessScheduler.exitProcess(params[0]);
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to arithmatic overflow in instruction 0x" + (params[0] + params[1]).toString(16) + ".");
+                    break;
+                case PRINT_INTEGER_IRQ:
+                    this.krnTrace("Printing integer " + params);
+                    _OsShell.outputMessage(params.toString());
+                    _CPU.isExecuting = true;
+                    break;
+                case PRINT_STRING_IRQ:
+                    this.krnTrace("Printing string " + params);
+                    _OsShell.outputMessage(params);
+                    _CPU.isExecuting = true;
+                    break;
+                case READ_PAST_EOP_IRQ:
+                    pcb = _ProcessScheduler.runningProcess;
+                    this.krnTrace("Read string past limit 0x" + params[1].toString(16) + " in process PID " + pcb.pid.toString() + ".");
+                    _ProcessScheduler.exitProcess(params[0]);
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to reading string past limit 0x" + params[1].toString(16) + ".");
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
@@ -164,6 +205,46 @@ var TSOS;
         // - ReadFile
         // - WriteFile
         // - CloseFile
+        // Create Process
+        Kernel.prototype.CreateProcess = function (program) {
+            // Send create process interrupt
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_PROCESS_IRQ, program));
+        };
+        // Terminate Process
+        Kernel.prototype.ExecuteProcess = function (pid) {
+            // Send interupt to run process
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(EXECUTE_PROCESS_IRQ, pid));
+        };
+        Kernel.prototype.TerminateProcess = function (base) {
+            // Var pid
+            var pid = _ProcessScheduler.findPID(base);
+            // Send exit process interrupt
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(TERMINATE_PROCESS_IRQ, pid));
+        };
+        // Print integer value in YReg
+        Kernel.prototype.PrintInteger = function () {
+            _Kernel.krnTrace('Send Interrupt');
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PRINT_INTEGER_IRQ, _CPU.Yreg));
+            _Kernel.krnTrace('Back from send Interrupt');
+        };
+        // Print string at address in YReg
+        Kernel.prototype.PrintString = function () {
+            var str = "";
+            try {
+                str = _Memory.getString(_CPU.Yreg, _CPU.limit);
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PRINT_STRING_IRQ, str));
+            }
+            catch (er) {
+                if (er instanceof RangeError) {
+                    // Send memory violation interrupt
+                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(_CPU.base, _CPU.Yreg)));
+                }
+                else {
+                    // Send memory violation interrupt
+                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(READ_PAST_EOP_IRQ, new Array(_CPU.base, _CPU.limit)));
+                }
+            }
+        };
         //
         // OS Utility Routines
         //

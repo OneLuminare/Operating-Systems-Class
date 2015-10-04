@@ -74,8 +74,6 @@ var TSOS;
                     TSOS.Control.updateCPUDisplay();
                     // Set return value
                     ret = true;
-                    // Update memory display with highlighted next instruction
-                    TSOS.Control.updateMemoryDisplay(_CPU.base, _CPU.getParamCount(_Memory.getAddress(_CPU.base).toString(16)));
                     // Send trace message
                     _Kernel.krnTrace("Executing process PID: " + this.runningProcess.pid);
                 }
@@ -110,8 +108,6 @@ var TSOS;
             pcb.zFlag = _CPU.Zflag;
             pcb.Acc = _CPU.Acc;
             pcb.running = false;
-            // Update memory display with no highlighted next instruction
-            TSOS.Control.updateMemoryDisplay();
             // Set trace message
             _Kernel.krnTrace("Terminating process PID: " + pcb.pid);
             // Trace pcb data

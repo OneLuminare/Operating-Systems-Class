@@ -36,6 +36,8 @@ var TSOS;
                 return false;
             // Set value
             this.programMemory[address] = value;
+            // Update memory display in hmtl
+            TSOS.Control.updateMemoryDisplay();
             // Return success
             return true;
         };

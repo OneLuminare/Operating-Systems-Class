@@ -55,8 +55,6 @@ var _KernelRunningProcesses = null;
 var _ProcessScheduler;
 // Flags
 var _ShellWaitForMessage = false; // Tells shell to wait for message from kernel after sending system call
-var _TraceMode = false;
-var _NextInstruction = false;
 // Standard input and output
 var _StdIn; // Same "to null or not to null" issue as above.
 var _StdOut;

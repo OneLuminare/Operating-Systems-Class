@@ -260,9 +260,6 @@ var TSOS;
             // Remove backspace char from buffer
             this.buffer = this.buffer.substr(0, this.buffer.length - 1);
         };
-        Console.prototype.reprintBuffer = function () {
-            this.putText(this.buffer);
-        };
         // Completes command, searches for match in order their added to command list
         Console.prototype.completeCommand = function () {
             // Inits

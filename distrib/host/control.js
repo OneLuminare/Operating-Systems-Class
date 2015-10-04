@@ -74,7 +74,6 @@ var TSOS;
             // .. enable the Halt and Reset buttons ...
             document.getElementById("btnHaltOS").disabled = false;
             document.getElementById("btnReset").disabled = false;
-            document.getElementById("btnTrace").disabled = false;
             // .. set focus on the OS console display ...
             document.getElementById("display").focus();
             // ... Create and initialize the CPU (because it's part of the hardware)  ...
@@ -82,8 +81,7 @@ var TSOS;
             _CPU.init(); //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
             // Create new memory object
             _Memory = new TSOS.Memory();
-            this.createMemoryDisplay();
-            this.createCPUDisplay();
+            this.updateMemoryDisplay();
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(TSOS.Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
             // .. and call the OS Kernel Bootstrap routine.
@@ -101,8 +99,6 @@ var TSOS;
             clearInterval(_hardwareClockID);
             this.updateHostStatus("OS halted.");
             document.getElementById("btnStartOS").disabled = false;
-            document.getElementById("btnTrace").disabled = true;
-            document.getElementById("btnStep").disabled = true;
             btn.disabled = true;
             // TODO: Is there anything else we need to do here?
         };
@@ -112,24 +108,6 @@ var TSOS;
             // That boolean parameter is the 'forceget' flag. When it is true it causes the page to always
             // be reloaded from the server. If it is false or not specified the browser may reload the
             // page from its cache, which is not what we want.
-        };
-        Control.hostBtnTraceMode_click = function (btn) {
-            // Toggle trace mode
-            var tm = _TraceMode = !_TraceMode;
-            // Enable or disable next button if trace mode is on
-            if (_TraceMode) {
-                document.getElementById("btnStep").disabled = false;
-                document.getElementById("btnTrace").value = "Trace Mode Off";
-                _NextInstruction = false;
-            }
-            else {
-                document.getElementById("btnStep").disabled = true;
-                document.getElementById("btnTrace").value = "Trace Mode On";
-            }
-        };
-        Control.hostBtnStep_click = function (btn) {
-            // Set execute next instruction flag
-            _NextInstruction = true;
         };
         // Updates status bar with msg
         Control.updateHostStatus = function (msg) {
@@ -143,105 +121,29 @@ var TSOS;
             // Update status bar
             document.getElementById("lblHostStatusBar").innerHTML = TSOS.Utils.dateString() + " - " + this.msg;
         };
-        // Creates memory display table
-        Control.createMemoryDisplay = function () {
-            // Inits
+        Control.updateMemoryDisplay = function () {
             var header = 0;
+            document.getElementById("tblMemory").innerHTML = "";
             var tbl = document.getElementById("tblMemory");
             var row = tbl.insertRow();
-            // Create first header cell
-            row.insertCell(0).innerHTML = "<b>0x" + TSOS.Utils.padString(header.toString(16), 4) + "</b>";
-            // Cycle through memory
-            for (var i = 0; i < _MemoryMax; i++) {
-                // If new row, create new header cell and insert new row
+            row.insertCell(0).innerHTML = "<b>0x" + header.toString(16) + "</b>";
+            for (var i = 0; i < 256; i++) {
                 if (i % 8 == 0 && i != 0) {
                     row = tbl.insertRow();
                     header += 8;
-                    row.insertCell().innerHTML = "<b>0x" + TSOS.Utils.padString(header.toString(16), 4) + "</b>";
+                    row.insertCell().innerHTML = "<b>0x" + header.toString(16) + "</b>";
                 }
-                // Insert new cell
                 row.insertCell().innerHTML = _Memory.getAddressHexStr(i);
             }
         };
-        // Updates memory display table. If instructed, highlights instruction and parameters.
-        //
-        // Params: instructionIndex <number> - instruction to highlight
-        //         params <number> - number of parameters to highlight
-        Control.updateMemoryDisplay = function (instructionIndex, params) {
-            if (instructionIndex === void 0) { instructionIndex = -1; }
-            if (params === void 0) { params = -1; }
-            // Inits
-            var tbl = document.getElementById("tblMemory");
-            var row = tbl.rows.item(0);
-            var header = 0;
-            var cellIndex = 1;
-            var paramsLeft = params;
-            var inParams = false;
-            // Cycle through memory
-            for (var i = 0; i < _MemoryMax; i++) {
-                // Get next row
-                if (i % 8 == 0 && i != 0) {
-                    header++;
-                    row = tbl.rows.item(header);
-                    cellIndex = 1;
-                }
-                // If instruction index highlight red
-                if (i == instructionIndex) {
-                    row.cells.item(cellIndex).style.color = "red";
-                    if (paramsLeft > 0)
-                        inParams = true;
-                }
-                else if (inParams) {
-                    row.cells.item(cellIndex).style.color = "blue";
-                    paramsLeft--;
-                    if (paramsLeft <= 0)
-                        inParams = false;
-                }
-                else {
-                    row.cells.item(cellIndex).style.color = "black";
-                }
-                // Update cell
-                row.cells.item(cellIndex).innerHTML = _Memory.getAddressHexStr(i);
-                // Inc cell index
-                cellIndex++;
-            }
-        };
-        // Updates cpu display table
         Control.updateCPUDisplay = function () {
-            // Inits
-            var tbl = document.getElementById("tblCPU");
-            var row = tbl.rows.item(1);
-            // Set register data
-            row.cells.item(0).innerHTML = _CPU.PC.toString(16).toUpperCase();
-            row.cells.item(1).innerHTML = _CPU.Acc.toString(16).toUpperCase();
-            row.cells.item(2).innerHTML = _CPU.Xreg.toString(16).toUpperCase();
-            row.cells.item(3).innerHTML = _CPU.Yreg.toString(16).toUpperCase();
-            row.cells.item(4).innerHTML = _CPU.Zflag.toString(16).toUpperCase();
-            row.cells.item(5).innerHTML = _CPU.base.toString(16).toUpperCase();
-            row.cells.item(6).innerHTML = _CPU.limit.toString(16).toUpperCase();
-        };
-        // Creates CPU display table
-        Control.createCPUDisplay = function () {
-            // Inits
-            var tbl = document.getElementById("tblCPU");
-            var hdr = tbl.insertRow();
-            var row = tbl.insertRow();
-            // Create header
-            hdr.insertCell().innerHTML = '<b>' + 'PC' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'Acc' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'X Reg' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'Y Reg' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'Z Flag' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
-            // Create cpu reg data
-            row.insertCell().innerHTML = _CPU.PC.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.Acc.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.Xreg.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.Yreg.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.Zflag.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.base.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.limit.toString(16).toUpperCase();
+            var html = "<tr><th>PC</th><th>Acc</th><th>X Reg</th><th>Y Reg</th><th>Z Flag</th></tr><tr>";
+            html += "<td>" + _CPU.PC.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Acc.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Xreg.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Yreg.toString(16).toUpperCase() + "</td>";
+            html += "<td>" + _CPU.Zflag.toString(16).toUpperCase() + "</td></tr>";
+            document.getElementById("tblCPU").innerHTML = html;
         };
         return Control;
     })();

@@ -102,24 +102,13 @@ var TSOS;
         // Returns ASCII string based on value
         Utils.getASCIIChar = function (value) {
             var char = "";
-            if ((value >= 48 && value <= 57) ||
-                (value >= 65 && value <= 90) ||
+            if ((value >= 65 && value <= 90) ||
                 (value >= 97 && value <= 122)) {
                 char = this.asciiChars[value];
             }
             return char;
         };
         Utils.asciiChars = {
-            48: '0',
-            49: '1',
-            50: '2',
-            51: '3',
-            52: '4',
-            53: '5',
-            54: '6',
-            55: '7',
-            56: '8',
-            57: '9',
             65: 'A',
             66: 'B',
             67: 'C',
