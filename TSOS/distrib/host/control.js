@@ -119,12 +119,12 @@ var TSOS;
             // Enable or disable next button if trace mode is on
             if (_TraceMode) {
                 document.getElementById("btnStep").disabled = false;
-                document.getElementById("btnTrace").value = "Trace Mode Off";
+                document.getElementById("btnTrace").value = "Trace Off";
                 _NextInstruction = false;
             }
             else {
                 document.getElementById("btnStep").disabled = true;
-                document.getElementById("btnTrace").value = "Trace Mode On";
+                document.getElementById("btnTrace").value = "Trace On";
             }
         };
         Control.hostBtnStep_click = function (btn) {

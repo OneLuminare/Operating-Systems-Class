@@ -154,13 +154,13 @@ module TSOS {
             if( _TraceMode )
             {
                 (<HTMLButtonElement>document.getElementById("btnStep")).disabled = false;
-                (<HTMLButtonElement>document.getElementById("btnTrace")).value = "Trace Mode Off";
+                (<HTMLButtonElement>document.getElementById("btnTrace")).value = "Trace Off";
                 _NextInstruction = false;
             }
             else
             {
                 (<HTMLButtonElement>document.getElementById("btnStep")).disabled = true;
-                (<HTMLButtonElement>document.getElementById("btnTrace")).value = "Trace Mode On";
+                (<HTMLButtonElement>document.getElementById("btnTrace")).value = "Trace On";
             }
 
 
