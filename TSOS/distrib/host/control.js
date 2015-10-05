@@ -212,13 +212,13 @@ var TSOS;
             var tbl = document.getElementById("tblCPU");
             var row = tbl.rows.item(1);
             // Set register data
-            row.cells.item(0).innerHTML = _CPU.PC.toString(16).toUpperCase();
-            row.cells.item(1).innerHTML = _CPU.Acc.toString(16).toUpperCase();
-            row.cells.item(2).innerHTML = _CPU.Xreg.toString(16).toUpperCase();
-            row.cells.item(3).innerHTML = _CPU.Yreg.toString(16).toUpperCase();
-            row.cells.item(4).innerHTML = _CPU.Zflag.toString(16).toUpperCase();
-            row.cells.item(5).innerHTML = _CPU.base.toString(16).toUpperCase();
-            row.cells.item(6).innerHTML = _CPU.limit.toString(16).toUpperCase();
+            row.cells.item(0).innerHTML = TSOS.Utils.padString(_CPU.PC.toString(16), 2).toUpperCase();
+            row.cells.item(1).innerHTML = TSOS.Utils.padString(_CPU.Acc.toString(16), 2).toUpperCase();
+            row.cells.item(2).innerHTML = TSOS.Utils.padString(_CPU.Xreg.toString(16), 2).toUpperCase();
+            row.cells.item(3).innerHTML = TSOS.Utils.padString(_CPU.Yreg.toString(16), 2).toUpperCase();
+            row.cells.item(4).innerHTML = TSOS.Utils.padString(_CPU.Zflag.toString(16), 2).toUpperCase();
+            row.cells.item(5).innerHTML = TSOS.Utils.padString(_CPU.base.toString(16), 4).toUpperCase();
+            row.cells.item(6).innerHTML = TSOS.Utils.padString(_CPU.limit.toString(16), 4).toUpperCase();
         };
         // Creates CPU display table
         Control.createCPUDisplay = function () {
@@ -235,13 +235,13 @@ var TSOS;
             hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
             // Create cpu reg data
-            row.insertCell().innerHTML = _CPU.PC.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.Acc.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.Xreg.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.Yreg.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.Zflag.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.base.toString(16).toUpperCase();
-            row.insertCell().innerHTML = _CPU.limit.toString(16).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.PC.toString(16), 2).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.Acc.toString(16), 2).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.Xreg.toString(16), 2).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.Yreg.toString(16), 2).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.Zflag.toString(16), 2).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.base.toString(16), 4).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.limit.toString(16), 4).toUpperCase();
         };
         return Control;
     })();

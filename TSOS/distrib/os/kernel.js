@@ -28,6 +28,8 @@ var TSOS;
             _KernelInputQueue = new TSOS.Queue(); // Where device input lands before being processed out somewhere.
             // Initialize process scheduler
             _ProcessScheduler = new TSOS.ProcessScheduler();
+            // Initalize memory manager
+            _MemoryManager = new TSOS.MemoryManager();
             // Initialize the console.
             _Console = new TSOS.Console(); // The command line interface / console I/O device.
             _Console.init();
@@ -145,27 +147,27 @@ var TSOS;
                     break;
                 case UNKNOWN_OP_CODE_IRQ:
                     pcb = _ProcessScheduler.runningProcess;
-                    this.krnTrace("Unknown op code at 0x" + params[1].toString(16) + " in process PID " + pcb.pid.toString() + ".");
+                    this.krnTrace("Unknown op code at 0x" + TSOS.Utils.padString(params[1].toString(16), 4) + " in process PID " + pcb.pid.toString() + ".");
                     _ProcessScheduler.exitProcess(params[0]);
-                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to unknown op code at 0x" + params[1].toString(16) + ".");
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to unknown op code at 0x" + TSOS.Utils.padString(params[1].toString(16), 4) + ".");
                     break;
                 case MEMORY_ACCESS_VIOLATION_IRQ:
                     pcb = _ProcessScheduler.runningProcess;
-                    this.krnTrace("Memory access violation to address 0x" + params[1].toString(16) + " in process PID " + pcb.pid.toString() + ".");
+                    this.krnTrace("Memory access violation to address 0x" + TSOS.Utils.padString(params[1].toString(16), 4) + " in process PID " + pcb.pid.toString() + ".");
                     _ProcessScheduler.exitProcess(params[0]);
-                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to memory access violation to address 0x" + params[1].toString(16) + ".");
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to memory access violation to address 0x" + TSOS.Utils.padString(params[1].toString(16), 4) + ".");
                     break;
                 case ARITHMATIC_OVERFLOW_IRQ:
                     pcb = _ProcessScheduler.runningProcess;
-                    this.krnTrace("Arithimatic overflow in instruction 0x" + (params[0] + params[1]).toString(16) + " in process PID " + pcb.pid.toString() + ".");
+                    this.krnTrace("Arithimatic overflow in instruction 0x" + TSOS.Utils.padString((params[0] + params[1]).toString(16), 4) + " in process PID " + pcb.pid.toString() + ".");
                     _ProcessScheduler.exitProcess(params[0]);
-                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to arithmatic overflow in instruction 0x" + (params[0] + params[1]).toString(16) + ".");
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to arithmatic overflow in instruction 0x" + TSOS.Utils.padString((params[0] + params[1]).toString(16), 4) + ".");
                     break;
                 case UNKNOWN_SYSCALL_IRQ:
                     pcb = _ProcessScheduler.runningProcess;
-                    this.krnTrace("Arithimatic overflow in instruction 0x" + (params[0] + params[1]).toString(16) + " in process PID " + pcb.pid.toString() + ".");
+                    this.krnTrace("Arithimatic overflow in instruction 0x" + TSOS.Utils.padString((params[0] + params[1]).toString(16), 4) + " in process PID " + pcb.pid.toString() + ".");
                     _ProcessScheduler.exitProcess(params[0]);
-                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to arithmatic overflow in instruction 0x" + (params[0] + params[1]).toString(16) + ".");
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to arithmatic overflow in instruction 0x" + TSOS.Utils.padString((params[0] + params[1]).toString(16), 4) + ".");
                     break;
                 case PRINT_INTEGER_IRQ:
                     this.krnTrace("Printing integer " + params);
@@ -179,9 +181,9 @@ var TSOS;
                     break;
                 case READ_PAST_EOP_IRQ:
                     pcb = _ProcessScheduler.runningProcess;
-                    this.krnTrace("Read string past limit 0x" + params[1].toString(16) + " in process PID " + pcb.pid.toString() + ".");
+                    this.krnTrace("Read string past limit 0x" + TSOS.Utils.padString(params[1].toString(16), 4) + " in process PID " + pcb.pid.toString() + ".");
                     _ProcessScheduler.exitProcess(params[0]);
-                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to reading string past limit 0x" + params[1].toString(16) + ".");
+                    _OsShell.message("Process pid " + pcb.pid.toString() + " terminated due to reading string past limit 0x" + TSOS.Utils.padString(params[1].toString(16), 4) + ".");
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
@@ -231,7 +233,7 @@ var TSOS;
         Kernel.prototype.PrintString = function () {
             var str = "";
             try {
-                str = _Memory.getString(_CPU.Yreg, _CPU.limit);
+                str = _MemoryManager.getString(_CPU.Yreg);
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PRINT_STRING_IRQ, str));
             }
             catch (er) {

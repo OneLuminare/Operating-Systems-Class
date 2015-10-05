@@ -51,13 +51,14 @@ module TSOS {
             document.removeEventListener("keydown", Devices.hostOnKeypress, false);
         }
 
-        public static hostOnKeypress(event): void {
+        public static hostOnKeypress(event ): void {
             // The canvas element CAN receive focus if you give it a tab index, which we have.
             // Check that we are processing keystrokes only from the canvas's id (as set in index.html).
             if (event.target.id === "display") {
                 event.preventDefault();
                 // Note the pressed key code in the params (Mozilla-specific).
-                var params = new Array(event.which, event.shiftKey);
+                var params = new Array(event.which || event.keyCode, event.shiftKey);
+
                 // Enqueue this interrupt on the kernel interrupt queue so that it gets to the Interrupt handler.
                 _KernelInterruptQueue.enqueue(new Interrupt(KEYBOARD_IRQ, params));
             }

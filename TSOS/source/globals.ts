@@ -79,8 +79,10 @@ var _OsShell: TSOS.Shell;
 var _Utils: TSOS.Utils;
 
 // Memory
-var _MemoryMax : number = 256;
+const _MemoryMax : number = 256;
+const _MemoryParitionSize : number = 256;
 var _Memory : TSOS.Memory;
+var _MemoryManager : TSOS.MemoryManager;
 
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode: boolean = false;

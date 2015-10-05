@@ -10,6 +10,24 @@ module TSOS {
 
         private static asciiChars =
         {
+            32: ' ',
+
+            33: '!',
+            34: '\"',
+            35: '#',
+            36: '$',
+            37: '%',
+            38: '&',
+            39: '\'',
+            40: '(',
+            41: ')',
+            42: '*',
+            43: '+',
+            44: ',',
+            45: '-',
+            46: '.',
+            47: '/',
+
             48: '0',
             49: '1',
             50: '2',
@@ -20,6 +38,14 @@ module TSOS {
             55: '7',
             56: '8',
             57: '9',
+
+            58: ':',
+            59: ';',
+            60: '<',
+            61: '=',
+            62: '>',
+            63: '?',
+            64: '@',
 
             65: 'A',
             66: 'B',
@@ -47,6 +73,13 @@ module TSOS {
 			88: 'X',
 			89: 'Y',
 			90: 'Z',
+
+            91: '[',
+            92: '\\',
+            93: ']',
+            94: '^',
+            95: '_',
+            96: '`',
 			
 			97: 'a',
             98: 'b',
@@ -73,7 +106,12 @@ module TSOS {
             119: 'w',
             120: 'x',
             121: 'y',
-            122: 'z'
+            122: 'z',
+
+            123: '{',
+            124: '|',
+            125: '}',
+            126: '~'
 
         }
 
@@ -198,13 +236,19 @@ module TSOS {
         }
 
         // Returns ASCII string based on value
+        // I accept all puncuation and small characters
+        // in my print string system call
         public static getASCIIChar(value : number) : string
         {
             var char : string = "";
 
+            /*
             if( (value >= 48 && value <= 57) ||
                 (value >= 65 && value <= 90) ||
-                (value >= 97 && value <= 122))
+                (value >= 97 && value <= 122) ||
+                (value == 32))
+                */
+            if( value >= 32 && value <= 126)
             {
                 char = this.asciiChars[value];
             }

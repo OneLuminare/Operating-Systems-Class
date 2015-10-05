@@ -44,7 +44,7 @@ module TSOS {
             this.nextPID++;
 
             // Load program input to memory
-            _Memory.loadMemory(processCode);
+            _MemoryManager.loadMemory(processCode);
 
             // Update memory display
             TSOS.Control.updateMemoryDisplay();

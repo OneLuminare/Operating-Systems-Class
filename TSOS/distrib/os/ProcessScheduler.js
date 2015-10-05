@@ -40,7 +40,7 @@ var TSOS;
             // Set next avaible pid
             this.nextPID++;
             // Load program input to memory
-            _Memory.loadMemory(processCode);
+            _MemoryManager.loadMemory(processCode);
             // Update memory display
             TSOS.Control.updateMemoryDisplay();
             // Send trace message

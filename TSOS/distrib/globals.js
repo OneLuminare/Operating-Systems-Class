@@ -66,7 +66,9 @@ var _OsShell;
 var _Utils;
 // Memory
 var _MemoryMax = 256;
+var _MemoryParitionSize = 256;
 var _Memory;
+var _MemoryManager;
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode = false;
 // Global Device Driver Objects - page 12

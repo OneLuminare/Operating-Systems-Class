@@ -79,7 +79,7 @@ module TSOS {
                     // BACK WHICH I COULD HAVE USED IN STEAD. FRUSTRATED
                     // WITH THIS LANGUAGE!!!
                     this.completeCommand();
-                    this.removeLastCharInQueue();
+                    //this.removeLastCharInQueue();
 
                 }
                 else if( chr == String.fromCharCode(38))
