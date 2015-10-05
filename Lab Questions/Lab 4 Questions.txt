@@ -1,0 +1,9 @@
+Lab 4 Questions
+===============
+1. In a virtualization system like VMware, the guest OS is a virtual OS that sits on top of the actual hardware
+OS, the host OS. The guest OS does not know its a virtual os, it has access to its own set of resources like 
+memory and I/0, but an application between the guest and the host OS does address translation. Important factors
+when choosing a Host OS are speed ( multiple core processors, and preferably 64 bit) to manage many guest OS's, 
+large amount of memory to increase memory available to each guest os, stability to keep running, and security 
+to keep users from accessing or doing things they shouldn't.
+  

@@ -21,10 +21,15 @@ var TIMER_IRQ = 0; // Pages 23 (timer), 9 (interrupts), and 561 (interrupt prior
 var KEYBOARD_IRQ = 1;
 var CREATE_PROCESS_IRQ = 2;
 var EXECUTE_PROCESS_IRQ = 3;
-var EXIT_PROCESS_IRQ = 4;
+var TERMINATE_PROCESS_IRQ = 4;
 var WAIT_FOR_PROCESS_EXIT_IRQ = 5;
 var UNKNOWN_OP_CODE_IRQ = 6;
 var MEMORY_ACCESS_VIOLATION_IRQ = 7;
+var ARITHMATIC_OVERFLOW_IRQ = 8;
+var UNKNOWN_SYSCALL_IRQ = 9;
+var PRINT_INTEGER_IRQ = 10;
+var PRINT_STRING_IRQ = 11;
+var READ_PAST_EOP_IRQ = 12;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
@@ -50,15 +55,20 @@ var _KernelRunningProcesses = null;
 var _ProcessScheduler;
 // Flags
 var _ShellWaitForMessage = false; // Tells shell to wait for message from kernel after sending system call
+var _TraceMode = false;
+var _NextInstruction = false;
 // Standard input and output
 var _StdIn; // Same "to null or not to null" issue as above.
 var _StdOut;
 // UI
 var _Console;
 var _OsShell;
+var _Utils;
 // Memory
 var _MemoryMax = 256;
+var _MemoryParitionSize = 256;
 var _Memory;
+var _MemoryManager;
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode = false;
 // Global Device Driver Objects - page 12

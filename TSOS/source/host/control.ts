@@ -1,7 +1,6 @@
 ///<reference path="../globals.ts" />
 ///<reference path="../os/canvastext.ts" />
 ///<reference path="memory.ts" />
-///<reference path="test.ts" />
 
 /* ------------
      Control.ts
@@ -94,6 +93,7 @@ module TSOS {
             // .. enable the Halt and Reset buttons ...
             (<HTMLButtonElement>document.getElementById("btnHaltOS")).disabled = false;
             (<HTMLButtonElement>document.getElementById("btnReset")).disabled = false;
+            (<HTMLButtonElement>document.getElementById("btnTrace")).disabled = false;
 
             // .. set focus on the OS console display ...
             document.getElementById("display").focus();
@@ -105,7 +105,8 @@ module TSOS {
             // Create new memory object
             _Memory = new TSOS.Memory();
 
-            this.updateMemoryDisplay();
+            this.createMemoryDisplay();
+            this.createCPUDisplay();
 
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
@@ -129,6 +130,9 @@ module TSOS {
             this.updateHostStatus("OS halted.");
 
             (<HTMLButtonElement>document.getElementById("btnStartOS")).disabled = false;
+            (<HTMLButtonElement>document.getElementById("btnTrace")).disabled = true;
+            (<HTMLButtonElement>document.getElementById("btnStep")).disabled = true;
+
             btn.disabled = true;
             // TODO: Is there anything else we need to do here?
         }
@@ -140,6 +144,36 @@ module TSOS {
             // be reloaded from the server. If it is false or not specified the browser may reload the
             // page from its cache, which is not what we want.
         }
+
+        public static hostBtnTraceMode_click(btn) : void
+        {
+            // Toggle trace mode
+            var tm = _TraceMode = !_TraceMode;
+
+            // Enable or disable next button if trace mode is on
+            if( _TraceMode )
+            {
+                (<HTMLButtonElement>document.getElementById("btnStep")).disabled = false;
+                (<HTMLButtonElement>document.getElementById("btnTrace")).value = "Trace Mode Off";
+                _NextInstruction = false;
+            }
+            else
+            {
+                (<HTMLButtonElement>document.getElementById("btnStep")).disabled = true;
+                (<HTMLButtonElement>document.getElementById("btnTrace")).value = "Trace Mode On";
+            }
+
+
+
+        }
+
+        public static hostBtnStep_click(btn) : void
+        {
+            // Set execute next instruction flag
+            _NextInstruction = true;
+        }
+
+
 
         // Updates status bar with msg
         public static updateHostStatus(msg : string ) : void
@@ -158,39 +192,134 @@ module TSOS {
             document.getElementById("lblHostStatusBar").innerHTML = Utils.dateString() + " - " + this.msg;
         }
 
-        public static updateMemoryDisplay() : void
+        // Creates memory display table
+        public static createMemoryDisplay() : void
         {
+            // Inits
             var header = 0;
-            (<HTMLTableElement>document.getElementById("tblMemory")).innerHTML = "";
             var tbl = (<HTMLTableElement>document.getElementById("tblMemory"));
             var row : HTMLTableRowElement = (<HTMLTableRowElement>tbl.insertRow());
 
-            row.insertCell(0).innerHTML = "<b>0x" + header.toString(16) + "</b>";
+            // Create first header cell
+            row.insertCell(0).innerHTML = "<b>0x" + TSOS.Utils.padString(header.toString(16),4) + "</b>";
 
-            for( var i = 0; i < 256; i++)
+            // Cycle through memory
+            for( var i = 0; i < _MemoryMax; i++)
             {
+                // If new row, create new header cell and insert new row
                 if( i % 8 == 0 && i != 0)
                 {
                     row = (<HTMLTableRowElement>tbl.insertRow());
                     header += 8;
-                    row.insertCell().innerHTML = "<b>0x" + header.toString(16) + "</b>";
+                    row.insertCell().innerHTML = "<b>0x" + TSOS.Utils.padString(header.toString(16),4) + "</b>";
                 }
 
+                // Insert new cell
                 row.insertCell().innerHTML =  _Memory.getAddressHexStr(i);
             }
         }
 
+        // Updates memory display table. If instructed, highlights instruction and parameters.
+        //
+        // Params: instructionIndex <number> - instruction to highlight
+        //         params <number> - number of parameters to highlight
+        public static updateMemoryDisplay(instructionIndex : number = -1, params : number = -1) : void
+        {
+            // Inits
+            var tbl = (<HTMLTableElement>document.getElementById("tblMemory"));
+            var row : HTMLTableRowElement = (<HTMLTableRowElement>tbl.rows.item(0));
+            var header = 0;
+            var cellIndex : number = 1;
+            var paramsLeft : number = params;
+            var inParams : boolean = false;
+
+            // Cycle through memory
+            for( var i = 0; i < _MemoryMax; i++)
+            {
+                // Get next row
+                if( i % 8 == 0 && i != 0)
+                {
+                    header++;
+                    row = (<HTMLTableRowElement>tbl.rows.item(header));
+                    cellIndex = 1;
+                }
+
+
+                // If instruction index highlight red
+                if( i == instructionIndex)
+                {
+                    (<HTMLTableCellElement>row.cells.item(cellIndex)).style.color = "red";
+                    if( paramsLeft > 0)
+                        inParams = true;
+                }
+                // Else if params left to highlight, highlight blue
+                else if( inParams )
+                {
+
+                    (<HTMLTableCellElement>row.cells.item(cellIndex)).style.color = "blue";
+
+                    paramsLeft--;
+
+                    if( paramsLeft <= 0)
+                        inParams = false;
+                }
+                // Else color is black
+                else
+                {
+                    (<HTMLTableCellElement>row.cells.item(cellIndex)).style.color = "black";
+                }
+
+                // Update cell
+                (<HTMLTableCellElement>row.cells.item(cellIndex)).innerHTML = _Memory.getAddressHexStr(i);
+
+                // Inc cell index
+                cellIndex++;
+            }
+        }
+
+        // Updates cpu display table
         public static updateCPUDisplay() : void
         {
-            var html = "<tr><th>PC</th><th>Acc</th><th>X Reg</th><th>Y Reg</th><th>Z Flag</th></tr><tr>";
-            html += "<td>" + _CPU.PC.toString(16).toUpperCase() + "</td>";
-            html += "<td>" + _CPU.Acc.toString(16).toUpperCase() + "</td>";
-            html += "<td>" + _CPU.Xreg.toString(16).toUpperCase() + "</td>";
-            html += "<td>" + _CPU.Yreg.toString(16).toUpperCase() + "</td>";
-            html += "<td>" + _CPU.Zflag.toString(16).toUpperCase() + "</td></tr>";
+            // Inits
+            var tbl = (<HTMLTableElement>document.getElementById("tblCPU"));
+            var row = (<HTMLTableRowElement>tbl.rows.item(1));
 
-            (<HTMLElement> document.getElementById("tblCPU")).innerHTML = html;
+            // Set register data
+            (<HTMLTableCellElement>row.cells.item(0)).innerHTML = TSOS.Utils.padString(_CPU.PC.toString(16),2).toUpperCase();
+            (<HTMLTableCellElement>row.cells.item(1)).innerHTML = TSOS.Utils.padString(_CPU.Acc.toString(16),2).toUpperCase();
+            (<HTMLTableCellElement>row.cells.item(2)).innerHTML = TSOS.Utils.padString(_CPU.Xreg.toString(16),2).toUpperCase();
+            (<HTMLTableCellElement>row.cells.item(3)).innerHTML = TSOS.Utils.padString(_CPU.Yreg.toString(16),2).toUpperCase();
+            (<HTMLTableCellElement>row.cells.item(4)).innerHTML = TSOS.Utils.padString(_CPU.Zflag.toString(16),2).toUpperCase();
+            (<HTMLTableCellElement>row.cells.item(5)).innerHTML = TSOS.Utils.padString(_CPU.base.toString(16),4).toUpperCase();
+            (<HTMLTableCellElement>row.cells.item(6)).innerHTML = TSOS.Utils.padString(_CPU.limit.toString(16),4).toUpperCase();
 
+        }
+
+        // Creates CPU display table
+        public static createCPUDisplay() : void
+        {
+            // Inits
+            var tbl = (<HTMLTableElement>document.getElementById("tblCPU"));
+            var hdr = (<HTMLTableRowElement>tbl.insertRow());
+            var row : HTMLTableRowElement = (<HTMLTableRowElement>tbl.insertRow());
+
+            // Create header
+            hdr.insertCell().innerHTML = '<b>' + 'PC' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Acc' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'X Reg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Y Reg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Z Flag' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+
+            // Create cpu reg data
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.PC.toString(16),2).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.Acc.toString(16),2).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.Xreg.toString(16),2).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.Yreg.toString(16),2).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.Zflag.toString(16),2).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.base.toString(16),4).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.limit.toString(16),4).toUpperCase();
         }
     }
 }

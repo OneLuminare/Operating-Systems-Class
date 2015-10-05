@@ -219,6 +219,8 @@ module TSOS {
             return retVal;
         }
 
+        // Outputs message on new line, and resets
+        // wait for message flag.
         public message(msg : string) : void
         {
             _StdOut.putText(msg);
@@ -229,6 +231,13 @@ module TSOS {
                 _ShellWaitForMessage = false;
                 this.putPrompt();
             }
+        }
+
+        // Outputs message but does not reset message flag
+        public outputMessage(msg : string) : void
+        {
+            _StdOut.putText(msg);
+            _StdOut.advanceLine();
         }
 
         //
@@ -485,8 +494,9 @@ module TSOS {
                 // Else send create process interupt
                 else
                 {
-                    // Send create process interrupt
-                    _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ, input));
+
+                    // Create process
+                    _Kernel.CreateProcess(input);
 
                     // Set flag for shell to wait until kernel messages back
                     _ShellWaitForMessage = true;
@@ -502,7 +512,7 @@ module TSOS {
             if( args.length > 0)
             {
                 // Send interupt to run process
-                _KernelInterruptQueue.enqueue(new Interrupt(EXECUTE_PROCESS_IRQ, args[0]));
+                _Kernel.ExecuteProcess(args[0]);
 
                 // Set flag for shell to wait until kernel messages back
                 _ShellWaitForMessage = true;

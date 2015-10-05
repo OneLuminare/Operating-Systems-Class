@@ -25,10 +25,15 @@ const KEYBOARD_IRQ: number = 1;
 
 const CREATE_PROCESS_IRQ: number = 2;
 const EXECUTE_PROCESS_IRQ: number = 3;
-const EXIT_PROCESS_IRQ: number = 4;
+const TERMINATE_PROCESS_IRQ: number = 4;
 const WAIT_FOR_PROCESS_EXIT_IRQ: number = 5;
 const UNKNOWN_OP_CODE_IRQ: number = 6;
 const MEMORY_ACCESS_VIOLATION_IRQ: number = 7;
+const ARITHMATIC_OVERFLOW_IRQ: number = 8;
+const UNKNOWN_SYSCALL_IRQ: number = 9;
+const PRINT_INTEGER_IRQ: number = 10;
+const PRINT_STRING_IRQ: number = 11;
+const READ_PAST_EOP_IRQ: number = 12;
 
 //
 // Global Variables
@@ -61,6 +66,8 @@ var _ProcessScheduler : TSOS.ProcessScheduler;
 
 // Flags
 var _ShellWaitForMessage : boolean = false;  // Tells shell to wait for message from kernel after sending system call
+var _TraceMode : boolean = false;
+var _NextInstruction : boolean = false;
 
 // Standard input and output
 var _StdIn;    // Same "to null or not to null" issue as above.
@@ -69,10 +76,13 @@ var _StdOut;
 // UI
 var _Console: TSOS.Console;
 var _OsShell: TSOS.Shell;
+var _Utils: TSOS.Utils;
 
 // Memory
-var _MemoryMax : number = 256;
+const _MemoryMax : number = 256;
+const _MemoryParitionSize : number = 256;
 var _Memory : TSOS.Memory;
+var _MemoryManager : TSOS.MemoryManager;
 
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode: boolean = false;

@@ -12,13 +12,11 @@ module TSOS {
 
         constructor(public programMemory  = new Array(_MemoryMax) ) {
             this.programMemory = new Array();
-            Control.updateHostStatus("Constructor");
-            this.zeroMemory();
+            this.init();
         }
 
-        // Sets all memory to 0. This will change to allow partions zeroed.
-        public zeroMemory(): void {
-
+        private init() : void
+        {
             // Cycle through mem positions
             for( var i = 0; i < _MemoryMax; i++)
             {
@@ -44,9 +42,6 @@ module TSOS {
 
             // Set value
             this.programMemory[address] = value;
-
-            // Update memory display in hmtl
-            TSOS.Control.updateMemoryDisplay();
 
             // Return success
             return true;
@@ -112,50 +107,6 @@ module TSOS {
             return ret.toUpperCase();
         }
 
-        // Get dword number value at start of two byte dword little endian address
-        //
-        // Params: address <number> - start byte of two byte little endian address
-        // Returns: value on success, or -1 on invalid address
-        public getDWordLittleEndian( address : number ) : number
-        {
-            // Init return value to fail
-            var dword = -1;
 
-            if( address + 1 < _MemoryMax && address > 0)
-            {
-                // Convert value , remembering a number represents a byte
-                dword = (this.programMemory[address + 1] * 256) + this.programMemory[address];
-                //dword = parseInt(this.programMemory[address + 1].toString(16) + this.programMemory[address].toString(16),16);
-            }
-
-            // Return dword value fliped, or -1 on invalid start address
-            return dword;
-        }
-
-        // Loads program into memory. Will change, only one partion at the moment.
-        // Implies data was validated before hand, with no spaces or carriage returns
-        //
-        // Params: source <string> - program input
-        public loadMemory( source : string) : void
-        {
-            // Inits
-            var val : string;
-            var mem = 0;
-
-            // Zeros the memory first
-            this.zeroMemory();
-
-            // Load data into memory splitting on hex pairs
-            for( var i = 0; (i < source.length) && (mem  < _MemoryMax); i = i + 2)
-            {
-                if( source.length > i + 1)
-                    val = source[i] + source[i + 1];
-                else
-                    val = source[i] + '0';
-
-                this.programMemory[mem] = parseInt(val,16);
-                mem++;
-            }
-        }
     }
 }

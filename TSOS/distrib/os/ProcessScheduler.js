@@ -40,7 +40,7 @@ var TSOS;
             // Set next avaible pid
             this.nextPID++;
             // Load program input to memory
-            _Memory.loadMemory(processCode);
+            _MemoryManager.loadMemory(processCode);
             // Update memory display
             TSOS.Control.updateMemoryDisplay();
             // Send trace message
@@ -74,6 +74,8 @@ var TSOS;
                     TSOS.Control.updateCPUDisplay();
                     // Set return value
                     ret = true;
+                    // Update memory display with highlighted next instruction
+                    TSOS.Control.updateMemoryDisplay(_CPU.base, _CPU.getParamCount(_Memory.getAddress(_CPU.base).toString(16)));
                     // Send trace message
                     _Kernel.krnTrace("Executing process PID: " + this.runningProcess.pid);
                 }
@@ -91,7 +93,7 @@ var TSOS;
         //
         // Params: base <number> - Identifies process, as cpu doesn't know pid
         // Returns: Process control block copy of exiting process.
-        ProcessScheduler.prototype.exitProcess = function (base) {
+        ProcessScheduler.prototype.exitProcess = function (pid) {
             // Inits
             var pcb = this.runningProcess;
             // Reset running process
@@ -108,12 +110,29 @@ var TSOS;
             pcb.zFlag = _CPU.Zflag;
             pcb.Acc = _CPU.Acc;
             pcb.running = false;
+            // Update memory display with no highlighted next instruction
+            TSOS.Control.updateMemoryDisplay();
             // Set trace message
             _Kernel.krnTrace("Terminating process PID: " + pcb.pid);
             // Trace pcb data
             _Kernel.krnTrace("PCB: " + pcb.toString());
             // Return pcb
             return pcb;
+        };
+        // Retrieves PID of process by given base, as running process might switch before termination
+        // interrupt gets handled. Will change with multiple processes added.
+        //
+        // Params: base <number> - memory base of process
+        // Returns: PID or -1 on error
+        ProcessScheduler.prototype.findPID = function (base) {
+            // Init PID at failure, -1
+            var pid = -1;
+            // Since only one running process at a time,
+            // just return pid of running process
+            if (this.runningProcess != null)
+                pid = this.runningProcess.pid;
+            // Return pid, or -1 if not found
+            return pid;
         };
         return ProcessScheduler;
     })();

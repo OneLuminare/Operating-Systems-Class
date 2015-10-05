@@ -79,7 +79,7 @@ module TSOS {
                     // BACK WHICH I COULD HAVE USED IN STEAD. FRUSTRATED
                     // WITH THIS LANGUAGE!!!
                     this.completeCommand();
-                    this.removeLastCharInQueue();
+                    //this.removeLastCharInQueue();
 
                 }
                 else if( chr == String.fromCharCode(38))
@@ -330,6 +330,11 @@ module TSOS {
 
             // Remove backspace char from buffer
             this.buffer = this.buffer.substr(0, this.buffer.length - 1);
+        }
+
+        public reprintBuffer()
+        {
+            this.putText(this.buffer);
         }
 
         // Completes command, searches for match in order their added to command list

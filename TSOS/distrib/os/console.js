@@ -75,7 +75,6 @@ var TSOS;
                     // BACK WHICH I COULD HAVE USED IN STEAD. FRUSTRATED
                     // WITH THIS LANGUAGE!!!
                     this.completeCommand();
-                    this.removeLastCharInQueue();
                 }
                 else if (chr == String.fromCharCode(38)) {
                     //this.buffer = this.buffer.substr(0,this.buffer.length - 1);
@@ -259,6 +258,9 @@ var TSOS;
             _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - _DefaultFontSize, eraseWidth, yWidth);
             // Remove backspace char from buffer
             this.buffer = this.buffer.substr(0, this.buffer.length - 1);
+        };
+        Console.prototype.reprintBuffer = function () {
+            this.putText(this.buffer);
         };
         // Completes command, searches for match in order their added to command list
         Console.prototype.completeCommand = function () {

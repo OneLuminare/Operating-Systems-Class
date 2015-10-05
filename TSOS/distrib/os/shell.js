@@ -159,6 +159,8 @@ var TSOS;
             }
             return retVal;
         };
+        // Outputs message on new line, and resets
+        // wait for message flag.
         Shell.prototype.message = function (msg) {
             _StdOut.putText(msg);
             _StdOut.advanceLine();
@@ -166,6 +168,11 @@ var TSOS;
                 _ShellWaitForMessage = false;
                 this.putPrompt();
             }
+        };
+        // Outputs message but does not reset message flag
+        Shell.prototype.outputMessage = function (msg) {
+            _StdOut.putText(msg);
+            _StdOut.advanceLine();
         };
         //
         // Shell Command Functions.  Kinda not part of Shell() class exactly, but
@@ -395,8 +402,8 @@ var TSOS;
                     _StdOut.putText("Program is valid, but over 256 bytes.");
                 }
                 else {
-                    // Send create process interrupt
-                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_PROCESS_IRQ, input));
+                    // Create process
+                    _Kernel.CreateProcess(input);
                     // Set flag for shell to wait until kernel messages back
                     _ShellWaitForMessage = true;
                 }
@@ -407,7 +414,7 @@ var TSOS;
             // Verify at least one pid given
             if (args.length > 0) {
                 // Send interupt to run process
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(EXECUTE_PROCESS_IRQ, args[0]));
+                _Kernel.ExecuteProcess(args[0]);
                 // Set flag for shell to wait until kernel messages back
                 _ShellWaitForMessage = true;
             }

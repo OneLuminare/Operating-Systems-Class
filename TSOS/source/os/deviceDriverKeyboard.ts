@@ -26,9 +26,8 @@ module TSOS {
        }
 
         // Creates charmap symbol array
-        public createCharMap()
+        public createCharMap() : void
         {
-
             charMap[48] = ')';
             charMap[49] = '!';
             charMap[50] = '@';
@@ -103,6 +102,7 @@ module TSOS {
                 (keyCode == 188) ||
                 (keyCode == 59))
             {
+
                 switch (keyCode) {
                     case 59:
                         if( isShifted )
@@ -174,6 +174,7 @@ module TSOS {
             else if( keyCode == 8 ) // Backspace
             {
                 chr = String.fromCharCode(8);
+
                 _KernelInputQueue.enqueue(chr);
             }
             else if( keyCode == 9) // Tab
