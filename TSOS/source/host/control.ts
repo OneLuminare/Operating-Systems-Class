@@ -1,6 +1,6 @@
 ///<reference path="../globals.ts" />
 ///<reference path="../os/canvastext.ts" />
-///<reference path="memory.ts" />
+///<reference path="memoryaccessor.ts" />
 
 /* ------------
      Control.ts
@@ -103,7 +103,7 @@ module TSOS {
             _CPU.init();       //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
 
             // Create new memory object
-            _Memory = new TSOS.Memory();
+            _Memory = new TSOS.MemoryAccessor();
 
             this.createMemoryDisplay();
             this.createCPUDisplay();

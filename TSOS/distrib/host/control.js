@@ -1,6 +1,6 @@
 ///<reference path="../globals.ts" />
 ///<reference path="../os/canvastext.ts" />
-///<reference path="memory.ts" />
+///<reference path="memoryaccessor.ts" />
 /* ------------
      Control.ts
 
@@ -81,7 +81,7 @@ var TSOS;
             _CPU = new TSOS.Cpu(); // Note: We could simulate multi-core systems by instantiating more than one instance of the CPU here.
             _CPU.init(); //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
             // Create new memory object
-            _Memory = new TSOS.Memory();
+            _Memory = new TSOS.MemoryAccessor();
             this.createMemoryDisplay();
             this.createCPUDisplay();
             // ... then set the host clock pulse ...

@@ -1,5 +1,5 @@
 ///<reference path="../globals.ts" />
-///<reference path="../host/memory.ts" />
+///<reference path="../host/memoryaccessor.ts" />
 ///<reference path="ProcessScheduler.ts" />
 /*
     memorymanager.ts
@@ -27,13 +27,9 @@ var TSOS;
         // Params: address <number> - start byte of two byte little endian address
         // Returns: converted dword <number>
         // Throws: RangeError on read past limit
-        MemoryManager.prototype.getDWordLittleEndian = function (address) {
+        MemoryManager.prototype.getDWordLittleEndian = function (address, base, limit) {
             // Init return value to fail
             var dword = -1;
-            // Get base of running process
-            var base = _ProcessScheduler.runningProcess.base;
-            // Get limit of running process
-            var limit = _ProcessScheduler.runningProcess.limit;
             var newAdd = base + address;
             if ((newAdd < limit) && (newAdd + 1 < limit)) {
                 // Convert value , remembering a number represents a byte
@@ -44,13 +40,6 @@ var TSOS;
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(base, newAdd)));
                 throw new RangeError("Memory past limit.");
             }
-            /*
-            if (address + 1 < _MemoryMax && address > 0) {
-                // Convert value , remembering a number represents a byte
-                dword = (_Memory.programMemory[address + 1] * 256) + _Memory.programMemory[address];
-                //dword = parseInt(this.programMemory[address + 1].toString(16) + this.programMemory[address].toString(16),16);
-            }
-            */
             // Return dword value fliped, or -1 on invalid start address
             return dword;
         };
@@ -110,125 +99,6 @@ var TSOS;
                 throw new RangeError("Memory address out of bounds.");
             // Return string, or null on error
             return ret;
-        };
-        /*
-        // Converts virtual address to actual address. I used to due this
-        // in the CPU with base and limit registers, but its a project
-        // requirement to do it here.
-        //
-        // Params: address <number> - virtual address
-        // Returns: Value at actual address <number>
-        // Throws: RangeError on address over limit
-        public getConvertedAddressLittleEndian(address : number) : number
-        {
-            // Convert address out of little endian
-            var dword : number = this.getDWordLittleEndian(address);
-
-            // Get base of running process
-            var base : number = _ProcessScheduler.runningProcess.base;
-
-            // Get converted address
-            var newAdd : number = base + dword;
-
-            // Get limit of running process
-            var limit : number = _ProcessScheduler.runningProcess.limit;
-
-            // Check if over limit
-            if( newAdd >= limit)
-            {
-                // Send memory violation interrupt
-                _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(base, newAdd)));
-
-                throw new RangeError("Memory past limit.");
-            }
-
-            // Return value at new address
-            return _Memory.programMemory[newAdd];
-
-        }
-
-        // Converts virtual address to actual address, and sets value at it. I used to due this
-        // in the CPU with base and limit registers, but its a project
-        // requirement to do it here.
-        //
-        // Params: address <number> - virtual address
-        //         value <number> - new value
-        // Returns: Value at actual address <number>
-        // Throws: RangeError on address over limit
-        public setConvertedAddressLittleEndian(address : number, value : number) : void
-        {
-            // Convert address out of little endian
-            var dword : number = this.getDWordLittleEndian(address);
-
-            // Get base of running process
-            var base : number = _ProcessScheduler.runningProcess.base;
-
-            // Get converted address
-            var newAdd : number = base + dword;
-
-            // Get limit of running process
-            var limit : number = _ProcessScheduler.runningProcess.limit;
-
-            // Check if over limit
-            if( newAdd >= limit)
-            {
-                // Send memory violation interrupt
-                _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(base, newAdd)));
-
-                throw new RangeError("Memory past limit.");
-            }
-
-            // Set value at new address
-            _Memory.programMemory[newAdd] = value;
-
-        }
-        */
-        // Converts virtual address to actual address. I used to due this
-        // in the CPU with base and limit registers, but its a project
-        // requirement to do it here.
-        //
-        // Params: address <number> - virtual address
-        // Returns: Value at actual address <number>
-        // Throws: RangeError on address over limit
-        MemoryManager.prototype.getConvertedAddress = function (address) {
-            // Get base of running process
-            var base = _ProcessScheduler.runningProcess.base;
-            // Get converted address
-            var newAdd = base + address;
-            // Get limit of running process
-            var limit = _ProcessScheduler.runningProcess.limit;
-            // Check if over limit
-            if (newAdd >= limit) {
-                // Send memory violation interrupt
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(base, newAdd)));
-                throw new RangeError("Memory past limit.");
-            }
-            // Return value at new address
-            return _Memory.programMemory[newAdd];
-        };
-        // Converts virtual address to actual address, and sets value at it. I used to due this
-        // in the CPU with base and limit registers, but its a project
-        // requirement to do it here.
-        //
-        // Params: address <number> - virtual address
-        //         value <number> - new value
-        // Returns: Value at actual address <number>
-        // Throws: RangeError on address over limit
-        MemoryManager.prototype.setConvertedAddress = function (address, value) {
-            // Get base of running process
-            var base = _ProcessScheduler.runningProcess.base;
-            // Get converted address
-            var newAdd = base + address;
-            // Get limit of running process
-            var limit = _ProcessScheduler.runningProcess.limit;
-            // Check if over limit
-            if (newAdd >= limit) {
-                // Send memory violation interrupt
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(base, newAdd)));
-                throw new RangeError("Memory past limit.");
-            }
-            // Set value at new address
-            _Memory.programMemory[newAdd] = value;
         };
         return MemoryManager;
     })();

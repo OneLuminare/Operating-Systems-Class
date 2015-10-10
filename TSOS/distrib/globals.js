@@ -66,7 +66,7 @@ var _OsShell;
 var _Utils;
 // Memory
 var _MemoryMax = 256;
-var _MemoryParitionSize = 256;
+var _MemoryPartitionSize = 256;
 var _Memory;
 var _MemoryManager;
 // At least this OS is not trying to kill you. (Yet.)

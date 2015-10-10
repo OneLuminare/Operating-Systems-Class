@@ -76,33 +76,19 @@ module TSOS {
             // Trace
             _Kernel.krnTrace('Executing LDA : AD with address ' + address.toString(16));
 
-            // Get converted value from memory
-            try
-            {
-                this.Acc = _MemoryManager.getConvertedAddress(address);
-            }
 
-            // Set return to false on RangeError
-            catch(e)
-            {
-                return false;
-            }
-
-            // I used to due it with base and limit registers, but
-            // project requirment has me do conversions in memory manager
-            /*
             // Find raw address
             var rawAddress = this.base + address;
 
             // Verify raw addres within limit, and set accumlator with value
-            if ( rawAddress < this.limit )
+            if ( rawAddress < (this. base + this.limit) )
             {
                 this.Acc = _Memory.getAddress(rawAddress);
             }
             // Else memory access violation
             else
                 return false;
-                */
+
 
             // Update program counter
             this.PC += 3;
@@ -120,36 +106,18 @@ module TSOS {
             // Kernel trace
             _Kernel.krnTrace('Executing STA : 8D with address ' + address.toString(16));
 
-            // Inits
-            var ret : boolean = true;
-
-            // Get converted value from memory
-            try
-            {
-                _MemoryManager.setConvertedAddress(address,this.Acc);
-            }
-
-                // Set return to false on RangeError
-            catch(e)
-            {
-                return false;
-            }
-
-            // I used to due it with base and limit registers, but
-            // project requirment has me do conversions in memory manager
-            /*
             // Get actual address
             var rawAddress = this.base + address;
 
             // Set address with accumlator if within limit
-            if ( rawAddress < this.limit )
+            if ( rawAddress < (this. base + this.limit) )
             {
                 _Memory.setAddress(rawAddress,this.Acc);
             }
             // Else memory access violation return false
             else
                 return false;
-                */
+
 
             // Update program counter
             this.PC += 3;
@@ -167,44 +135,11 @@ module TSOS {
             // Kernel trace
             _Kernel.krnTrace('Executing ADC : 6D with address ' + address.toString(16));
 
-            // Get converted value from memory
-            try
-            {
-                value = _MemoryManager.getConvertedAddress(address);
-            }
-
-                // Set return to false on RangeError
-            catch(e)
-            {
-                return false;
-            }
-
-
-
-            // Add value to accumulator
-            this.Acc += value;
-
-            // Check for overflow
-            if( this.Acc > 255 )
-            {
-                // Set accumlator to FF
-                this.Acc = 255;
-
-                // Send overflow interrupt
-                _KernelInterruptQueue.enqueue(new Interrupt(ARITHMATIC_OVERFLOW_IRQ, new Array(this.base,this.PC)));
-
-                return false;
-
-            }
-
-            // I used to due it with base and limit registers, but
-            // project requirment has me do conversions in memory manager
-            /*
             // Get actual address
             var rawAddress = this.base + address;
 
             // Check if address is within program range
-            if ( rawAddress < this.limit )
+            if ( rawAddress < (this. base + this.limit) )
             {
                 // Get memory value
                 value = _Memory.getAddress(rawAddress);
@@ -233,7 +168,7 @@ module TSOS {
 
                 return false;
             }
-            */
+
 
             // Increment pc
             this.PC += 3;
@@ -270,33 +205,18 @@ module TSOS {
             // Kernel trace
             _Kernel.krnTrace('Executing LDX : AE with address ' + address.toString(16));
 
-            // Get converted value from memory
-            try
-            {
-                this.Xreg = _MemoryManager.getConvertedAddress(address);
-            }
-
-                // Set return to false on RangeError
-            catch(e)
-            {
-                return false;
-            }
-
-            // I used to due it with base and limit registers, but
-            // project requirment has me do conversions in memory manager
-            /*
             // Get actual address
             var rawAddress = this.base + address;
 
             // Set address with accumlator if within limit
-            if ( rawAddress < this.limit )
+            if ( rawAddress < (this. base + this.limit) )
             {
                 this.Xreg = _Memory.getAddress(rawAddress);
             }
             // Else memory access violation return false
             else
                 return false;
-                */
+
 
             // Update program counter
             this.PC += 3;
@@ -333,33 +253,18 @@ module TSOS {
             // Kernel trace
             _Kernel.krnTrace('Executing LDY : AC with address ' + address.toString(16));
 
-            // Get converted value from memory
-            try
-            {
-                this.Yreg = _MemoryManager.getConvertedAddress(address);
-            }
-
-                // Set return to false on RangeError
-            catch(e)
-            {
-                return false;
-            }
-
-            // I used to due it with base and limit registers, but
-            // project requirment has me do conversions in memory manager
-            /*
             // Get actual address
             var rawAddress = this.base + address;
 
             // Set address with accumlator if within limit
-            if ( rawAddress < this.limit )
+            if ( rawAddress < (this. base + this.limit) )
             {
                 this.Yreg = _Memory.getAddress(rawAddress);
             }
             // Else memory access violation return false
             else
                 return false;
-                */
+
 
             // Update program counter
             this.PC += 3;
@@ -377,28 +282,11 @@ module TSOS {
             // Kernel trace
             _Kernel.krnTrace('Executing CPX : EC with address ' + address.toString(16));
 
-            // Get converted value from memory
-            try
-            {
-                value = _MemoryManager.getConvertedAddress(address);
-            }
-
-                // Set return to false on RangeError
-            catch(e)
-            {
-                return false;
-            }
-
-
-
-            // I used to due it with base and limit registers, but
-            // project requirment has me do conversions in memory manager
-            /*
             // Get actual address
             var rawAddress = this.base + address;
 
             // Check if address within limit
-            if ( rawAddress < this.limit )
+            if ( rawAddress < (this. base + this.limit) )
             {
                 // Get value at address
                 value = _Memory.getAddress(rawAddress);
@@ -418,7 +306,7 @@ module TSOS {
             // Else memory access violation return false
             else
                 return false;
-    */
+
 
             // If equal to xReg, set ZFlag to 0
             if( this.Xreg == value)
@@ -462,8 +350,8 @@ module TSOS {
                 newPc = this.PC + value;
 
                 // If over partition size, cycle to begining
-                if( newPc > 255)
-                    newPc = newPc - 256;
+                if( newPc > (_MemoryPartitionSize - 1) )
+                    newPc = newPc - _MemoryPartitionSize;
 
                 // Set new pc
                 this.PC = newPc;
@@ -479,38 +367,11 @@ module TSOS {
             // Kernel trace
             _Kernel.krnTrace('Executing INC : EE with address ' + address.toString(16));
 
-
-            // Get converted value from memory
-            try
-            {
-                value = _MemoryManager.getConvertedAddress(address);
-            }
-
-                // Set return to false on RangeError
-            catch(e)
-            {
-                return false;
-            }
-
-            // Inc by 1
-            value++;
-
-            // If over a byte, set to 0
-            if( value > 255)
-                value = 0;
-
-            // Set new value
-            _MemoryManager.setConvertedAddress(address,value);
-
-
-            // I used to due it with base and limit registers, but
-            // project requirment has me do conversions in memory manager
-            /*
             // Get actual address
             var rawAddress = this.base + address;
 
             // Check if address is within limi
-            if ( rawAddress < this.limit )
+            if ( rawAddress < (this. base + this.limit) )
             {
                 // Get value
                 value = _Memory.getAddress(address);
@@ -528,7 +389,7 @@ module TSOS {
             // Else memory access violation return false
             else
                 return false;
-                */
+
 
             // Update program counter
             this.PC += 3;
@@ -660,206 +521,211 @@ module TSOS {
             // TODO: Accumulate CPU usage and profiling statistics here.
             // Do the real work here. Be sure to set this.isExecuting appropriately.
 
-            // I did conversions with base and limit register, but due
-            // to project req using memory manager, I convert their
-            /*
-            var address = this.base + this.PC;
-            var inst = _Memory.getAddress(address).toString(16);
-            var dword = null;
-            */
-
-            var inst : string = _MemoryManager.getConvertedAddress(this.PC).toString(16);
-            var value : number = 0;
+            // Inits
+            var address : number = this.base + this.PC;
+            var limitAddress : number = this.base + this.limit;
+            var nextAddress : number = address + 1;
+            var inst : string = _Memory.getAddress(address).toString(16);
             var dword : number = 0;
 
+            // Switch on instruction
+            switch (inst)
+            {
+                // LDA immediate
+                case "a9":
+                    // Check if next address is over limit
+                    if( nextAddress >= limitAddress )
+                    {
+                        // Send memory violation interrupt
+                        _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, nextAddress)));
 
+                        // Stop executing
+                        this.isExecuting = false;
+                    }
+                    // Else execute instruction
+                    else
+                        this.LDA(_Memory.getAddress(address + 1));
 
-                // Switch on instruction
-                switch (inst) {
-                    // LDA immediate
-                    case "a9":
-                        //this.LDA(_Memory.getAddress(address + 1));
-                        try
-                        {
-                            value = _MemoryManager.getConvertedAddress(this.PC + 1);
-                            this.LDA(value);
-                        }
+                    break;
 
-                        catch(e)
-                        {
-                            this.isExecuting = false;
-                        }
+                // LDA indirect
+                case "ad":
+                    // Check if next dword is out of limit
+                    if( (address + 2) >= limitAddress)
+                    {
+                        // Send memory violation interrupt
+                        _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, nextAddress)));
 
-                        break;
-
-                    // LDA indirect
-                    case "ad":
-                        /*
+                        // Stop executing
+                        this.isExecuting = false;
+                    }
+                    // Else get dword and run instruction
+                    else
+                    {
                         // Convert little endian address to base 10 address
-                        dword = _Memory.getDWordLittleEndian(address + 1);
+                        dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
 
-                        // Run instruction, and check for failure
-                        if (!this.LDA2(dword)) {
+                        // Run instruction
+                        if(!this.LDA2(dword))
+                        {
                             // Send memory violation interrupt
                             _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
 
                             // Stop executing
                             this.isExecuting = false;
                         }
-                        */
+                    }
+                    break;
 
-                        try
-                        {
-                            dword = _MemoryManager.getDWordLittleEndian(this.PC + 1);
-                            if( !this.LDA2(dword) )
-                                this.isExecuting = false;
-                        }
-
-                        catch(e)
-                        {
-                            this.isExecuting = false;
-                        }
-
-                        break;
 
                     // STA
                     case "8d":
-                        /*
-                        // Convert little endian address to base 10 address
-                        dword = _Memory.getDWordLittleEndian(address + 1);
-
-                        // Run instruction, and check for failure
-                        if (!this.STA(dword)) {
+                        // Check if next dword is out of limit
+                        if( (address + 2) >= limitAddress)
+                        {
                             // Send memory violation interrupt
-                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
+                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, nextAddress)));
 
                             // Stop executing
                             this.isExecuting = false;
                         }
-                        */
-
-                        try
+                        else
                         {
-                            dword = _MemoryManager.getDWordLittleEndian(this.PC + 1);
-                            if( !this.STA(dword) )
+                            // Convert little endian address to base 10 address
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+
+                            // Run instruction
+                            if(!this.STA(dword))
+                            {
+                                // Send memory violation interrupt
+                                _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
+
+                                // Stop executing
                                 this.isExecuting = false;
+                            }
                         }
 
-                        catch(e)
-                        {
-                            this.isExecuting = false;
-                        }
                         break;
 
                     // ADC
                     case "6d":
-                        /*
-                        // Convert little endian address to base 10 address
-                        dword = _Memory.getDWordLittleEndian(address + 1);
+                        // Check if next dword is out of limit
+                        if( (address + 2) >= limitAddress)
+                        {
+                            // Send memory violation interrupt
+                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, nextAddress)));
 
-                        // Run instruction, and check for failure
-                        if (!this.ADC(dword)) {
                             // Stop executing
                             this.isExecuting = false;
                         }
-                        */
-                        try
+                        else
                         {
-                            dword = _MemoryManager.getDWordLittleEndian(this.PC + 1);
-                            if( !this.ADC(dword) )
+                            // Convert little endian address to base 10 address
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+
+                            // Run instruction
+                            if(!this.ADC(dword))
+                            {
+                                // Send memory violation interrupt
+                                _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
+
+                                // Stop executing
                                 this.isExecuting = false;
+                            }
                         }
 
-                        catch(e)
-                        {
-                            this.isExecuting = false;
-                        }
                         break;
 
                     // LDX immediate
                     case "a2":
-                        //this.LDX1(_Memory.getAddress(address + 1));
-                        try
+                        // Check if next address is over limit
+                        if( nextAddress >= limitAddress )
                         {
-                            value = _MemoryManager.getConvertedAddress(this.PC + 1);
-                            this.LDX1(value);
-                        }
+                            // Send memory violation interrupt
+                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, nextAddress)));
 
-                        catch(e)
-                        {
+                            // Stop executing
                             this.isExecuting = false;
                         }
+                        // Else execute instruction
+                        else
+                            this.LDX1(_Memory.getAddress(address + 1));
+
                         break;
 
                     // LDX indirect
                     case "ae":
-                        /*
-                        // Convert little endian address to base 10 address
-                        dword = _Memory.getDWordLittleEndian(address + 1);
-
-                        // Run instruction, and check for failure
-                        if (!this.LDX2(dword)) {
+                        // Check if next dword is out of limit
+                        if( (address + 2) >= limitAddress)
+                        {
                             // Send memory violation interrupt
-                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
+                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, nextAddress)));
 
                             // Stop executing
                             this.isExecuting = false;
                         }
-                        */
-                        try
+                        else
                         {
-                            dword = _MemoryManager.getDWordLittleEndian(this.PC + 1);
-                            if( !this.LDX2(dword) )
+                            // Convert little endian address to base 10 address
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+
+                            // Run instruction
+                            if(!this.LDX2(dword))
+                            {
+                                // Send memory violation interrupt
+                                _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
+
+                                // Stop executing
                                 this.isExecuting = false;
+                            }
                         }
 
-                        catch(e)
-                        {
-                            this.isExecuting = false;
-                        }
                         break;
 
                     // LDY immediate
                     case "a0":
-                      //this.LDY1(_Memory.getAddress(address + 1));
-                        try
+                        // Check if next address is over limit
+                        if( nextAddress >= limitAddress )
                         {
-                            value = _MemoryManager.getConvertedAddress(this.PC + 1);
-                            this.LDY1(value);
-                        }
-
-                        catch(e)
-                        {
-                            this.isExecuting = false;
-                        }
-                        break;
-
-                    // LDY indirect
-                    case "ac":
-                        /*
-                        // Convert little endian address to base 10 address
-                        dword = _Memory.getDWordLittleEndian(address + 1);
-
-                        // Run instruction, and check for failure
-                        if (!this.LDY2(dword)) {
                             // Send memory violation interrupt
-                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
+                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, nextAddress)));
 
                             // Stop executing
                             this.isExecuting = false;
                         }
-                        */
-                        try
-                        {
-                            dword = _MemoryManager.getDWordLittleEndian(this.PC + 1);
-                            if( !this.LDY2(dword) )
-                                this.isExecuting = false;
-                        }
+                        // Else execute instruction
+                        else
+                            this.LDY1(_Memory.getAddress(address + 1));;
 
-                        catch(e)
+                        break;
+
+                    // LDY indirect
+                    case "ac":
+                        // Check if next dword is out of limit
+                        if( (address + 2) >= limitAddress)
                         {
+                            // Send memory violation interrupt
+                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, nextAddress)));
+
+                            // Stop executing
                             this.isExecuting = false;
                         }
+                        else
+                        {
+                            // Convert little endian address to base 10 address
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+
+                            // Run instruction
+                            if(!this.LDY2(dword))
+                            {
+                                // Send memory violation interrupt
+                                _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
+
+                                // Stop executing
+                                this.isExecuting = false;
+                            }
+                        }
+
                         break;
 
                     // No op EA
@@ -869,73 +735,66 @@ module TSOS {
 
                     // CPX
                     case "ec":
-                        /*
-                        // Convert little endian address to base 10 address
-                        dword = _Memory.getDWordLittleEndian(address + 1);
-
-                        // Run instruction, and check for failure
-                        if (!this.CPX(dword)) {
+                        // Check if next dword is out of limit
+                        if( (address + 2) >= limitAddress)
+                        {
                             // Send memory violation interrupt
-                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
+                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, nextAddress)));
 
                             // Stop executing
                             this.isExecuting = false;
                         }
-                        */
-                        try
+                        else
                         {
-                            dword = _MemoryManager.getDWordLittleEndian(this.PC + 1);
-                            if( !this.CPX(dword) )
+                            // Convert little endian address to base 10 address
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+
+                            // Run instruction
+                            if(!this.CPX(dword))
+                            {
+                                // Send memory violation interrupt
+                                _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
+
+                                // Stop executing
                                 this.isExecuting = false;
+                            }
                         }
 
-                        catch(e)
-                        {
-                            this.isExecuting = false;
-                        }
                         break;
 
                     // BNE
                     case "d0":
-                        //this.BNE(_Memory.getAddress(address + 1));
-                        try
-                        {
-                            value = _MemoryManager.getConvertedAddress(this.PC + 1);
-                            this.BNE(value);
-                        }
+                        this.BNE(_Memory.getAddress(address + 1));
 
-                        catch(e)
-                        {
-                            this.isExecuting = false;
-                        }
                         break;
 
                     // INC
                     case "ee":
-                        /*
-                        // Convert little endian address to base 10 address
-                        dword = _Memory.getDWordLittleEndian(address + 1);
-
-                        // Run instruction, and check for failure
-                        if (!this.INC(dword)) {
+                        // Check if next dword is out of limit
+                        if( (address + 2) >= limitAddress)
+                        {
                             // Send memory violation interrupt
-                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
+                            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, nextAddress)));
 
                             // Stop executing
                             this.isExecuting = false;
                         }
-                        */
-                        try
+                        else
                         {
-                            dword = _MemoryManager.getDWordLittleEndian(this.PC + 1);
-                            if( !this.INC(dword) )
+                            // Convert little endian address to base 10 address
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+
+                            // Run instruction
+                            if(!this.INC(dword))
+                            {
+                                // Send memory violation interrupt
+                                _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
+
+                                // Stop executing
                                 this.isExecuting = false;
+                            }
                         }
 
-                        catch(e)
-                        {
-                            this.isExecuting = false;
-                        }
                         break;
 
                     case "ff":
@@ -974,39 +833,21 @@ module TSOS {
                         break;
                 }
 
-
-            // Try to get next instruction
-            try
-            {
-                inst = _MemoryManager.getConvertedAddress(this.PC).toString(16);
-
-                // Update memory display with highlighted code
-                TSOS.Control.updateMemoryDisplay(this.base + this.PC, this.getParamCount(inst));
-            }
-            catch(e)
-            {
-                TSOS.Control.updateMemoryDisplay();
-            }
-            /*
             // Get next instruction address
-            var address = this.base + this.PC;
+            address = this.base + this.PC;
 
             // check if this address is with in memory, and update mem with highlight code
-            if( address < this.limit )
+            if( address < limitAddress )
             {
-                // Get insturction
-                try
-                {
                     inst = _Memory.getAddress(address).toString(16);
 
                     // Update memory display with highlighted code
                     TSOS.Control.updateMemoryDisplay(address, this.getParamCount(inst));
-                }
             }
             // Else update mem with out highlight code
             else
                 TSOS.Control.updateMemoryDisplay();
-                */
+
 
 
             // Update cput display

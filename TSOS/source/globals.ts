@@ -80,8 +80,8 @@ var _Utils: TSOS.Utils;
 
 // Memory
 const _MemoryMax : number = 256;
-const _MemoryParitionSize : number = 256;
-var _Memory : TSOS.Memory;
+const _MemoryPartitionSize : number = 256;
+var _Memory : TSOS.MemoryAccessor;
 var _MemoryManager : TSOS.MemoryManager;
 
 // At least this OS is not trying to kill you. (Yet.)
