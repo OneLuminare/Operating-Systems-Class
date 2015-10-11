@@ -12,16 +12,129 @@ var TSOS;
     var MemoryManager = (function () {
         // Constructor just zeros all memory
         function MemoryManager() {
-            this.zeroMemory();
+            // Init arrays
+            this.partitionsLoaded = new Array(_MemoryPartitions);
+            this.partitionBaseAddress = new Array(_MemoryPartitions);
+            // Populate arrays
+            this.populateArrays();
+            // Zero memory
+            this.zeroAllMemory();
         }
-        // Sets all memory to 0. This will change to allow partions zeroed.
-        MemoryManager.prototype.zeroMemory = function () {
+        // Populate arrays
+        MemoryManager.prototype.populateArrays = function () {
+            // Set loaded to false
+            this.partitionsLoaded[0] = false;
+            this.partitionsLoaded[1] = false;
+            this.partitionsLoaded[2] = false;
+            // Init base addresses
+            var nextAddress = 0;
+            for (var i = 0; i < _MemoryPartitions; i++) {
+                this.partitionBaseAddress[i] = nextAddress;
+                nextAddress += _MemoryPartitionSize;
+            }
+        };
+        // Sets all memory to 0.
+        //
+        // Returns: Always true.
+        MemoryManager.prototype.zeroAllMemory = function () {
             // Cycle through mem positions
             for (var i = 0; i < _MemoryMax; i++) {
                 // Set to 0
                 _Memory.programMemory[i] = 0;
             }
+            // Always return true
+            return true;
         };
+        // Sets partition memory to 0
+        //
+        // Params: partition <number> - 0 based index of partition
+        // Returns: true on valid partition
+        MemoryManager.prototype.zeroMemory = function (partition) {
+            // Return if invalid partition index
+            if (partition < 0 || partition >= _MemoryPartitions)
+                return false;
+            // Get base
+            var base = this.partitionBaseAddress[partition];
+            var limit = base + _MemoryPartitionSize;
+            // Cycle through mem positions
+            for (var i = base; i < limit; i++) {
+                // Set to 0
+                _Memory.programMemory[i] = 0;
+            }
+            // Return sucess
+            return true;
+        };
+        // Returns true if partition available.
+        //
+        // Returns: true if memory available
+        MemoryManager.prototype.isMemoryAvailable = function () {
+            // Inits
+            var ret = false;
+            // Check if partition available
+            for (var i = 0; (i < _MemoryPartitions) && !ret; i++)
+                if (this.partitionsLoaded[i] == false)
+                    ret = true;
+            // Return true if memory available
+            return ret;
+        };
+        // Gets index of next available partition.
+        // Returns -1 if none avialable.
+        //
+        // Returns: partition available, or -1 if memory full
+        MemoryManager.prototype.nextPartitionAvailable = function () {
+            // Inits
+            var next = -1;
+            // Check if partition available
+            for (var i = 0; (i < _MemoryPartitions) && (next == -1); i++)
+                if (this.partitionsLoaded[i] == false)
+                    next = i;
+            // Return true if memory available
+            return next;
+        };
+        // Mark partition as available.
+        //
+        // Params: partition <number> - index of partition
+        //         zeroMemory <boolean> - flag to zero memory if desired. Default false.
+        // Returns: true on valid partition
+        MemoryManager.prototype.freePartition = function (partition, zeroMemory) {
+            if (zeroMemory === void 0) { zeroMemory = false; }
+            // Return if invalid partition index
+            if (partition < 0 || partition >= _MemoryPartitions)
+                return false;
+            // Set partition not in use
+            this.partitionsLoaded[partition] = false;
+            // Zero memory if told to
+            if (zeroMemory)
+                this.zeroMemory(partition);
+            // Return success
+            return true;
+        };
+        // Gets base address at given partition, or -1 on invalid partition
+        //
+        // Params: partition <number> - 0 based index of partition
+        // Returns: true on valid partition
+        MemoryManager.prototype.getPartitionBaseAddress = function (partition) {
+            // Return if invalid partition index
+            if (partition < 0 || partition >= _MemoryPartitions)
+                return -1;
+            // Return base
+            return this.partitionBaseAddress[partition];
+        };
+        /*
+        // Gets limit at given partition, or -1 on invalid partition
+        //
+        // Params: partition <number> - 0 based index of partition
+        // Returns: true on valid partition
+        public partitionLimit(partition : number)
+        {
+            // Return if invalid partition index
+            if (partition < 0 || partition >= _MemoryPartitions)
+                return -1;
+
+            // Return limit
+            return this.partitionBaseAddress[partition] + _MemoryPartitionSize;
+        }
+        */
         // Get dword number value at start of two byte dword little endian address
         //
         // Params: address <number> - start byte of two byte little endian address
@@ -49,10 +162,16 @@ var TSOS;
         // Params: source <string> - program input
         MemoryManager.prototype.loadMemory = function (source) {
             // Inits
+            var nextPart = this.nextPartitionAvailable();
             var val;
             var mem = 0;
+            // Return -1 if no partition avialable
+            if (nextPart == -1)
+                return -1;
+            // Set mem to base
+            mem = this.partitionBaseAddress[nextPart];
             // Zeros the memory first
-            this.zeroMemory();
+            this.zeroMemory(nextPart);
             // Load data into memory splitting on hex pairs
             for (var i = 0; (i < source.length) && (mem < _MemoryMax); i = i + 2) {
                 if (source.length > i + 1)
@@ -62,6 +181,10 @@ var TSOS;
                 _Memory.programMemory[mem] = parseInt(val, 16);
                 mem++;
             }
+            // Flag partition in use
+            this.partitionsLoaded[nextPart] = true;
+            // Return partition added
+            return nextPart;
         };
         // Gets string from memory. Reads until 00.
         //

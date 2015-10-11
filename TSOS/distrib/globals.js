@@ -30,6 +30,7 @@ var UNKNOWN_SYSCALL_IRQ = 9;
 var PRINT_INTEGER_IRQ = 10;
 var PRINT_STRING_IRQ = 11;
 var READ_PAST_EOP_IRQ = 12;
+var MEMORY_FULL_IRQ = 13;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
@@ -66,9 +67,14 @@ var _OsShell;
 var _Utils;
 // Memory
 var _MemoryMax = 256;
+var _MemoryPartitions = 3;
 var _MemoryPartitionSize = 256;
 var _Memory;
 var _MemoryManager;
+// Process Scheduling
+var _TimerOn = false;
+var _TimerCounter = 0;
+var _Quantum = 6;
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode = false;
 // Global Device Driver Objects - page 12

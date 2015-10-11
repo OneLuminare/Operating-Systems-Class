@@ -11,15 +11,14 @@ module TSOS {
     export class ProcessControlBlock {
 
         constructor(public pid : number,
-                    public base : number,
-                    public limit : number,
+                    public base : number = 0,
+                    public limit : number = 0,
                     public PC : number = 0,
                     public xReg : number = 0,
                     public yReg : number = 0,
                     public Acc : number = 0,
                     public zFlag : number = 0,
-                    public created : Date = new Date(),
-                    public running : boolean = true) {
+                    public created : Date = new Date()) {
         }
 
         // Overrides toString for trace purposes

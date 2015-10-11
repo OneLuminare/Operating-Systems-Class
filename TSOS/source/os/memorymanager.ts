@@ -11,25 +11,163 @@
 
 module TSOS
 {
-    export class MemoryManager
-    {
+    export class MemoryManager {
+        // Properties
+        partitionsLoaded:Array<boolean>;
+        partitionBaseAddress:Array<number>;
 
         // Constructor just zeros all memory
-        constructor()
-        {
-            this.zeroMemory();
+        constructor() {
+            // Init arrays
+            this.partitionsLoaded = new Array<boolean>(_MemoryPartitions);
+            this.partitionBaseAddress = new Array<number>(_MemoryPartitions);
+
+            // Populate arrays
+            this.populateArrays();
+
+            // Zero memory
+            this.zeroAllMemory();
         }
 
-        // Sets all memory to 0. This will change to allow partions zeroed.
-        public zeroMemory(): void {
+        // Populate arrays
+        private populateArrays():void {
+            // Set loaded to false
+            this.partitionsLoaded[0] = false;
+            this.partitionsLoaded[1] = false;
+            this.partitionsLoaded[2] = false;
+
+            // Init base addresses
+            var nextAddress:number = 0;
+            for (var i = 0; i < _MemoryPartitions; i++) {
+                this.partitionBaseAddress[i] = nextAddress;
+
+                nextAddress += _MemoryPartitionSize;
+            }
+        }
+
+        // Sets all memory to 0.
+        //
+        // Returns: Always true.
+        public zeroAllMemory():boolean {
 
             // Cycle through mem positions
-            for( var i = 0; i < _MemoryMax; i++)
-            {
+            for (var i = 0; i < _MemoryMax; i++) {
                 // Set to 0
                 _Memory.programMemory[i] = 0;
             }
+
+            // Always return true
+            return true;
         }
+
+        // Sets partition memory to 0
+        //
+        // Params: partition <number> - 0 based index of partition
+        // Returns: true on valid partition
+        public zeroMemory(partition:number):boolean {
+            // Return if invalid partition index
+            if (partition < 0 || partition >= _MemoryPartitions)
+                return false;
+
+            // Get base
+            var base:number = this.partitionBaseAddress[partition];
+            var limit:number = base + _MemoryPartitionSize;
+
+            // Cycle through mem positions
+            for (var i = base; i < limit; i++) {
+                // Set to 0
+                _Memory.programMemory[i] = 0;
+            }
+
+            // Return sucess
+            return true;
+        }
+
+        // Returns true if partition available.
+        //
+        // Returns: true if memory available
+        public isMemoryAvailable():boolean {
+            // Inits
+            var ret = false;
+
+            // Check if partition available
+            for (var i = 0; (i < _MemoryPartitions) && !ret; i++)
+                if (this.partitionsLoaded[i] == false)
+                    ret = true;
+
+            // Return true if memory available
+            return ret;
+        }
+
+        // Gets index of next available partition.
+        // Returns -1 if none avialable.
+        //
+        // Returns: partition available, or -1 if memory full
+        public nextPartitionAvailable():number
+        {
+            // Inits
+            var next : number = -1;
+
+            // Check if partition available
+            for (var i = 0; (i < _MemoryPartitions) && (next == -1); i++)
+                if (this.partitionsLoaded[i] == false)
+                    next = i;
+
+            // Return true if memory available
+            return next;
+        }
+
+        // Mark partition as available.
+        //
+        // Params: partition <number> - index of partition
+        //         zeroMemory <boolean> - flag to zero memory if desired. Default false.
+        // Returns: true on valid partition
+        public freePartition(partition : number, zeroMemory : boolean = false) : boolean
+        {
+            // Return if invalid partition index
+            if (partition < 0 || partition >= _MemoryPartitions)
+                return false;
+
+            // Set partition not in use
+            this.partitionsLoaded[partition] = false;
+
+            // Zero memory if told to
+            if( zeroMemory )
+                this.zeroMemory(partition);
+
+            // Return success
+            return true;
+        }
+
+        // Gets base address at given partition, or -1 on invalid partition
+        //
+        // Params: partition <number> - 0 based index of partition
+        // Returns: true on valid partition
+        public getPartitionBaseAddress(partition : number) : number
+        {
+            // Return if invalid partition index
+            if (partition < 0 || partition >= _MemoryPartitions)
+                return -1;
+
+            // Return base
+            return this.partitionBaseAddress[partition];
+        }
+
+        /*
+        // Gets limit at given partition, or -1 on invalid partition
+        //
+        // Params: partition <number> - 0 based index of partition
+        // Returns: true on valid partition
+        public partitionLimit(partition : number)
+        {
+            // Return if invalid partition index
+            if (partition < 0 || partition >= _MemoryPartitions)
+                return -1;
+
+            // Return limit
+            return this.partitionBaseAddress[partition] + _MemoryPartitionSize;
+        }
+        */
 
         // Get dword number value at start of two byte dword little endian address
         //
@@ -66,14 +204,22 @@ module TSOS
         // Implies data was validated before hand, with no spaces or carriage returns
         //
         // Params: source <string> - program input
-        public loadMemory(source:string):void
+        public loadMemory(source:string): number
         {
             // Inits
+            var nextPart : number = this.nextPartitionAvailable();
             var val:string;
             var mem = 0;
 
+            // Return -1 if no partition avialable
+            if( nextPart == -1 )
+                return -1;
+
+            // Set mem to base
+            mem = this.partitionBaseAddress[nextPart];
+
             // Zeros the memory first
-            this.zeroMemory();
+            this.zeroMemory(nextPart);
 
             // Load data into memory splitting on hex pairs
             for (var i = 0; (i < source.length) && (mem < _MemoryMax); i = i + 2) {
@@ -85,6 +231,12 @@ module TSOS
                 _Memory.programMemory[mem] = parseInt(val, 16);
                 mem++;
             }
+
+            // Flag partition in use
+            this.partitionsLoaded[nextPart] = true;
+
+            // Return partition added
+            return nextPart;
         }
 
         // Gets string from memory. Reads until 00.

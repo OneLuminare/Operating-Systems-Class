@@ -34,6 +34,7 @@ const UNKNOWN_SYSCALL_IRQ: number = 9;
 const PRINT_INTEGER_IRQ: number = 10;
 const PRINT_STRING_IRQ: number = 11;
 const READ_PAST_EOP_IRQ: number = 12;
+const MEMORY_FULL_IRQ: number = 13;
 
 //
 // Global Variables
@@ -80,9 +81,15 @@ var _Utils: TSOS.Utils;
 
 // Memory
 const _MemoryMax : number = 256;
+const _MemoryPartitions = 3;
 const _MemoryPartitionSize : number = 256;
 var _Memory : TSOS.MemoryAccessor;
 var _MemoryManager : TSOS.MemoryManager;
+
+// Process Scheduling
+var _TimerOn : boolean = false;
+var _TimerCounter : number = 0;
+var _Quantum : number = 6;
 
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode: boolean = false;

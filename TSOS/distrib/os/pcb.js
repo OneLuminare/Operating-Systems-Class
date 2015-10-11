@@ -7,14 +7,15 @@
 var TSOS;
 (function (TSOS) {
     var ProcessControlBlock = (function () {
-        function ProcessControlBlock(pid, base, limit, PC, xReg, yReg, Acc, zFlag, created, running) {
+        function ProcessControlBlock(pid, base, limit, PC, xReg, yReg, Acc, zFlag, created) {
+            if (base === void 0) { base = 0; }
+            if (limit === void 0) { limit = 0; }
             if (PC === void 0) { PC = 0; }
             if (xReg === void 0) { xReg = 0; }
             if (yReg === void 0) { yReg = 0; }
             if (Acc === void 0) { Acc = 0; }
             if (zFlag === void 0) { zFlag = 0; }
             if (created === void 0) { created = new Date(); }
-            if (running === void 0) { running = true; }
             this.pid = pid;
             this.base = base;
             this.limit = limit;
@@ -24,7 +25,6 @@ var TSOS;
             this.Acc = Acc;
             this.zFlag = zFlag;
             this.created = created;
-            this.running = running;
         }
         // Overrides toString for trace purposes
         ProcessControlBlock.prototype.toString = function () {
