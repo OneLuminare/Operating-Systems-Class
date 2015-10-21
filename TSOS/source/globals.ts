@@ -78,9 +78,10 @@ var _StdOut;
 var _Console: TSOS.Console;
 var _OsShell: TSOS.Shell;
 var _Utils: TSOS.Utils;
+var _OutputPrompt : string = '#';
 
 // Memory
-const _MemoryMax : number = 256;
+const _MemoryMax : number = 768;
 const _MemoryPartitions = 3;
 const _MemoryPartitionSize : number = 256;
 var _Memory : TSOS.MemoryAccessor;

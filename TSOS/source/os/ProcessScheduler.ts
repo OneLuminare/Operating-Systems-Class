@@ -207,11 +207,14 @@ module TSOS {
             pcb.base = _MemoryManager.getPartitionBaseAddress(part);
             pcb.limit = _MemoryPartitionSize;
 
+            // Add to resident list
+            this.residentList.push(pcb);
+
             // Update memory display
             TSOS.Control.updateMemoryDisplay();
 
             // Send trace message
-            _Kernel.krnTrace("Created process PID: " + this.runningProcess.pid);
+            _Kernel.krnTrace("Created process PID: " + pcb.pid);
 
             // Return pcb created
             return pcb;
@@ -247,8 +250,10 @@ module TSOS {
         // Returns: True if executed, false if invlaid pid
         public executeProcess(pid : number) : boolean
         {
+            _Kernel.krnTrace("h1");
             // Get index in list
             var index : number = this.findResidentListIndex(pid);
+            _Kernel.krnTrace("h2" + index);
 
             // Return false if not found pid
             if( index == -1)
@@ -256,15 +261,20 @@ module TSOS {
 
             // Get pcb
             var pcb : TSOS.ProcessControlBlock = this.residentList[index];
+            _Kernel.krnTrace("h3");
 
             // Remove from resident list
             this.removeFromResidentList(pid);
 
+            _Kernel.krnTrace("h4");
+
             // If no running processess
             if( !this.areProcessesRunning() )
             {
+                _Kernel.krnTrace("h5");
                 // Put in ready queue
                 this.readyQueue.enqueue(pcb);
+                _Kernel.krnTrace("h6");
 
                 // !!! Might Change
                 // !!! Might send interrupt to do context switch
@@ -272,6 +282,7 @@ module TSOS {
 
                 // Perform context switch
                 this.contextSwitch();
+                _Kernel.krnTrace("h7");
             }
             // Else processes are running
             else

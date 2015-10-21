@@ -65,8 +65,9 @@ var _StdOut;
 var _Console;
 var _OsShell;
 var _Utils;
+var _OutputPrompt = '#';
 // Memory
-var _MemoryMax = 256;
+var _MemoryMax = 768;
 var _MemoryPartitions = 3;
 var _MemoryPartitionSize = 256;
 var _Memory;

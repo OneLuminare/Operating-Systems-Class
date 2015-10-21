@@ -159,10 +159,12 @@ var TSOS;
             // Set base and limit of pcb
             pcb.base = _MemoryManager.getPartitionBaseAddress(part);
             pcb.limit = _MemoryPartitionSize;
+            // Add to resident list
+            this.residentList.push(pcb);
             // Update memory display
             TSOS.Control.updateMemoryDisplay();
             // Send trace message
-            _Kernel.krnTrace("Created process PID: " + this.runningProcess.pid);
+            _Kernel.krnTrace("Created process PID: " + pcb.pid);
             // Return pcb created
             return pcb;
             /*
@@ -195,24 +197,31 @@ var TSOS;
         // Params: pid <number> - pid of loaded process
         // Returns: True if executed, false if invlaid pid
         ProcessScheduler.prototype.executeProcess = function (pid) {
+            _Kernel.krnTrace("h1");
             // Get index in list
             var index = this.findResidentListIndex(pid);
+            _Kernel.krnTrace("h2" + index);
             // Return false if not found pid
             if (index == -1)
                 return false;
             // Get pcb
             var pcb = this.residentList[index];
+            _Kernel.krnTrace("h3");
             // Remove from resident list
             this.removeFromResidentList(pid);
+            _Kernel.krnTrace("h4");
             // If no running processess
             if (!this.areProcessesRunning()) {
+                _Kernel.krnTrace("h5");
                 // Put in ready queue
                 this.readyQueue.enqueue(pcb);
+                _Kernel.krnTrace("h6");
                 // !!! Might Change
                 // !!! Might send interrupt to do context switch
                 // !!! And start timer irq
                 // Perform context switch
                 this.contextSwitch();
+                _Kernel.krnTrace("h7");
             }
             else {
                 // Put in ready queue

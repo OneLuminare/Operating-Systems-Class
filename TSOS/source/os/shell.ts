@@ -134,6 +134,10 @@ module TSOS {
             _StdOut.putText(this.promptStr);
         }
 
+        public putPromptOutput() {
+            _StdOut.putText(_OutputPrompt);
+        }
+
         public handleInput(buffer) {
             _Kernel.krnTrace("Shell Command~" + buffer);
             //
@@ -236,8 +240,11 @@ module TSOS {
         // Outputs message but does not reset message flag
         public outputMessage(msg : string) : void
         {
+            _StdOut.advanceLine();
             _StdOut.putText(msg);
             _StdOut.advanceLine();
+            this.putPrompt();
+            _StdOut.putText(_Console.buffer);
         }
 
         //

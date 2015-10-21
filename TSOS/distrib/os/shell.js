@@ -79,6 +79,9 @@ var TSOS;
         Shell.prototype.putPrompt = function () {
             _StdOut.putText(this.promptStr);
         };
+        Shell.prototype.putPromptOutput = function () {
+            _StdOut.putText(_OutputPrompt);
+        };
         Shell.prototype.handleInput = function (buffer) {
             _Kernel.krnTrace("Shell Command~" + buffer);
             //
@@ -173,6 +176,8 @@ var TSOS;
         Shell.prototype.outputMessage = function (msg) {
             _StdOut.putText(msg);
             _StdOut.advanceLine();
+            //this.putPrompt();
+            _StdOut.putText(_Console.buffer);
         };
         //
         // Shell Command Functions.  Kinda not part of Shell() class exactly, but
