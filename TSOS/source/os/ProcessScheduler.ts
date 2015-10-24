@@ -141,6 +141,7 @@ module TSOS {
         // Returns: PCB removed or null if not found
         public removeFromReadyQueue(pid : number) : TSOS.ProcessControlBlock
         {
+
             // Inits
             var tempArr  = [];
             var pcb : TSOS.ProcessControlBlock = null;
@@ -155,16 +156,24 @@ module TSOS {
                 // Add to array if not one to be removed
                 if( pcb.pid != pid)
                 {
+
                     tempArr.push(pcb);
+
                 }
                 // Else get pcb
                 else
+                    _Kernel.krnTrace("found");
                     found = pcb;
             }
 
+
+
             // Copy temp array back into queue
             for( var i = 0; i < tempArr.length; i++)
+            {
+                _Kernel.krnTrace(tempArr[i].pid.toString());
                 this.readyQueue.enqueue(tempArr[i]);
+            }
 
             // Return pcb or null
             return found;
@@ -187,11 +196,11 @@ module TSOS {
             var pcb : TSOS.ProcessControlBlock = new TSOS.ProcessControlBlock(this.nextPID);
             var part : number = 0;
 
+            // Load program input to memory
+            part = _MemoryManager.loadMemory(processCode,this.nextPID);
+
             // Set next avaible pid
             this.nextPID++;
-
-            // Load program input to memory
-            part = _MemoryManager.loadMemory(processCode);
 
             // Check if parition wasn't  loaded
             if( part == -1)
@@ -250,10 +259,11 @@ module TSOS {
         // Returns: True if executed, false if invlaid pid
         public executeProcess(pid : number) : boolean
         {
-            _Kernel.krnTrace("h1");
+
+
             // Get index in list
             var index : number = this.findResidentListIndex(pid);
-            _Kernel.krnTrace("h2" + index);
+
 
             // Return false if not found pid
             if( index == -1)
@@ -261,34 +271,36 @@ module TSOS {
 
             // Get pcb
             var pcb : TSOS.ProcessControlBlock = this.residentList[index];
-            _Kernel.krnTrace("h3");
+
 
             // Remove from resident list
             this.removeFromResidentList(pid);
 
-            _Kernel.krnTrace("h4");
 
             // If no running processess
             if( !this.areProcessesRunning() )
             {
-                _Kernel.krnTrace("h5");
                 // Put in ready queue
                 this.readyQueue.enqueue(pcb);
-                _Kernel.krnTrace("h6");
 
                 // !!! Might Change
                 // !!! Might send interrupt to do context switch
                 // !!! And start timer irq
 
+                TSOS.Control.updateReadyQueueDisplay();
+
                 // Perform context switch
                 this.contextSwitch();
-                _Kernel.krnTrace("h7");
+
             }
             // Else processes are running
             else
             {
                 // Put in ready queue
                 this.readyQueue.enqueue(pcb);
+
+                TSOS.Control.updateReadyQueueDisplay();
+
             }
 
             // Set trace message
@@ -358,6 +370,7 @@ module TSOS {
             // Check if process is in running process
             if (this.runningProcess != null) {
                 if (this.runningProcess.pid == pid) {
+
                     // Get pcb
                     pcb = this.runningProcess;
 
@@ -370,11 +383,21 @@ module TSOS {
                     pcb.zFlag = _CPU.Zflag;
                     pcb.Acc = _CPU.Acc;
 
+
+                    // Set partition free
+                    var part = _MemoryManager.partitionFromBase(pcb.base);
+
+                    _MemoryManager.freePartition(part);
+
+
                     // Set running process to null
-                    this.runningProcess == null;
+                    this.runningProcess = null;
+
+                    TSOS.Control.updateRunningProcessDisplay();
 
                     // Context switch
                     this.contextSwitch();
+
                 }
                 // Else remove from ready queue
                 else
@@ -382,11 +405,17 @@ module TSOS {
                     // Removes from ready queue, or
                     // gets null for return value
                     pcb = this.removeFromReadyQueue(pid);
+
+                    TSOS.Control.updateReadyQueueDisplay();
+
+                    // Set partition free
+                    var part = _MemoryManager.partitionFromBase(pcb.base);
+                    _MemoryManager.freePartition(part);
+
                 }
             }
 
-            // Update memory display with no highlighted next instruction
-            TSOS.Control.updateMemoryDisplay();
+
 
             // Check if not null pcb
             if (pcb != null)
@@ -450,6 +479,9 @@ module TSOS {
             // Inits
             var pcb:TSOS.ProcessControlBlock = null;
 
+            // Trace
+            _Kernel.krnTrace("Context Switch");
+
             // Check if running process
             if( this.runningProcess != null)
             {
@@ -459,11 +491,21 @@ module TSOS {
                     // Get pcb of running process
                     pcb = this.runningProcess;
 
+                    pcb.base = _CPU.base;
+                    pcb.limit = _CPU.limit;
+                    pcb.PC = _CPU.PC;
+                    pcb.xReg = _CPU.Xreg;
+                    pcb.yReg = _CPU.Yreg;
+                    pcb.zFlag = _CPU.Zflag;
+                    pcb.Acc = _CPU.Acc;
+
                     // Enqueue in ready queue
                     this.readyQueue.enqueue(pcb);
 
                     // Get next process
                     pcb = this.readyQueue.dequeue();
+
+
 
                     // Set registers back
                     _CPU.base = pcb.base;
@@ -474,8 +516,25 @@ module TSOS {
                     _CPU.Acc = pcb.Acc;
                     _CPU.PC = pcb.PC;
 
+
+                    // Update cput display
+                    TSOS.Control.updateCPUDisplay();
+
                     // Set running process
                     this.runningProcess = pcb;
+
+                    TSOS.Control.updateRunningProcessDisplay();
+                    TSOS.Control.updateReadyQueueDisplay();
+
+                    // check if this address is with in memory, and update mem with highlight code
+                    if( pcb.PC < pcb.limit )
+                    {
+                        var address = pcb.base + pcb.PC;
+                        var inst = _Memory.getAddress(address).toString(16);
+
+                        // Update memory display with highlighted code
+                        TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
+                    }
 
                     // Start executing again
                     _CPU.isExecuting = true;
@@ -484,6 +543,7 @@ module TSOS {
             // Else no running process
             else
             {
+
                 // Check if residents
                 if( this.readyQueue.getSize() > 0 )
                 {
@@ -499,8 +559,28 @@ module TSOS {
                     _CPU.Acc = pcb.Acc;
                     _CPU.PC = pcb.PC;
 
+                    // Update cput display
+                    TSOS.Control.updateCPUDisplay();
+
                     // Set as running process
                     this.runningProcess = pcb;
+
+                    TSOS.Control.updateRunningProcessDisplay();
+                    TSOS.Control.updateReadyQueueDisplay();
+
+                    if( pcb.PC < pcb.limit )
+                    {
+
+                        var address = pcb.base + pcb.PC;
+                        var inst = _Memory.getAddress(address).toString(16);
+
+                        // Update memory display with highlighted code
+                        TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
+                    }
+
+
+                    //TSOS.Devices.startTimer();
+
 
                     // Turn on timer
                     _TimerOn = true;
@@ -508,16 +588,23 @@ module TSOS {
                     // Reset counter
                     _TimerCounter = 0;
 
+
                     // Set is executing flag
                     _CPU.isExecuting = true;
                 }
                 else
                 {
+                    //TSOS.Devices.stopTimer();
+
+                    // Update memory display with no highlighted next instruction
+                    TSOS.Control.updateMemoryDisplay();
+
                     // Turn on timer
                     _TimerOn = false;
 
                     // Reset counter
                     _TimerCounter = 0;
+
 
                     // Stop executing
                     _CPU.isExecuting = false;

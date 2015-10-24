@@ -82,8 +82,11 @@ var TSOS;
             _CPU.init(); //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
             // Create new memory object
             _Memory = new TSOS.MemoryAccessor();
+            // Create table
             this.createMemoryDisplay();
             this.createCPUDisplay();
+            this.createRunningProcessDisplay();
+            this.createReadyQueueDisplay();
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(TSOS.Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
             // .. and call the OS Kernel Bootstrap routine.
@@ -242,6 +245,144 @@ var TSOS;
             row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.Zflag.toString(16), 2).toUpperCase();
             row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.base.toString(16), 4).toUpperCase();
             row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.limit.toString(16), 4).toUpperCase();
+        };
+        Control.createRunningProcessDisplay = function () {
+            var tbl = document.getElementById("tblRunningProcess");
+            var hdr = tbl.insertRow();
+            var row = tbl.insertRow();
+            hdr.insertCell().innerHTML = '<b>' + 'PID' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'PC' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Acc' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'XReg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'YReg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'ZFlag' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
+            row.insertCell().innerHTML = ' ';
+            row.insertCell().innerHTML = ' ';
+            row.insertCell().innerHTML = ' ';
+            row.insertCell().innerHTML = ' ';
+            row.insertCell().innerHTML = ' ';
+            row.insertCell().innerHTML = ' ';
+            row.insertCell().innerHTML = ' ';
+            row.insertCell().innerHTML = ' ';
+            row.insertCell().innerHTML = ' ';
+        };
+        Control.updateRunningProcessDisplay = function () {
+            var tbl = document.getElementById("tblRunningProcess");
+            var row = tbl.rows.item(1);
+            var pid = 0;
+            var acc = 0;
+            var pc = 0;
+            var xreg = 0;
+            var yreg = 0;
+            var zflag = 0;
+            var base = 0;
+            var limit = 0;
+            var created = "";
+            var pcb = _ProcessScheduler.runningProcess;
+            if (pcb != null) {
+                pid = pcb.pid;
+                acc = pcb.Acc;
+                xreg = pcb.xReg;
+                yreg = pcb.yReg;
+                zflag = pcb.zFlag;
+                base = pcb.base;
+                limit = pcb.limit;
+                created = TSOS.Utils.timeString(pcb.created);
+            }
+            row.cells.item(0).innerHTML = pid.toString();
+            row.cells.item(1).innerHTML = pc.toString(16);
+            row.cells.item(2).innerHTML = acc.toString(16);
+            row.cells.item(3).innerHTML = xreg.toString(16);
+            row.cells.item(4).innerHTML = yreg.toString(16);
+            row.cells.item(5).innerHTML = zflag.toString(16);
+            row.cells.item(6).innerHTML = base.toString(16);
+            row.cells.item(7).innerHTML = limit.toString(16);
+            row.cells.item(8).innerHTML = created;
+        };
+        Control.createReadyQueueDisplay = function () {
+            var tbl = document.getElementById("tblReadyQueue");
+            var hdr = tbl.insertRow();
+            var row = tbl.insertRow();
+            hdr.insertCell().innerHTML = '<b>' + 'PID' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'PC' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Acc' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'XReg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'YReg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'ZFlag' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
+            row.insertCell().innerHTML = '0';
+            row.insertCell().innerHTML = ' 0';
+            row.insertCell().innerHTML = ' 0';
+            row.insertCell().innerHTML = ' 0';
+            row.insertCell().innerHTML = ' 0';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row = tbl.insertRow();
+            row.insertCell().innerHTML = ' 0';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = ' 0';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = ' 0';
+            row = tbl.insertRow();
+            row.insertCell().innerHTML = ' 0';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = '0 ';
+        };
+        Control.updateReadyQueueDisplay = function () {
+            var tbl = document.getElementById("tblReadyQueue");
+            var row = null;
+            var rowNum = 1;
+            var pcb = null;
+            var arr = new Array();
+            var temp = new TSOS.Queue();
+            while (_ProcessScheduler.readyQueue.getSize() > 0) {
+                pcb = _ProcessScheduler.readyQueue.dequeue();
+                arr.push(pcb);
+                temp.enqueue(pcb);
+            }
+            for (var i = 0; (i < arr.length) && (i < 3); i++)
+                ;
+            {
+                _Kernel.krnTrace("rq2");
+                pcb = arr[i];
+                _Kernel.krnTrace("rq3");
+                if (pcb != null) {
+                    _Kernel.krnTrace(pcb.toString());
+                    row = tbl.rows.item(rowNum);
+                    row.cells.item(0).innerHTML = pcb.pid.toString();
+                    row.cells.item(1).innerHTML = pcb.PC.toString(16);
+                    row.cells.item(2).innerHTML = pcb.Acc.toString(16);
+                    row.cells.item(3).innerHTML = pcb.xReg.toString(16);
+                    row.cells.item(4).innerHTML = pcb.yReg.toString(16);
+                    row.cells.item(5).innerHTML = pcb.zFlag.toString(16);
+                    row.cells.item(6).innerHTML = pcb.base.toString(16);
+                    row.cells.item(7).innerHTML = pcb.limit.toString(16);
+                    row.cells.item(8).innerHTML = TSOS.Utils.timeString(pcb.created);
+                    rowNum++;
+                    _Kernel.krnTrace("rq5");
+                }
+            }
+            while (temp.getSize() > 0) {
+                pcb = temp.dequeue();
+                _ProcessScheduler.readyQueue.enqueue(pcb);
+            }
         };
         return Control;
     })();

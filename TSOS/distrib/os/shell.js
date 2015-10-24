@@ -174,9 +174,10 @@ var TSOS;
         };
         // Outputs message but does not reset message flag
         Shell.prototype.outputMessage = function (msg) {
+            _StdOut.advanceLine();
             _StdOut.putText(msg);
             _StdOut.advanceLine();
-            //this.putPrompt();
+            this.putPrompt();
             _StdOut.putText(_Console.buffer);
         };
         //

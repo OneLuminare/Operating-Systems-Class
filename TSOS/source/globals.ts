@@ -35,6 +35,7 @@ const PRINT_INTEGER_IRQ: number = 10;
 const PRINT_STRING_IRQ: number = 11;
 const READ_PAST_EOP_IRQ: number = 12;
 const MEMORY_FULL_IRQ: number = 13;
+const CONTEXT_SWITCH_IRQ: number = 14;
 
 //
 // Global Variables

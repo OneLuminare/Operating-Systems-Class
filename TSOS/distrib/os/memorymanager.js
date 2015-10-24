@@ -15,6 +15,7 @@ var TSOS;
             // Init arrays
             this.partitionsLoaded = new Array(_MemoryPartitions);
             this.partitionBaseAddress = new Array(_MemoryPartitions);
+            this.partitionPIDs = new Array(_MemoryPartitions);
             // Populate arrays
             this.populateArrays();
             // Zero memory
@@ -26,6 +27,10 @@ var TSOS;
             this.partitionsLoaded[0] = false;
             this.partitionsLoaded[1] = false;
             this.partitionsLoaded[2] = false;
+            // Set partition pids
+            this.partitionPIDs[0] = 0;
+            this.partitionPIDs[1] = 0;
+            this.partitionPIDs[2] = 0;
             // Init base addresses
             var nextAddress = 0;
             for (var i = 0; i < _MemoryPartitions; i++) {
@@ -91,6 +96,18 @@ var TSOS;
             // Return true if memory available
             return next;
         };
+        // Gets partition index by base
+        //
+        // Params: base
+        // Returns partition index or -1 on not found
+        MemoryManager.prototype.partitionFromBase = function (base) {
+            var partition = -1;
+            for (var i = 0; (i < this.partitionBaseAddress.length) && (partition == -1); i++) {
+                if (this.partitionBaseAddress[i] == base)
+                    partition = i;
+            }
+            return partition;
+        };
         // Mark partition as available.
         //
         // Params: partition <number> - index of partition
@@ -140,17 +157,16 @@ var TSOS;
         // Params: address <number> - start byte of two byte little endian address
         // Returns: converted dword <number>
         // Throws: RangeError on read past limit
-        MemoryManager.prototype.getDWordLittleEndian = function (address, base, limit) {
+        MemoryManager.prototype.getDWordLittleEndian = function (address, limit) {
             // Init return value to fail
             var dword = -1;
-            var newAdd = base + address;
-            if ((newAdd < limit) && (newAdd + 1 < limit)) {
+            if ((address < limit) && (address + 1 < limit)) {
                 // Convert value , remembering a number represents a byte
                 dword = (_Memory.programMemory[address + 1] * 256) + _Memory.programMemory[address];
             }
             else {
                 // Send memory violation interrupt
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(base, newAdd)));
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(limit - _MemoryPartitionSize, address)));
                 throw new RangeError("Memory past limit.");
             }
             // Return dword value fliped, or -1 on invalid start address
@@ -160,7 +176,7 @@ var TSOS;
         // Implies data was validated before hand, with no spaces or carriage returns
         //
         // Params: source <string> - program input
-        MemoryManager.prototype.loadMemory = function (source) {
+        MemoryManager.prototype.loadMemory = function (source, pid) {
             // Inits
             var nextPart = this.nextPartitionAvailable();
             var val;
@@ -183,8 +199,31 @@ var TSOS;
             }
             // Flag partition in use
             this.partitionsLoaded[nextPart] = true;
+            // Set pid
+            this.partitionPIDs[nextPart] = pid;
             // Return partition added
             return nextPart;
+        };
+        // Get pid of loaded process.
+        //
+        // Params: base <number> - base address of process
+        // Returns: pid on success
+        //          -1 on invalid base
+        //          -2 on no process loaded at base
+        MemoryManager.prototype.getLoadedPID = function (base) {
+            var index = 0;
+            var found = false;
+            for (var i = 0; (i < _MemoryPartitions) && !found; i++) {
+                if (base == this.partitionBaseAddress[i]) {
+                    index = i;
+                    found = true;
+                }
+            }
+            if (!found)
+                return -1;
+            if (this.partitionsLoaded[index] == false)
+                return -2;
+            return this.partitionPIDs[index];
         };
         // Gets string from memory. Reads until 00.
         //

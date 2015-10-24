@@ -31,6 +31,7 @@ var PRINT_INTEGER_IRQ = 10;
 var PRINT_STRING_IRQ = 11;
 var READ_PAST_EOP_IRQ = 12;
 var MEMORY_FULL_IRQ = 13;
+var CONTEXT_SWITCH_IRQ = 14;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.

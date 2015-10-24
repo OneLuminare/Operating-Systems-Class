@@ -124,11 +124,14 @@ var TSOS;
                     tempArr.push(pcb);
                 }
                 else
-                    found = pcb;
+                    _Kernel.krnTrace("found");
+                found = pcb;
             }
             // Copy temp array back into queue
-            for (var i = 0; i < tempArr.length; i++)
+            for (var i = 0; i < tempArr.length; i++) {
+                _Kernel.krnTrace(tempArr[i].pid.toString());
                 this.readyQueue.enqueue(tempArr[i]);
+            }
             // Return pcb or null
             return found;
         };
@@ -145,10 +148,10 @@ var TSOS;
             // Inits - create pcb
             var pcb = new TSOS.ProcessControlBlock(this.nextPID);
             var part = 0;
+            // Load program input to memory
+            part = _MemoryManager.loadMemory(processCode, this.nextPID);
             // Set next avaible pid
             this.nextPID++;
-            // Load program input to memory
-            part = _MemoryManager.loadMemory(processCode);
             // Check if parition wasn't  loaded
             if (part == -1) {
                 // Send interrupt
@@ -197,35 +200,30 @@ var TSOS;
         // Params: pid <number> - pid of loaded process
         // Returns: True if executed, false if invlaid pid
         ProcessScheduler.prototype.executeProcess = function (pid) {
-            _Kernel.krnTrace("h1");
             // Get index in list
             var index = this.findResidentListIndex(pid);
-            _Kernel.krnTrace("h2" + index);
             // Return false if not found pid
             if (index == -1)
                 return false;
             // Get pcb
             var pcb = this.residentList[index];
-            _Kernel.krnTrace("h3");
             // Remove from resident list
             this.removeFromResidentList(pid);
-            _Kernel.krnTrace("h4");
             // If no running processess
             if (!this.areProcessesRunning()) {
-                _Kernel.krnTrace("h5");
                 // Put in ready queue
                 this.readyQueue.enqueue(pcb);
-                _Kernel.krnTrace("h6");
                 // !!! Might Change
                 // !!! Might send interrupt to do context switch
                 // !!! And start timer irq
+                TSOS.Control.updateReadyQueueDisplay();
                 // Perform context switch
                 this.contextSwitch();
-                _Kernel.krnTrace("h7");
             }
             else {
                 // Put in ready queue
                 this.readyQueue.enqueue(pcb);
+                TSOS.Control.updateReadyQueueDisplay();
             }
             // Set trace message
             _Kernel.krnTrace("Executing process PID: " + pcb.pid);
@@ -296,8 +294,12 @@ var TSOS;
                     pcb.yReg = _CPU.Yreg;
                     pcb.zFlag = _CPU.Zflag;
                     pcb.Acc = _CPU.Acc;
+                    // Set partition free
+                    var part = _MemoryManager.partitionFromBase(pcb.base);
+                    _MemoryManager.freePartition(part);
                     // Set running process to null
-                    this.runningProcess == null;
+                    this.runningProcess = null;
+                    TSOS.Control.updateRunningProcessDisplay();
                     // Context switch
                     this.contextSwitch();
                 }
@@ -305,10 +307,12 @@ var TSOS;
                     // Removes from ready queue, or
                     // gets null for return value
                     pcb = this.removeFromReadyQueue(pid);
+                    TSOS.Control.updateReadyQueueDisplay();
+                    // Set partition free
+                    var part = _MemoryManager.partitionFromBase(pcb.base);
+                    _MemoryManager.freePartition(part);
                 }
             }
-            // Update memory display with no highlighted next instruction
-            TSOS.Control.updateMemoryDisplay();
             // Check if not null pcb
             if (pcb != null) {
                 // Set trace message
@@ -362,12 +366,21 @@ var TSOS;
         ProcessScheduler.prototype.contextSwitch = function () {
             // Inits
             var pcb = null;
+            // Trace
+            _Kernel.krnTrace("Context Switch");
             // Check if running process
             if (this.runningProcess != null) {
                 // Check if residents
                 if (this.readyQueue.getSize() > 0) {
                     // Get pcb of running process
                     pcb = this.runningProcess;
+                    pcb.base = _CPU.base;
+                    pcb.limit = _CPU.limit;
+                    pcb.PC = _CPU.PC;
+                    pcb.xReg = _CPU.Xreg;
+                    pcb.yReg = _CPU.Yreg;
+                    pcb.zFlag = _CPU.Zflag;
+                    pcb.Acc = _CPU.Acc;
                     // Enqueue in ready queue
                     this.readyQueue.enqueue(pcb);
                     // Get next process
@@ -380,8 +393,19 @@ var TSOS;
                     _CPU.Zflag = pcb.zFlag;
                     _CPU.Acc = pcb.Acc;
                     _CPU.PC = pcb.PC;
+                    // Update cput display
+                    TSOS.Control.updateCPUDisplay();
                     // Set running process
                     this.runningProcess = pcb;
+                    TSOS.Control.updateRunningProcessDisplay();
+                    TSOS.Control.updateReadyQueueDisplay();
+                    // check if this address is with in memory, and update mem with highlight code
+                    if (pcb.PC < pcb.limit) {
+                        var address = pcb.base + pcb.PC;
+                        var inst = _Memory.getAddress(address).toString(16);
+                        // Update memory display with highlighted code
+                        TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
+                    }
                     // Start executing again
                     _CPU.isExecuting = true;
                 }
@@ -399,8 +423,19 @@ var TSOS;
                     _CPU.Zflag = pcb.zFlag;
                     _CPU.Acc = pcb.Acc;
                     _CPU.PC = pcb.PC;
+                    // Update cput display
+                    TSOS.Control.updateCPUDisplay();
                     // Set as running process
                     this.runningProcess = pcb;
+                    TSOS.Control.updateRunningProcessDisplay();
+                    TSOS.Control.updateReadyQueueDisplay();
+                    if (pcb.PC < pcb.limit) {
+                        var address = pcb.base + pcb.PC;
+                        var inst = _Memory.getAddress(address).toString(16);
+                        // Update memory display with highlighted code
+                        TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
+                    }
+                    //TSOS.Devices.startTimer();
                     // Turn on timer
                     _TimerOn = true;
                     // Reset counter
@@ -409,6 +444,9 @@ var TSOS;
                     _CPU.isExecuting = true;
                 }
                 else {
+                    //TSOS.Devices.stopTimer();
+                    // Update memory display with no highlighted next instruction
+                    TSOS.Control.updateMemoryDisplay();
                     // Turn on timer
                     _TimerOn = false;
                     // Reset counter

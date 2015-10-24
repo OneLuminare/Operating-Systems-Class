@@ -99,7 +99,13 @@ module TSOS {
                 // Execute if not (trace mode on, and next instruction false)
                 if( !(_TraceMode && !_NextInstruction) )
                 {
+                    //_TimerCounter++;
+
+
                     _CPU.cycle();
+
+                    if( _TimerOn )
+                        _KernelInterruptQueue.enqueue(new Interrupt(TIMER_IRQ,null));
 
                     // Set next instruction to false, for next step
                     _NextInstruction = false;
@@ -168,32 +174,39 @@ module TSOS {
                         _OsShell.message("Executing process PID " + params.toString() + ".");
                     break;
                 case TERMINATE_PROCESS_IRQ:
-                    pcb = _ProcessScheduler.exitProcess(params[0]);
-                    _OsShell.outputMessage("Exiting process with PID " + pcb.pid.toString() + ".");
+                    pcb = _ProcessScheduler.exitProcess(params);
+                    if(pcb != null)
+                        _OsShell.outputMessage("Exiting process with PID " + pcb.pid.toString() + ".");
+                    else
+                        _OsShell.outputMessage("Cannot terminate process pid " + params.toString() + ", as it does not exist.")
                     break;
                 case UNKNOWN_OP_CODE_IRQ:
-                    pcb =  _ProcessScheduler.runningProcess;
-                    this.krnTrace("Unknown op code at 0x" + TSOS.Utils.padString(params[1].toString(16),4) + " in process PID " + pcb.pid.toString() + ".");
-                    _ProcessScheduler.exitProcess(params[0]);
-                    _OsShell.outputMessage("Process pid " + pcb.pid.toString() + " terminated due to unknown op code at 0x" + TSOS.Utils.padString(params[1].toString(16),4) + ".");
+                    //pcb =  _ProcessScheduler.runningProcess;
+                    var pid : number = _MemoryManager.getLoadedPID(params[0]);
+                    this.krnTrace("Unknown op code at 0x" + TSOS.Utils.padString((params[1]).toString(16),4) + " in process PID " + pid.toString() + ".");
+                    _ProcessScheduler.exitProcess(pid);
+                    _OsShell.outputMessage("Process pid " + pid.toString() + " terminated due to unknown op code at 0x" + TSOS.Utils.padString((params[1]).toString(16),4) + ".");
                     break;
                 case MEMORY_ACCESS_VIOLATION_IRQ:
-                    pcb =  _ProcessScheduler.runningProcess;
-                    this.krnTrace("Memory access violation to address 0x" + TSOS.Utils.padString(params[1].toString(16),4) + " in process PID " + pcb.pid.toString() + ".");
-                    _ProcessScheduler.exitProcess(params[0]);
-                    _OsShell.outputMessage("Process pid " + pcb.pid.toString() + " terminated due to memory access violation to address 0x" + TSOS.Utils.padString(params[1].toString(16),4) + ".");
+                    //pcb =  _ProcessScheduler.runningProcess;
+                    var pid : number = _MemoryManager.getLoadedPID(params[0]);
+                    this.krnTrace("Memory access violation to address 0x" + TSOS.Utils.padString((params[1]).toString(16),4) + " in process PID " + pid.toString() + ".");
+                    _ProcessScheduler.exitProcess(pid);
+                    _OsShell.outputMessage("Process pid " + pid.toString() + " terminated due to memory access violation to address 0x" + TSOS.Utils.padString((params[1]).toString(16),4) + ".");
                     break;
                 case ARITHMATIC_OVERFLOW_IRQ:
-                    pcb =  _ProcessScheduler.runningProcess;
-                    this.krnTrace("Arithimatic overflow in instruction 0x" + TSOS.Utils.padString((params[0] + params[1]).toString(16),4) + " in process PID " + pcb.pid.toString() + ".");
-                    _ProcessScheduler.exitProcess(params[0]);
-                    _OsShell.outputMessage("Process pid " + pcb.pid.toString() + " terminated due to arithmatic overflow in instruction 0x" + TSOS.Utils.padString((params[0] + params[1]).toString(16),4) + ".")
+                    //pcb =  _ProcessScheduler.runningProcess;
+                    var pid : number = _MemoryManager.getLoadedPID(params[0]);
+                    this.krnTrace("Arithimatic overflow in instruction 0x" + TSOS.Utils.padString((params[1]).toString(16),4) + " in process PID " + pid.toString() + ".");
+                    _ProcessScheduler.exitProcess(pid);
+                    _OsShell.outputMessage("Process pid " + pid.toString() + " terminated due to arithmatic overflow in instruction 0x" + TSOS.Utils.padString((params[1]).toString(16),4) + ".")
                     break;
                 case UNKNOWN_SYSCALL_IRQ:
-                    pcb =  _ProcessScheduler.runningProcess;
-                    this.krnTrace("Arithimatic overflow in instruction 0x" + TSOS.Utils.padString((params[0] + params[1]).toString(16),4) + " in process PID " + pcb.pid.toString() + ".");
-                    _ProcessScheduler.exitProcess(params[0]);
-                    _OsShell.outputMessage("Process pid " + pcb.pid.toString() + " terminated due to arithmatic overflow in instruction 0x" + TSOS.Utils.padString((params[0] + params[1]).toString(16),4) + ".")
+                    //pcb =  _ProcessScheduler.runningProcess;
+                    var pid : number = _MemoryManager.getLoadedPID(params[0]);
+                    this.krnTrace("Unknown system call at instruction 0x" + TSOS.Utils.padString((params[1]).toString(16),4) + " in process PID " + pid.toString() + ".");
+                    _ProcessScheduler.exitProcess(pid);
+                    _OsShell.outputMessage("Process pid " + pid.toString() + " terminated due to arithmatic overflow in instruction 0x" + TSOS.Utils.padString((params[1]).toString(16),4) + ".")
                     break;
                 case PRINT_INTEGER_IRQ:
                     this.krnTrace("Printing integer " + params);
@@ -206,14 +219,18 @@ module TSOS {
                     _CPU.isExecuting = true;
                     break;
                 case READ_PAST_EOP_IRQ:
-                    pcb =  _ProcessScheduler.runningProcess;
-                    this.krnTrace("Read string past limit 0x" +TSOS.Utils.padString(params[1].toString(16),4) + " in process PID " + pcb.pid.toString() + ".");
-                    _ProcessScheduler.exitProcess(params[0]);
-                    _OsShell.outputMessage("Process pid " + pcb.pid.toString() + " terminated due to reading string past limit 0x" + TSOS.Utils.padString(params[1].toString(16),4) + ".");
+                    //pcb =  _ProcessScheduler.runningProcess;
+                    var pid : number = _MemoryManager.getLoadedPID(params[0]);
+                    this.krnTrace("Read string past limit 0x" +TSOS.Utils.padString(params[1].toString(16),4) + " in process PID " + pid.toString() + ".");
+                    _ProcessScheduler.exitProcess(pid);
+                    _OsShell.outputMessage("Process pid " + pid.toString() + " terminated due to reading string past limit 0x" + TSOS.Utils.padString(params[1].toString(16),4) + ".");
                     break;
                 case MEMORY_FULL_IRQ:
                     this.krnTrace("Memory full cannot load program.");
                     _OsShell.message("Cannot load program, memory full.");
+                    break;
+                case CONTEXT_SWITCH_IRQ:
+                    _ProcessScheduler.contextSwitch();
                     break;
 
                 default:
@@ -221,9 +238,17 @@ module TSOS {
             }
         }
 
-        public krnTimerISR() {
+        public krnTimerISR()
+        {
             // The built-in TIMER (not clock) Interrupt Service Routine (as opposed to an ISR coming from a device driver). {
             // Check multiprogramming parameters and enforce quanta here. Call the scheduler / context switch here if necessary.
+            //_ProcessScheduler.contextSwitch();
+            _TimerCounter++;
+            if( _TimerCounter == _Quantum)
+            {
+                _KernelInterruptQueue.enqueue(new Interrupt(CONTEXT_SWITCH_IRQ,null));
+                _TimerCounter = 0;
+            }
 
         }
 
@@ -259,7 +284,7 @@ module TSOS {
         public TerminateProcess(base : number) : void
         {
             // Var pid
-            var pid : number = _ProcessScheduler.findPID(base);
+            var pid : number = _MemoryManager.getLoadedPID(base);;
 
             // Send exit process interrupt
             _KernelInterruptQueue.enqueue(new Interrupt(TERMINATE_PROCESS_IRQ,pid));
