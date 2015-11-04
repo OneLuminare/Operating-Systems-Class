@@ -36,6 +36,11 @@ const PRINT_STRING_IRQ: number = 11;
 const READ_PAST_EOP_IRQ: number = 12;
 const MEMORY_FULL_IRQ: number = 13;
 const CONTEXT_SWITCH_IRQ: number = 14;
+const CLEAR_MEMORY_IRQ : number = 15;
+const EXECUTE_ALL_IRQ : number = 16;
+const LIST_PROCESS_IRQ : number = 17;
+const CHANGE_QUANTUM_IRQ : number = 18;
+
 
 //
 // Global Variables
@@ -67,7 +72,6 @@ var _KernelRunningProcesses: any[] = null;
 var _ProcessScheduler : TSOS.ProcessScheduler;
 
 // Flags
-var _ShellWaitForMessage : boolean = false;  // Tells shell to wait for message from kernel after sending system call
 var _TraceMode : boolean = false;
 var _NextInstruction : boolean = false;
 

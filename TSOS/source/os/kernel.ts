@@ -157,21 +157,19 @@ module TSOS {
                     // untill allowing input, due to output messages forcing me to
                     // constantly redraw prompt and current input, or draw output
                     // above input
-                    if( !_ShellWaitForMessage ) {
-                        _krnKeyboardDriver.isr(params);   // Kernel mode device driver
-                        _StdIn.handleInput();
-                    }
+                    _krnKeyboardDriver.isr(params);   // Kernel mode device driver
+                    _StdIn.handleInput();
                     break;
                 case CREATE_PROCESS_IRQ:
                     pcb = _ProcessScheduler.createProcess(params);
                     if( pcb != null)
-                        _OsShell.message("Loaded process with PID " + pcb.pid.toString() + ".");
+                        _OsShell.outputMessage("Loaded process with PID " + pcb.pid.toString() + ".");
                     break;
                 case EXECUTE_PROCESS_IRQ:
                     if( !_ProcessScheduler.executeProcess(params) )
-                        _OsShell.message("No process with PID " + params.toString() + ".");
+                        _OsShell.outputMessage("No process with PID " + params.toString() + ".");
                     else
-                        _OsShell.message("Executing process PID " + params.toString() + ".");
+                        _OsShell.outputMessage("Executing process PID " + params.toString() + ".");
                     break;
                 case TERMINATE_PROCESS_IRQ:
                     pcb = _ProcessScheduler.exitProcess(params);
@@ -227,10 +225,90 @@ module TSOS {
                     break;
                 case MEMORY_FULL_IRQ:
                     this.krnTrace("Memory full cannot load program.");
-                    _OsShell.message("Cannot load program, memory full.");
+                    _OsShell.outputMessage("Cannot load program, memory full.");
                     break;
                 case CONTEXT_SWITCH_IRQ:
                     _ProcessScheduler.contextSwitch();
+                    break;
+                case CLEAR_MEMORY_IRQ:
+                    if( params < 0)
+                    {
+                        _MemoryManager.freeAllPartitions(true);
+                        _OsShell.outputMessage("Cleared all memory of loaded processess.");
+                        this.krnTrace("Cleared all memory of loaded processess.");
+                    }
+                    else
+                    {
+                        var ret = _MemoryManager.freePartition(params,true);
+                        if( ret )
+                        {
+                            _OsShell.outputMessage("Cleared partition " + params.toString() + ".");
+                            this.krnTrace("Cleared partition " + params.toString() + ".");
+                        }
+                        else
+                        {
+                            _OsShell.outputMessage("Invalid partition size. Choose an index between 0 and " + _MemoryPartitions.toString() + ".");
+                            this.krnTrace("Invalid partition size. Choose an index between 0 and " + _MemoryPartitions.toString() + ".");
+                        }
+                    }
+                    break;
+                case EXECUTE_ALL_IRQ :
+                    var procs : number[] = _ProcessScheduler.executeAllProcesses();
+                    var msg : string = "Executed " + procs.length.toString() + " processes with pid's: ";
+                    for( var i = 0; i < procs.length; i++)
+                    {
+                        if( i != 0 )
+                            msg += ',';
+                        msg += procs[i].toString();
+                    }
+                    msg += ".";
+                    _OsShell.outputMessage(msg);
+                    this.krnTrace(msg);
+                    break;
+                case LIST_PROCESS_IRQ:
+                    var running : number[] = _ProcessScheduler.listAllRunningProcesses();
+                    var loaded : number[] = _ProcessScheduler.listAllLoadedProcesses();
+                    var msg : string;
+                    var i : number = 0;
+
+                    msg = "Running Process PID's: ";
+                    for( i = 0; i < running.length; i++)
+                    {
+                        if( i != 0 )
+                            msg += " , ";
+                        msg += running[i].toString();
+                    }
+
+                    _OsShell.outputMessage(msg);
+                    this.krnTrace(msg);
+
+                    msg = "Loaded Process PID's: ";
+                    for( i = 0; i < loaded.length; i++)
+                    {
+                        if( i != 0 )
+                            msg += " , ";
+                        msg += loaded[i].toString();
+                    }
+
+                    _OsShell.outputMessage(msg);
+                    this.krnTrace(msg);
+
+                    break;
+                case CHANGE_QUANTUM_IRQ:
+                    if( params < 0)
+                    {
+                        _OsShell.outputMessage("Cannot change quantum, invalid quantum " + params.toString() + " entered.");
+                        this.krnTrace("Cannot change quantum, invalid quantum " + params.toString() + " entered.");
+                    }
+                    else
+                    {
+
+                        _Quantum = params;
+
+                        _OsShell.outputMessage("Changed quantum to " + params.toString() + ".");
+                        this.krnTrace("Changed quantum to " + params.toString() + ".");
+                    }
+
                     break;
 
                 default:
@@ -244,7 +322,7 @@ module TSOS {
             // Check multiprogramming parameters and enforce quanta here. Call the scheduler / context switch here if necessary.
             //_ProcessScheduler.contextSwitch();
             _TimerCounter++;
-            if( _TimerCounter == _Quantum)
+            if( _TimerCounter >= _Quantum)
             {
                 _KernelInterruptQueue.enqueue(new Interrupt(CONTEXT_SWITCH_IRQ,null));
                 _TimerCounter = 0;
@@ -274,13 +352,21 @@ module TSOS {
             _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ, program));
         }
 
-        // Terminate Process
+        // Execute Process based on pid
         public ExecuteProcess(pid : number) : void
         {
             // Send interupt to run process
             _KernelInterruptQueue.enqueue(new Interrupt(EXECUTE_PROCESS_IRQ, pid));
         }
 
+        // Executes all loaded process
+        public ExecuteAllProcessess() : void
+        {
+            // Send interupt to run process
+            _KernelInterruptQueue.enqueue(new Interrupt(EXECUTE_ALL_IRQ, null));
+        }
+
+        // Terminates process on base (cpu break)
         public TerminateProcess(base : number) : void
         {
             // Var pid
@@ -289,6 +375,35 @@ module TSOS {
             // Send exit process interrupt
             _KernelInterruptQueue.enqueue(new Interrupt(TERMINATE_PROCESS_IRQ,pid));
         }
+
+        // Terminate process on pid
+        public TerminateProcessByPID(pid : number)
+        {
+            // Send exit process interrupt
+            _KernelInterruptQueue.enqueue(new Interrupt(TERMINATE_PROCESS_IRQ,pid));
+        }
+
+        // Clears all memory if -1, or specific partition if part id.
+        public ClearMemory(partition : number = -1)
+        {
+            // Send interrupt to clear mem
+            _KernelInterruptQueue.enqueue(new Interrupt(CLEAR_MEMORY_IRQ,partition));
+        }
+
+        // Lists all activ processes
+        public ListAllProcessess() : void
+        {
+            // Send interupt to run process
+            _KernelInterruptQueue.enqueue(new Interrupt(LIST_PROCESS_IRQ, null));
+        }
+
+        // Changes quantum by value
+        public ChangeQuantum(quantum : number) : void
+        {
+            // Send interupt to run process
+            _KernelInterruptQueue.enqueue(new Interrupt(CHANGE_QUANTUM_IRQ, quantum));
+        }
+
 
         // Print integer value in YReg
         public PrintInteger() : void

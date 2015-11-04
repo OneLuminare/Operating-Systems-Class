@@ -179,10 +179,66 @@ module TSOS {
             return found;
         }
 
+        public getReadyQueueItem(index:number): TSOS.ProcessControlBlock
+        {
+            var ret : TSOS.ProcessControlBlock = null;
+
+            _Kernel.krnTrace("index " + index.toString() + " size " + this.readyQueue.getSize().toString());
+            if( index >= 0 && index < this.readyQueue.getSize()) {
+                ret = this.readyQueue.q[index];
+                _Kernel.krnTrace("good index");
+                _Kernel.krnTrace(ret.toString());
+            }
+
+
+            return ret;
+        }
+
+        public readyQueueSize() : number
+        { return this.readyQueue.getSize();}
+
         // Returns true if running processes
         public areProcessesRunning() : boolean
         {
             return ((this.runningProcess != null) || (this.readyQueue.getSize() > 0));
+        }
+
+        // Lists all loaded procress pid, but not running.
+        //
+        // Returns: number[] - array of loaded pid's
+        public listAllLoadedProcesses() : Array<number>
+        {
+            // Inits
+            var procs : number[] = new Array<number>();
+
+            // Cycle through resident list
+            for( var i = 0; i < this.residentList.length; i++)
+                // Add pid to list
+                procs.push(this.residentList[i].pid);
+
+            // Return array
+            return procs;
+        }
+
+        // Lists all running processs pid's, but not loaded
+        //
+        // Returns: number[] - array of running pid's
+        public listAllRunningProcesses() : Array<number>
+        {
+            // Inits
+            var procs : number[] = new Array<number>();
+
+            // If running proc add tthat too
+            if( this.runningProcess )
+                procs.push(this.runningProcess.pid);
+
+            // Cycle through resident list
+            for( var i = 0; i < this.readyQueue.q.length; i++)
+                // Add pid to list
+                procs.push(this.readyQueue.q[i].pid);
+
+            // Return array
+            return procs;
         }
 
         // Creates a PCB for a process, and loads it into memory.
@@ -347,15 +403,40 @@ module TSOS {
             */
         }
 
-        public handleReadyQueue()
+        // Executes all load processes, that are not running.
+        //
+        // Returns: <number> - number of process executed.
+        public executeAllProcesses() : Array<number>
         {
-            /* TODO */
+            // Inits
+            var procs : number[] = new Array<number>();
+            var pcb : TSOS.ProcessControlBlock = null;
+
+            // Cycle through resident list
+            while(this.residentList.length > 0)
+            {
+
+                // Remove top element of list
+                pcb = this.residentList.shift();
+
+                // Enqueu on ready queue
+                this.readyQueue.enqueue(pcb);
+
+                // Put pid on return value array
+                procs.push(pcb.pid);
+            }
+
+            // If not running processs perform context switch
+            if( this.runningProcess != null)
+                this.contextSwitch();
+            // Else update ready queue table (which is also done in context switch)
+            else
+                TSOS.Control.updateReadyQueueDisplay();
+
+            // Return procs executed
+            return procs;
         }
 
-        public  updateRunningProcess()
-        {
-            /* TODO */
-        }
 
 
         // Exits running process. Identfied by base incase process
@@ -435,40 +516,6 @@ module TSOS {
             // Return pcb or null on not found
             return pcb;
 
-
-            /*
-            // Inits
-            var pcb = this.runningProcess;
-
-            // Reset running process
-            this.runningProcess = null;
-
-            // Set next pid available
-            this.nextPID--;
-
-            // Set last values for trace. Will change, onl
-            // will save these when switching processes
-            pcb.base = _CPU.base;
-            pcb.limit = _CPU.limit;
-            pcb.PC = _CPU.PC;
-            pcb.xReg = _CPU.Xreg;
-            pcb.yReg = _CPU.Yreg;
-            pcb.zFlag = _CPU.Zflag;
-            pcb.Acc = _CPU.Acc;
-            pcb.running = false;
-
-            // Update memory display with no highlighted next instruction
-            TSOS.Control.updateMemoryDisplay();
-
-            // Set trace message
-            _Kernel.krnTrace("Terminating process PID: " + pcb.pid);
-
-            // Trace pcb data
-            _Kernel.krnTrace("PCB: " + pcb.toString());
-
-            // Return pcb
-            return pcb;
-            */
         }
 
         // Switches running procesess.
@@ -523,8 +570,7 @@ module TSOS {
                     // Set running process
                     this.runningProcess = pcb;
 
-                    TSOS.Control.updateRunningProcessDisplay();
-                    TSOS.Control.updateReadyQueueDisplay();
+
 
                     // check if this address is with in memory, and update mem with highlight code
                     if( pcb.PC < pcb.limit )
@@ -565,9 +611,6 @@ module TSOS {
                     // Set as running process
                     this.runningProcess = pcb;
 
-                    TSOS.Control.updateRunningProcessDisplay();
-                    TSOS.Control.updateReadyQueueDisplay();
-
                     if( pcb.PC < pcb.limit )
                     {
 
@@ -578,24 +621,17 @@ module TSOS {
                         TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
                     }
 
-
-                    //TSOS.Devices.startTimer();
-
-
                     // Turn on timer
                     _TimerOn = true;
 
                     // Reset counter
                     _TimerCounter = 0;
 
-
                     // Set is executing flag
                     _CPU.isExecuting = true;
                 }
                 else
                 {
-                    //TSOS.Devices.stopTimer();
-
                     // Update memory display with no highlighted next instruction
                     TSOS.Control.updateMemoryDisplay();
 
@@ -609,6 +645,10 @@ module TSOS {
                     // Stop executing
                     _CPU.isExecuting = false;
                 }
+
+                // Update running processes nd ready queue tables
+                TSOS.Control.updateRunningProcessDisplay();
+                TSOS.Control.updateReadyQueueDisplay();
             }
         }
 

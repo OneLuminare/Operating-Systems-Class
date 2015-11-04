@@ -123,8 +123,19 @@ var TSOS;
             // Zero memory if told to
             if (zeroMemory)
                 this.zeroMemory(partition);
+            // Update memory display
+            TSOS.Control.updateMemoryDisplay();
             // Return success
             return true;
+        };
+        // Clears all memory partitions
+        MemoryManager.prototype.freeAllPartitions = function (zeroMemory) {
+            if (zeroMemory === void 0) { zeroMemory = false; }
+            for (var i = 0; i < _MemoryPartitions; i++) {
+                this.freePartition(i, zeroMemory);
+            }
+            // Update memory display
+            TSOS.Control.updateMemoryDisplay();
         };
         // Gets base address at given partition, or -1 on invalid partition
         //

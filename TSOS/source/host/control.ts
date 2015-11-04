@@ -343,55 +343,55 @@ module TSOS {
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
 
-            row.insertCell().innerHTML = ' ';
-            row.insertCell().innerHTML = ' ';
-            row.insertCell().innerHTML = ' ';
-            row.insertCell().innerHTML = ' ';
-            row.insertCell().innerHTML = ' ';
-            row.insertCell().innerHTML = ' ';
-            row.insertCell().innerHTML = ' ';
-            row.insertCell().innerHTML = ' ';
-            row.insertCell().innerHTML = ' ';
+            row.insertCell().innerHTML = '-';
+            row.insertCell().innerHTML = '-';
+            row.insertCell().innerHTML = '-';
+            row.insertCell().innerHTML = '-';
+            row.insertCell().innerHTML = '-';
+            row.insertCell().innerHTML = '-';
+            row.insertCell().innerHTML = '-';
+            row.insertCell().innerHTML = '-';
+            row.insertCell().innerHTML = '-';
         }
 
         public static updateRunningProcessDisplay() : void
         {
             var tbl = (<HTMLTableElement>document.getElementById("tblRunningProcess"));
             var row : HTMLTableRowElement = (<HTMLTableRowElement>tbl.rows.item(1));
-            var pid: number = 0;
-            var acc: number = 0;
-            var pc: number = 0;
-            var xreg: number = 0;
-            var yreg: number = 0;
-            var zflag: number = 0;
-            var base: number = 0;
-            var limit: number = 0;
-            var created: string = "";
-
+            var pid = "-";
+            var acc = "-";
+            var pc = "-";
+            var xreg = "-";
+            var yreg = "-";
+            var zflag = "-";
+            var base = "-";
+            var limit = "-";
+            var created = "-";
 
             var pcb = _ProcessScheduler.runningProcess;
 
             if( pcb != null )
             {
-                pid = pcb.pid;
-                acc = pcb.Acc;
-                xreg = pcb.xReg;
-                yreg = pcb.yReg;
-                zflag = pcb.zFlag;
-                base = pcb.base;
-                limit = pcb.limit;
+                pid = pcb.pid.toString();
+                pc = pcb.PC.toString(16);
+                acc = pcb.Acc.toString(16);
+                xreg = pcb.xReg.toString(16);
+                yreg = pcb.yReg.toString(16);
+                zflag = pcb.zFlag.toString(16);
+                base = pcb.base.toString(16);
+                limit = pcb.limit.toString(16);
                 created = TSOS.Utils.timeString(pcb.created);
             }
 
 
-            (<HTMLTableCellElement>row.cells.item(0)).innerHTML = pid.toString();
-            (<HTMLTableCellElement>row.cells.item(1)).innerHTML = pc.toString(16);
-            (<HTMLTableCellElement>row.cells.item(2)).innerHTML = acc.toString(16);
-            (<HTMLTableCellElement>row.cells.item(3)).innerHTML = xreg.toString(16);
-            (<HTMLTableCellElement>row.cells.item(4)).innerHTML = yreg.toString(16);
-            (<HTMLTableCellElement>row.cells.item(5)).innerHTML = zflag.toString(16);
-            (<HTMLTableCellElement>row.cells.item(6)).innerHTML = base.toString(16);
-            (<HTMLTableCellElement>row.cells.item(7)).innerHTML = limit.toString(16);
+            (<HTMLTableCellElement>row.cells.item(0)).innerHTML = pid;
+            (<HTMLTableCellElement>row.cells.item(1)).innerHTML = pc;
+            (<HTMLTableCellElement>row.cells.item(2)).innerHTML = acc;
+            (<HTMLTableCellElement>row.cells.item(3)).innerHTML = xreg;
+            (<HTMLTableCellElement>row.cells.item(4)).innerHTML = yreg;
+            (<HTMLTableCellElement>row.cells.item(5)).innerHTML = zflag;
+            (<HTMLTableCellElement>row.cells.item(6)).innerHTML = base;
+            (<HTMLTableCellElement>row.cells.item(7)).innerHTML = limit;
             (<HTMLTableCellElement>row.cells.item(8)).innerHTML = created;
         }
 
@@ -411,39 +411,39 @@ module TSOS {
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
 
-            row.insertCell().innerHTML = '0';
-            row.insertCell().innerHTML = ' 0';
-            row.insertCell().innerHTML = ' 0';
-            row.insertCell().innerHTML = ' 0';
-            row.insertCell().innerHTML = ' 0';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
 
             row = (<HTMLTableRowElement>tbl.insertRow());
 
-            row.insertCell().innerHTML = ' 0';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = ' 0';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = ' 0';
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
 
             row = (<HTMLTableRowElement>tbl.insertRow());
 
-            row.insertCell().innerHTML = ' 0';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
-            row.insertCell().innerHTML = '0 ';
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
 
         }
 
@@ -453,19 +453,15 @@ module TSOS {
             var row : HTMLTableRowElement = null;
             var rowNum : number = 1;
             var pcb : TSOS.ProcessControlBlock = null;
-            var arr : Array<any> = new Array();
-            var temp : Queue = new Queue();
-            while(_ProcessScheduler.readyQueue.getSize() > 0)
+            var len = _ProcessScheduler.readyQueueSize();
+
+            this.clearReadyQueueDisplay();
+
+            for( var i : number = 0; ((i < len) && (i < 3)); i++)
             {
-                pcb = _ProcessScheduler.readyQueue.dequeue();
-                arr.push(pcb);
-                temp.enqueue(pcb);
-            }
-            for( var i = 0; (i < arr.length) && (i < 3); i++);
-            {
-                _Kernel.krnTrace("rq2");
-                pcb = arr[i];
-                _Kernel.krnTrace("rq3");
+
+                pcb = _ProcessScheduler.getReadyQueueItem(i);
+
                 if( pcb != null)
                 {
                     _Kernel.krnTrace(pcb.toString());
@@ -482,14 +478,30 @@ module TSOS {
                     (<HTMLTableCellElement>row.cells.item(8)).innerHTML = TSOS.Utils.timeString(pcb.created);
 
                     rowNum++;
-                    _Kernel.krnTrace("rq5");
+                    _Kernel.krnTrace("rq57");
                 }
             }
 
-            while(temp.getSize() > 0)
+        }
+
+        public static clearReadyQueueDisplay() : void
+        {
+            var tbl : HTMLTableElement = (<HTMLTableElement>document.getElementById("tblReadyQueue"));
+            var row : HTMLTableRowElement;
+
+            for( var i = 0; i < 3; i++)
             {
-                pcb = temp.dequeue();
-                _ProcessScheduler.readyQueue.enqueue(pcb);
+                row = (<HTMLTableRowElement>tbl.rows.item(i + 1));
+
+                (<HTMLTableCellElement>row.cells.item(0)).innerHTML = "-";
+                (<HTMLTableCellElement>row.cells.item(1)).innerHTML = "-";
+                (<HTMLTableCellElement>row.cells.item(2)).innerHTML = "-";
+                (<HTMLTableCellElement>row.cells.item(3)).innerHTML = "-";
+                (<HTMLTableCellElement>row.cells.item(4)).innerHTML = "-";
+                (<HTMLTableCellElement>row.cells.item(5)).innerHTML = "-";
+                (<HTMLTableCellElement>row.cells.item(6)).innerHTML = "-";
+                (<HTMLTableCellElement>row.cells.item(7)).innerHTML = "-";
+                (<HTMLTableCellElement>row.cells.item(8)).innerHTML = "-";
             }
         }
     }

@@ -32,6 +32,10 @@ var PRINT_STRING_IRQ = 11;
 var READ_PAST_EOP_IRQ = 12;
 var MEMORY_FULL_IRQ = 13;
 var CONTEXT_SWITCH_IRQ = 14;
+var CLEAR_MEMORY_IRQ = 15;
+var EXECUTE_ALL_IRQ = 16;
+var LIST_PROCESS_IRQ = 17;
+var CHANGE_QUANTUM_IRQ = 18;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
@@ -56,7 +60,6 @@ var _KernelReadyQueue;
 var _KernelRunningProcesses = null;
 var _ProcessScheduler;
 // Flags
-var _ShellWaitForMessage = false; // Tells shell to wait for message from kernel after sending system call
 var _TraceMode = false;
 var _NextInstruction = false;
 // Standard input and output

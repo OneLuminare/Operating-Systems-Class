@@ -160,8 +160,23 @@ module TSOS
             if( zeroMemory )
                 this.zeroMemory(partition);
 
+            // Update memory display
+            TSOS.Control.updateMemoryDisplay();
+
             // Return success
             return true;
+        }
+
+        // Clears all memory partitions
+        public freeAllPartitions(zeroMemory:boolean = false) : void
+        {
+            for( var i = 0; i < _MemoryPartitions; i++)
+            {
+                this.freePartition(i,zeroMemory);
+            }
+
+            // Update memory display
+            TSOS.Control.updateMemoryDisplay();
         }
 
         // Gets base address at given partition, or -1 on invalid partition
