@@ -591,7 +591,7 @@ var TSOS;
                 // Break instruction
                 case "0":
                     // Trace
-                    _Kernel.krnTrace('Executing break.');
+                    _Kernel.krnTrace('Executing break. Base ' + this.base);
                     // Send exit process interrupt
                     _Kernel.TerminateProcess(this.base);
                     // Stop executing
@@ -614,7 +614,6 @@ var TSOS;
                 TSOS.Control.updateMemoryDisplay(address, this.getParamCount(inst));
             }
             else {
-                _Kernel.krnTrace("test");
                 TSOS.Control.updateMemoryDisplay();
             }
             // Update cput display

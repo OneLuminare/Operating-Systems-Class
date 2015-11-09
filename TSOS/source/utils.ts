@@ -220,6 +220,25 @@ module TSOS {
             return (Hours + ':' + Minutes + ':' + Seconds + ' ' + AMPM);
         }
 
+        public static secondsString(date : Date) : string
+        {
+            var min = date.getMinutes().toString();
+            var sec = date.getSeconds().toString();
+            var mil = date.getMilliseconds().toString();
+
+
+            if( min.length == 1)
+                min = '0' + min;
+
+            if( sec.length == 1)
+                sec = '0' + sec;
+
+            if( mil.length == 1)
+                mil = '0' + mil;
+
+            return (min + ':' + sec + ':' + mil);
+        }
+
         // Pads string with 00 to length
         public static padString(str : string, num : number)
         {

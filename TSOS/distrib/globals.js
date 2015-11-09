@@ -36,6 +36,7 @@ var CLEAR_MEMORY_IRQ = 15;
 var EXECUTE_ALL_IRQ = 16;
 var LIST_PROCESS_IRQ = 17;
 var CHANGE_QUANTUM_IRQ = 18;
+var CREATE_ALL_PROCESS_IRQ = 19;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
@@ -59,6 +60,7 @@ var _KernelTabInput = false; // A flag to take tab input, as cant put tab on inp
 var _KernelReadyQueue;
 var _KernelRunningProcesses = null;
 var _ProcessScheduler;
+var _FirstStart = false;
 // Flags
 var _TraceMode = false;
 var _NextInstruction = false;

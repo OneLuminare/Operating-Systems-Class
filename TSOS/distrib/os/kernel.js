@@ -145,11 +145,12 @@ var TSOS;
                         _OsShell.outputMessage("Executing process PID " + params.toString() + ".");
                     break;
                 case TERMINATE_PROCESS_IRQ:
+                    this.krnTrace("Terminate: " + params);
                     pcb = _ProcessScheduler.exitProcess(params);
                     if (pcb != null)
                         _OsShell.outputMessage("Exiting process with PID " + pcb.pid.toString() + ".");
                     else
-                        _OsShell.outputMessage("Cannot terminate process pid " + params.toString() + ", as it does not exist.");
+                        _OsShell.outputMessage("No process with pid " + params.toString() + " is running.");
                     break;
                 case UNKNOWN_OP_CODE_IRQ:
                     //pcb =  _ProcessScheduler.runningProcess;
@@ -208,12 +209,16 @@ var TSOS;
                         _MemoryManager.freeAllPartitions(true);
                         _OsShell.outputMessage("Cleared all memory of loaded processess.");
                         this.krnTrace("Cleared all memory of loaded processess.");
+                        _ProcessScheduler.clearResidentList();
                     }
                     else {
+                        var lpid = _MemoryManager.getLoadedPIDFromPartitionIndex(params);
                         var ret = _MemoryManager.freePartition(params, true);
                         if (ret) {
                             _OsShell.outputMessage("Cleared partition " + params.toString() + ".");
                             this.krnTrace("Cleared partition " + params.toString() + ".");
+                            if (lpid >= 0)
+                                _ProcessScheduler.removeFromResidentList(lpid);
                         }
                         else {
                             _OsShell.outputMessage("Invalid partition size. Choose an index between 0 and " + _MemoryPartitions.toString() + ".");
@@ -312,8 +317,7 @@ var TSOS;
         // Terminates process on base (cpu break)
         Kernel.prototype.TerminateProcess = function (base) {
             // Var pid
-            var pid = _MemoryManager.getLoadedPID(base);
-            ;
+            var pid = _MemoryManager.getBasePID(base);
             // Send exit process interrupt
             _KernelInterruptQueue.enqueue(new TSOS.Interrupt(TERMINATE_PROCESS_IRQ, pid));
         };
@@ -337,6 +341,11 @@ var TSOS;
         Kernel.prototype.ChangeQuantum = function (quantum) {
             // Send interupt to run process
             _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CHANGE_QUANTUM_IRQ, quantum));
+        };
+        Kernel.prototype.LoadAllProcesses = function (input) {
+            var availPart = _MemoryManager.totalAvailablePartitions();
+            for (var i = 0; i < availPart; i++)
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_PROCESS_IRQ, input));
         };
         // Print integer value in YReg
         Kernel.prototype.PrintInteger = function () {

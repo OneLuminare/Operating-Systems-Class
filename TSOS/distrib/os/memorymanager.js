@@ -236,6 +236,59 @@ var TSOS;
                 return -2;
             return this.partitionPIDs[index];
         };
+        // Get pid of loaded process.
+        //
+        // Params: base <number> - base address of process
+        // Returns: pid on success
+        //          -1 on invalid base
+        MemoryManager.prototype.getBasePID = function (base) {
+            var index = 0;
+            var found = false;
+            for (var i = 0; (i < _MemoryPartitions) && !found; i++) {
+                if (base == this.partitionBaseAddress[i]) {
+                    index = i;
+                    found = true;
+                }
+            }
+            if (!found)
+                return -1;
+            return this.partitionPIDs[index];
+        };
+        // Returns all available partition indicies.
+        //
+        // Returns: Array<number> - list of  available partition indicies
+        MemoryManager.prototype.availablePartitions = function () {
+            var availParts = Array();
+            for (var i = 0; (i < _MemoryPartitions); i++) {
+                if (this.partitionsLoaded[i] == false)
+                    availParts.push(i);
+            }
+            return availParts;
+        };
+        // Returns total available partition indicies.
+        //
+        // Returns: number - total  available partition indicies
+        MemoryManager.prototype.totalAvailablePartitions = function () {
+            var availParts = 0;
+            for (var i = 0; (i < _MemoryPartitions); i++) {
+                if (this.partitionsLoaded[i] == false)
+                    availParts++;
+            }
+            return availParts;
+        };
+        // Get pid of loaded process, based on partition index.
+        //
+        // Params: part <number> - partition index
+        // Returns: pid on success
+        //          -1 on invalid base
+        //          -2 on no process loaded at base
+        MemoryManager.prototype.getLoadedPIDFromPartitionIndex = function (part) {
+            if (part < 0 || (part > (_MemoryPartitions - 1)))
+                return -1;
+            if (this.partitionsLoaded[part] == false)
+                return -2;
+            return this.partitionPIDs[part];
+        };
         // Gets string from memory. Reads until 00.
         //
         // Params: address <number> - address to start reading from

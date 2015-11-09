@@ -10,14 +10,16 @@
 var TSOS;
 (function (TSOS) {
     var ProcessScheduler = (function () {
-        function ProcessScheduler(readyQueue, residentList, runningProcess, nextPID) {
+        function ProcessScheduler(readyQueue, residentList, runningProcess, terminatedQueue, nextPID) {
             if (readyQueue === void 0) { readyQueue = new TSOS.Queue(); }
             if (residentList === void 0) { residentList = new Array(0); }
             if (runningProcess === void 0) { runningProcess = null; }
+            if (terminatedQueue === void 0) { terminatedQueue = new TSOS.Queue(); }
             if (nextPID === void 0) { nextPID = 0; }
             this.readyQueue = readyQueue;
             this.residentList = residentList;
             this.runningProcess = runningProcess;
+            this.terminatedQueue = terminatedQueue;
             this.nextPID = nextPID;
             this.init();
         }
@@ -33,6 +35,11 @@ var TSOS;
             this.residentList.push(pcb);
             // Return index in list
             return this.residentList.length - 1;
+        };
+        // Clears resident list.
+        ProcessScheduler.prototype.clearResidentList = function () {
+            while (this.residentList.length > 0)
+                this.residentList.pop();
         };
         // Removes process from resident list.
         //
@@ -249,10 +256,13 @@ var TSOS;
             var pcb = this.residentList[index];
             // Remove from resident list
             this.removeFromResidentList(pid);
+            // set start cycle
+            pcb.startCycle = _OSclock;
             // If no running processess
             if (!this.areProcessesRunning()) {
                 // Put in ready queue
                 this.readyQueue.enqueue(pcb);
+                pcb.lastContextSwitchCycle = _OSclock;
                 // !!! Might Change
                 // !!! Might send interrupt to do context switch
                 // !!! And start timer irq
@@ -263,49 +273,13 @@ var TSOS;
             else {
                 // Put in ready queue
                 this.readyQueue.enqueue(pcb);
+                pcb.lastContextSwitchCycle = _OSclock;
                 TSOS.Control.updateReadyQueueDisplay();
             }
             // Set trace message
             _Kernel.krnTrace("Executing process PID: " + pcb.pid);
             // Return true
             return true;
-            /*
-            // Inits
-            var ret = false;
-
-            // This will change when I implement multiple processes
-            if( this.runningProcess != null)
-            {
-                // Check if pid is one load. This will change.
-                if (this.runningProcess.pid == pid)
-                {
-                    // Set cpu values
-                    _CPU.PC = 0;
-                    _CPU.Acc = 0;
-                    _CPU.Xreg = 0;
-                    _CPU.Yreg = 0;
-                    _CPU.Zflag = 0;
-                    _CPU.base = this.runningProcess.base;
-                    _CPU.limit = this.runningProcess.limit;
-                    _CPU.isExecuting = true;
-
-                    // Update cpu display
-                    Control.updateCPUDisplay();
-
-                    // Set return value
-                    ret = true;
-
-                    // Update memory display with highlighted next instruction
-                    TSOS.Control.updateMemoryDisplay(_CPU.base, _CPU.getParamCount(_Memory.getAddress(_CPU.base).toString(16)));
-
-                    // Send trace message
-                    _Kernel.krnTrace("Executing process PID: " + this.runningProcess.pid);
-                }
-
-            }
-
-            return ret;
-            */
         };
         // Executes all load processes, that are not running.
         //
@@ -320,11 +294,13 @@ var TSOS;
                 pcb = this.residentList.shift();
                 // Enqueu on ready queue
                 this.readyQueue.enqueue(pcb);
+                pcb.startCycle = _OSclock;
+                pcb.lastContextSwitchCycle = _OSclock;
                 // Put pid on return value array
                 procs.push(pcb.pid);
             }
             // If not running processs perform context switch
-            if (this.runningProcess != null)
+            if (this.runningProcess == null)
                 this.contextSwitch();
             else
                 TSOS.Control.updateReadyQueueDisplay();
@@ -354,6 +330,7 @@ var TSOS;
                     pcb.Acc = _CPU.Acc;
                     // Set partition free
                     var part = _MemoryManager.partitionFromBase(pcb.base);
+                    _Kernel.krnTrace("part:" + part);
                     _MemoryManager.freePartition(part);
                     // Set running process to null
                     this.runningProcess = null;
@@ -362,6 +339,7 @@ var TSOS;
                     this.contextSwitch();
                 }
                 else {
+                    _Kernel.krnTrace("here");
                     // Removes from ready queue, or
                     // gets null for return value
                     pcb = this.removeFromReadyQueue(pid);
@@ -373,6 +351,11 @@ var TSOS;
             }
             // Check if not null pcb
             if (pcb != null) {
+                // Compute turnaround time
+                pcb.turnAroundCycles = _OSclock - pcb.startCycle;
+                // Add to terminated queue
+                this.terminatedQueue.enqueue(pcb);
+                TSOS.Control.updateTerminatedQueueDisplay();
                 // Set trace message
                 _Kernel.krnTrace("Terminating process PID: " + pcb.pid);
                 // Trace pcb data
@@ -391,6 +374,7 @@ var TSOS;
         ProcessScheduler.prototype.contextSwitch = function () {
             // Inits
             var pcb = null;
+            var date = new Date();
             // Trace
             _Kernel.krnTrace("Context Switch");
             // Check if running process
@@ -408,8 +392,10 @@ var TSOS;
                     pcb.Acc = _CPU.Acc;
                     // Enqueue in ready queue
                     this.readyQueue.enqueue(pcb);
+                    pcb.lastContextSwitchCycle = _OSclock;
                     // Get next process
                     pcb = this.readyQueue.dequeue();
+                    pcb.waitCycles += _OSclock - pcb.lastContextSwitchCycle;
                     // Set registers back
                     _CPU.base = pcb.base;
                     _CPU.limit = pcb.limit;
@@ -438,6 +424,7 @@ var TSOS;
                 if (this.readyQueue.getSize() > 0) {
                     // Get next resdient
                     pcb = this.readyQueue.dequeue();
+                    pcb.waitCycles += _OSclock - pcb.lastContextSwitchCycle;
                     // Set cpu values
                     _CPU.base = pcb.base;
                     _CPU.limit = pcb.limit;
@@ -473,10 +460,10 @@ var TSOS;
                     // Stop executing
                     _CPU.isExecuting = false;
                 }
-                // Update running processes nd ready queue tables
-                TSOS.Control.updateRunningProcessDisplay();
-                TSOS.Control.updateReadyQueueDisplay();
             }
+            // Update running processes nd ready queue tables
+            TSOS.Control.updateRunningProcessDisplay();
+            TSOS.Control.updateReadyQueueDisplay();
         };
         // Retrieves PID of process by given base, as running process might switch before termination
         // interrupt gets handled. Will change with multiple processes added.

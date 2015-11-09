@@ -16,6 +16,7 @@ module TSOS {
         constructor(public readyQueue : Queue = new Queue(),
                     public residentList : Array<TSOS.ProcessControlBlock> = new Array<TSOS.ProcessControlBlock>(0),
                     public runningProcess : TSOS.ProcessControlBlock = null,
+                    public terminatedQueue : Queue = new Queue(),
                     public nextPID : number = 0 ) {
             this.init();
         }
@@ -36,6 +37,13 @@ module TSOS {
 
             // Return index in list
             return this.residentList.length - 1;
+        }
+
+        // Clears resident list.
+        public clearResidentList() : void
+        {
+            while(this.residentList.length > 0)
+                this.residentList.pop();
         }
 
         // Removes process from resident list.
@@ -209,7 +217,7 @@ module TSOS {
         public listAllLoadedProcesses() : Array<number>
         {
             // Inits
-            var procs : number[] = new Array<number>();
+            var procs : Array<number> = new Array();
 
             // Cycle through resident list
             for( var i = 0; i < this.residentList.length; i++)
@@ -226,7 +234,7 @@ module TSOS {
         public listAllRunningProcesses() : Array<number>
         {
             // Inits
-            var procs : number[] = new Array<number>();
+            var procs : Array<number> = new Array();
 
             // If running proc add tthat too
             if( this.runningProcess )
@@ -332,12 +340,16 @@ module TSOS {
             // Remove from resident list
             this.removeFromResidentList(pid);
 
+            // set start cycle
+            pcb.startCycle = _OSclock;
 
             // If no running processess
             if( !this.areProcessesRunning() )
             {
                 // Put in ready queue
                 this.readyQueue.enqueue(pcb);
+
+                pcb.lastContextSwitchCycle = _OSclock;
 
                 // !!! Might Change
                 // !!! Might send interrupt to do context switch
@@ -355,6 +367,8 @@ module TSOS {
                 // Put in ready queue
                 this.readyQueue.enqueue(pcb);
 
+                pcb.lastContextSwitchCycle = _OSclock;
+
                 TSOS.Control.updateReadyQueueDisplay();
 
             }
@@ -364,43 +378,6 @@ module TSOS {
 
             // Return true
             return true;
-            /*
-            // Inits
-            var ret = false;
-
-            // This will change when I implement multiple processes
-            if( this.runningProcess != null)
-            {
-                // Check if pid is one load. This will change.
-                if (this.runningProcess.pid == pid)
-                {
-                    // Set cpu values
-                    _CPU.PC = 0;
-                    _CPU.Acc = 0;
-                    _CPU.Xreg = 0;
-                    _CPU.Yreg = 0;
-                    _CPU.Zflag = 0;
-                    _CPU.base = this.runningProcess.base;
-                    _CPU.limit = this.runningProcess.limit;
-                    _CPU.isExecuting = true;
-
-                    // Update cpu display
-                    Control.updateCPUDisplay();
-
-                    // Set return value
-                    ret = true;
-
-                    // Update memory display with highlighted next instruction
-                    TSOS.Control.updateMemoryDisplay(_CPU.base, _CPU.getParamCount(_Memory.getAddress(_CPU.base).toString(16)));
-
-                    // Send trace message
-                    _Kernel.krnTrace("Executing process PID: " + this.runningProcess.pid);
-                }
-
-            }
-
-            return ret;
-            */
         }
 
         // Executes all load processes, that are not running.
@@ -409,7 +386,7 @@ module TSOS {
         public executeAllProcesses() : Array<number>
         {
             // Inits
-            var procs : number[] = new Array<number>();
+            var procs : Array<number> = new Array();
             var pcb : TSOS.ProcessControlBlock = null;
 
             // Cycle through resident list
@@ -422,12 +399,15 @@ module TSOS {
                 // Enqueu on ready queue
                 this.readyQueue.enqueue(pcb);
 
+                pcb.startCycle = _OSclock;
+                pcb.lastContextSwitchCycle = _OSclock;
+
                 // Put pid on return value array
                 procs.push(pcb.pid);
             }
 
             // If not running processs perform context switch
-            if( this.runningProcess != null)
+            if( this.runningProcess == null)
                 this.contextSwitch();
             // Else update ready queue table (which is also done in context switch)
             else
@@ -467,6 +447,7 @@ module TSOS {
 
                     // Set partition free
                     var part = _MemoryManager.partitionFromBase(pcb.base);
+                    _Kernel.krnTrace("part:" + part);
 
                     _MemoryManager.freePartition(part);
 
@@ -483,6 +464,7 @@ module TSOS {
                 // Else remove from ready queue
                 else
                 {
+                    _Kernel.krnTrace("here");
                     // Removes from ready queue, or
                     // gets null for return value
                     pcb = this.removeFromReadyQueue(pid);
@@ -501,6 +483,14 @@ module TSOS {
             // Check if not null pcb
             if (pcb != null)
             {
+                // Compute turnaround time
+                pcb.turnAroundCycles = _OSclock - pcb.startCycle;
+
+                // Add to terminated queue
+                this.terminatedQueue.enqueue(pcb);
+
+                TSOS.Control.updateTerminatedQueueDisplay();
+
                 // Set trace message
                 _Kernel.krnTrace("Terminating process PID: " + pcb.pid);
 
@@ -525,6 +515,7 @@ module TSOS {
         {
             // Inits
             var pcb:TSOS.ProcessControlBlock = null;
+            var date : Date = new Date();
 
             // Trace
             _Kernel.krnTrace("Context Switch");
@@ -549,8 +540,12 @@ module TSOS {
                     // Enqueue in ready queue
                     this.readyQueue.enqueue(pcb);
 
+                    pcb.lastContextSwitchCycle = _OSclock;
+
                     // Get next process
                     pcb = this.readyQueue.dequeue();
+
+                    pcb.waitCycles += _OSclock - pcb.lastContextSwitchCycle;
 
 
 
@@ -595,6 +590,8 @@ module TSOS {
                 {
                     // Get next resdient
                     pcb = this.readyQueue.dequeue();
+
+                    pcb.waitCycles += _OSclock - pcb.lastContextSwitchCycle;
 
                     // Set cpu values
                     _CPU.base = pcb.base;
@@ -646,10 +643,12 @@ module TSOS {
                     _CPU.isExecuting = false;
                 }
 
-                // Update running processes nd ready queue tables
-                TSOS.Control.updateRunningProcessDisplay();
-                TSOS.Control.updateReadyQueueDisplay();
+
             }
+
+            // Update running processes nd ready queue tables
+            TSOS.Control.updateRunningProcessDisplay();
+            TSOS.Control.updateReadyQueueDisplay();
         }
 
         // Retrieves PID of process by given base, as running process might switch before termination

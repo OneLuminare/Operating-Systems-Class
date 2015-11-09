@@ -40,6 +40,7 @@ const CLEAR_MEMORY_IRQ : number = 15;
 const EXECUTE_ALL_IRQ : number = 16;
 const LIST_PROCESS_IRQ : number = 17;
 const CHANGE_QUANTUM_IRQ : number = 18;
+const CREATE_ALL_PROCESS_IRQ : number = 19;
 
 
 //
@@ -70,6 +71,7 @@ var _KernelTabInput : boolean = false; // A flag to take tab input, as cant put 
 var _KernelReadyQueue;
 var _KernelRunningProcesses: any[] = null;
 var _ProcessScheduler : TSOS.ProcessScheduler;
+var _FirstStart = false;
 
 // Flags
 var _TraceMode : boolean = false;

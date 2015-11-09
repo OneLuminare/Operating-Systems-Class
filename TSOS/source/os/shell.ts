@@ -152,6 +152,11 @@ module TSOS {
                 "<int> - Executes all loaded processes.");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellLoadAll,
+                "loadall",
+                "- Loads process into all available partitions.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -431,6 +436,8 @@ module TSOS {
                     case "kill":
                         _StdOut.putText("Terminates a processs with given pid.");
                         break;
+                    case "loadall":
+                        _StdOut.putText("Loads program input into all available partitions.");
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -562,8 +569,11 @@ module TSOS {
             // Verify at least one pid given
             if( args.length > 0)
             {
-                // Send interupt to run process
-                _Kernel.ExecuteProcess(args[0]);
+                if( !isNaN(args[0]))
+                    // Send interupt to run process
+                    _Kernel.ExecuteProcess(args[0]);
+                else
+                    _StdOut.putText("usage: run <int> - Please provide a PID.");
             }
             // Else message user of usage
             else
@@ -580,7 +590,10 @@ module TSOS {
         {
             if( args.length > 0)
             {
-                _Kernel.ClearMemory(args[0]);
+                if( !isNaN(args[0]))
+                    _Kernel.ClearMemory(args[0]);
+                else
+                    _StdOut.putText("usage: clrpart <int> - Please enter a partition index.");
             }
             else
             {
@@ -597,7 +610,11 @@ module TSOS {
         {
             if( args.length > 0)
             {
-                _Kernel.ChangeQuantum(args[0]);
+                if( !isNaN(args[0]))
+                    _Kernel.ChangeQuantum(args[0]);
+                else
+                    _StdOut.putText("usage: quantum <int> - Please enter a quantum.");
+
             }
             else
             {
@@ -614,12 +631,51 @@ module TSOS {
         {
             if( args.length > 0)
             {
-                _Kernel.TerminateProcessByPID(args[0]);
+                if( !isNaN(args[0]))
+                    _Kernel.TerminateProcessByPID(args[0]);
+                else
+                    _StdOut.putText("usage: kill <int> - Please enter a pid of a running processs.");
             }
             else
             {
                 _StdOut.putText("usage: kill <int> - Please enter a pid of a running processs.");
             }
+        }
+
+        public shellLoadAll(args)
+        {
+            // Inits
+            var programInput : string = (<HTMLInputElement>document.getElementById("taProgramInput")).value;
+
+
+            // Check if empty input
+            if( programInput.length == 0 )
+                _StdOut.putText("Empty program input.")
+            // Check if valid characters
+            else if( programInput.match("[^a-f|A-F|0-9| |\n|\r]+") )
+                _StdOut.putText("Invalid program input, only hex values and spaces allowed.");
+            // Else valid input
+            else
+            {
+                // Remove white space and carrieg returns
+                var reg = new RegExp("[ |\n\r]+");
+                var hex = programInput.split(reg);
+                var input = hex.join('');
+
+                // Verify inputs not over 256 bytes
+                if( input.length > 512)
+                {
+                    _StdOut.putText("Program is valid, but over 256 bytes.")
+                }
+                // Else send create process interupt
+                else
+                {
+
+                    // Create process
+                    _Kernel.LoadAllProcesses(input);
+                }
+            }
+
         }
     }
 }

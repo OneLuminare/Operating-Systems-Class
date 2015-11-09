@@ -18,7 +18,13 @@ module TSOS {
                     public yReg : number = 0,
                     public Acc : number = 0,
                     public zFlag : number = 0,
-                    public created : Date = new Date()) {
+                    public created : Date = new Date(),
+                    public turnAroundCycles : number = 0,
+                    public startCycle : number = 0,
+                    public waitCycles : number = 0,
+                    public lastContextSwitchCycle : number = 0,
+                    public setTurnAroundTime : boolean = false) {
+
         }
 
         // Overrides toString for trace purposes
@@ -26,7 +32,8 @@ module TSOS {
         {
             return "pid: " + this.pid.toString() + " base: " + this.base.toString(16) + " limit: " + this.limit.toString(16)
                 + " PC: " + this.PC.toString(16) + " xReg: " + this.xReg.toString(16) + " yReg: " + this.yReg.toString(16)
-                + " Acc: " + this.Acc.toString(16) + " zFlag: " + this.zFlag.toString(16) + " created: " + TSOS.Utils.timeString(this.created);
+                + " Acc: " + this.Acc.toString(16) + " zFlag: " + this.zFlag.toString(16) + " created: " + TSOS.Utils.timeString(this.created)
+                + " Turnaround Time: " + this.turnAroundCycles + " cycles Wait Time: "  + this.waitCycles + " cycles" ;
 
         }
     }

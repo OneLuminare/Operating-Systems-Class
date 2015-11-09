@@ -105,11 +105,17 @@ module TSOS {
             // Create new memory object
             _Memory = new TSOS.MemoryAccessor();
 
-            // Create table
-            this.createMemoryDisplay();
-            this.createCPUDisplay();
-            this.createRunningProcessDisplay();
-            this.createReadyQueueDisplay();
+            if( !_FirstStart )
+            {
+                // Create table
+                this.createMemoryDisplay();
+                this.createCPUDisplay();
+                this.createRunningProcessDisplay();
+                this.createReadyQueueDisplay();
+                this.createTerminatedQueueDisplay();
+
+                _FirstStart = true;
+            }
 
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
@@ -296,7 +302,7 @@ module TSOS {
             (<HTMLTableCellElement>row.cells.item(3)).innerHTML = TSOS.Utils.padString(_CPU.Yreg.toString(16),2).toUpperCase();
             (<HTMLTableCellElement>row.cells.item(4)).innerHTML = TSOS.Utils.padString(_CPU.Zflag.toString(16),2).toUpperCase();
             (<HTMLTableCellElement>row.cells.item(5)).innerHTML = TSOS.Utils.padString(_CPU.base.toString(16),4).toUpperCase();
-            (<HTMLTableCellElement>row.cells.item(6)).innerHTML = TSOS.Utils.padString(_CPU.limit.toString(16),4).toUpperCase();
+            (<HTMLTableCellElement>row.cells.item(6)).innerHTML = TSOS.Utils.padString((_CPU.base + _CPU.limit).toString(16),4).toUpperCase();
 
         }
 
@@ -324,7 +330,7 @@ module TSOS {
             row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.Yreg.toString(16),2).toUpperCase();
             row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.Zflag.toString(16),2).toUpperCase();
             row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.base.toString(16),4).toUpperCase();
-            row.insertCell().innerHTML = TSOS.Utils.padString(_CPU.limit.toString(16),4).toUpperCase();
+            row.insertCell().innerHTML = TSOS.Utils.padString((_CPU.base + _CPU.limit).toString(16),4).toUpperCase();
         }
 
         public static createRunningProcessDisplay() : void
@@ -372,14 +378,14 @@ module TSOS {
 
             if( pcb != null )
             {
-                pid = pcb.pid.toString();
-                pc = pcb.PC.toString(16);
-                acc = pcb.Acc.toString(16);
-                xreg = pcb.xReg.toString(16);
-                yreg = pcb.yReg.toString(16);
-                zflag = pcb.zFlag.toString(16);
-                base = pcb.base.toString(16);
-                limit = pcb.limit.toString(16);
+                pid = TSOS.Utils.padString(pcb.pid.toString(),2).toUpperCase();
+                pc = TSOS.Utils.padString(pcb.PC.toString(16),2).toUpperCase();
+                acc = TSOS.Utils.padString(pcb.Acc.toString(16),2).toUpperCase();
+                xreg = TSOS.Utils.padString(pcb.xReg.toString(16),2).toUpperCase();
+                yreg = TSOS.Utils.padString(pcb.yReg.toString(16),2).toUpperCase();
+                zflag = TSOS.Utils.padString(pcb.zFlag.toString(16),2).toUpperCase();
+                base = TSOS.Utils.padString(pcb.base.toString(16),4).toUpperCase();
+                limit = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16),4).toUpperCase();
                 created = TSOS.Utils.timeString(pcb.created);
             }
 
@@ -433,6 +439,7 @@ module TSOS {
             row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
 
+            /*
             row = (<HTMLTableRowElement>tbl.insertRow());
 
             row.insertCell().innerHTML = "-";
@@ -444,6 +451,7 @@ module TSOS {
             row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
+            */
 
         }
 
@@ -457,7 +465,7 @@ module TSOS {
 
             this.clearReadyQueueDisplay();
 
-            for( var i : number = 0; ((i < len) && (i < 3)); i++)
+            for( var i : number = 0; ((i < len) && (i < 2)); i++)
             {
 
                 pcb = _ProcessScheduler.getReadyQueueItem(i);
@@ -467,18 +475,18 @@ module TSOS {
                     _Kernel.krnTrace(pcb.toString());
                     row = (<HTMLTableRowElement>tbl.rows.item(rowNum));
 
-                    (<HTMLTableCellElement>row.cells.item(0)).innerHTML = pcb.pid.toString();
-                    (<HTMLTableCellElement>row.cells.item(1)).innerHTML = pcb.PC.toString(16);
-                    (<HTMLTableCellElement>row.cells.item(2)).innerHTML = pcb.Acc.toString(16);
-                    (<HTMLTableCellElement>row.cells.item(3)).innerHTML = pcb.xReg.toString(16);
-                    (<HTMLTableCellElement>row.cells.item(4)).innerHTML = pcb.yReg.toString(16);
-                    (<HTMLTableCellElement>row.cells.item(5)).innerHTML = pcb.zFlag.toString(16);
-                    (<HTMLTableCellElement>row.cells.item(6)).innerHTML = pcb.base.toString(16);
-                    (<HTMLTableCellElement>row.cells.item(7)).innerHTML = pcb.limit.toString(16);
+                    (<HTMLTableCellElement>row.cells.item(0)).innerHTML = TSOS.Utils.padString(pcb.pid.toString(),2).toUpperCase();
+                    (<HTMLTableCellElement>row.cells.item(1)).innerHTML = TSOS.Utils.padString(pcb.PC.toString(16),2).toUpperCase();
+                    (<HTMLTableCellElement>row.cells.item(2)).innerHTML = TSOS.Utils.padString(pcb.Acc.toString(16),2).toUpperCase();
+                    (<HTMLTableCellElement>row.cells.item(3)).innerHTML = TSOS.Utils.padString(pcb.xReg.toString(16),2).toUpperCase();
+                    (<HTMLTableCellElement>row.cells.item(4)).innerHTML = TSOS.Utils.padString(pcb.yReg.toString(16),2).toUpperCase();
+                    (<HTMLTableCellElement>row.cells.item(5)).innerHTML = TSOS.Utils.padString(pcb.zFlag.toString(16),2).toUpperCase();
+                    (<HTMLTableCellElement>row.cells.item(6)).innerHTML = TSOS.Utils.padString(pcb.base.toString(16),4).toUpperCase();
+                    (<HTMLTableCellElement>row.cells.item(7)).innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16),4).toUpperCase();
                     (<HTMLTableCellElement>row.cells.item(8)).innerHTML = TSOS.Utils.timeString(pcb.created);
 
                     rowNum++;
-                    _Kernel.krnTrace("rq57");
+
                 }
             }
 
@@ -489,7 +497,7 @@ module TSOS {
             var tbl : HTMLTableElement = (<HTMLTableElement>document.getElementById("tblReadyQueue"));
             var row : HTMLTableRowElement;
 
-            for( var i = 0; i < 3; i++)
+            for( var i = 0; i < 2; i++)
             {
                 row = (<HTMLTableRowElement>tbl.rows.item(i + 1));
 
@@ -503,6 +511,50 @@ module TSOS {
                 (<HTMLTableCellElement>row.cells.item(7)).innerHTML = "-";
                 (<HTMLTableCellElement>row.cells.item(8)).innerHTML = "-";
             }
+        }
+
+        public static createTerminatedQueueDisplay() : void
+        {
+            var tbl = (<HTMLTableElement>document.getElementById("tblTerminatedQueue"));
+            var hdr = (<HTMLTableRowElement>tbl.insertRow());
+            var row : HTMLTableRowElement = (<HTMLTableRowElement>tbl.insertRow());
+
+            hdr.insertCell().innerHTML = '<b>' + 'PID' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'PC' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Acc' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'XReg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'YReg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'ZFlag' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Turn Around Time' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Wait Time' + '</b>';
+
+        }
+
+        public static updateTerminatedQueueDisplay() : void
+        {
+            var tbl = (<HTMLTableElement>document.getElementById("tblTerminatedQueue"));
+            var row : HTMLTableRowElement = null;
+            var pcb : TSOS.ProcessControlBlock = null;
+
+            row = (<HTMLTableRowElement>tbl.insertRow());
+            pcb = _ProcessScheduler.terminatedQueue.q[_ProcessScheduler.terminatedQueue.getSize() - 1];
+
+            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.pid.toString(),2).toUpperCase();
+            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.PC.toString(16),2).toUpperCase();
+            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.Acc.toString(16),2).toUpperCase();
+            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.xReg.toString(16),2).toUpperCase();
+            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.yReg.toString(16),2).toUpperCase();
+            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.zFlag.toString(16),2).toUpperCase();
+            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.base.toString(16),4).toUpperCase();
+            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16),4).toUpperCase();
+            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.timeString(pcb.created);
+            (<HTMLTableCellElement>row.insertCell()).innerHTML = pcb.turnAroundCycles.toString();
+            (<HTMLTableCellElement>row.insertCell()).innerHTML = pcb.waitCycles.toString();
+
+
         }
     }
 }

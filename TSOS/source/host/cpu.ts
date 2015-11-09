@@ -808,6 +808,7 @@ module TSOS {
                             _KernelInterruptQueue.enqueue(new Interrupt(UNKNOWN_SYSCALL_IRQ, new Array(this.base, this.PC)));
                         }
 
+
                         // Stop executing (either on failure or success)
                         this.isExecuting = false;
 
@@ -816,13 +817,14 @@ module TSOS {
                     // Break instruction
                     case "0":
                         // Trace
-                        _Kernel.krnTrace('Executing break.');
+                        _Kernel.krnTrace('Executing break. Base ' + this.base);
 
                         // Send exit process interrupt
                         _Kernel.TerminateProcess(this.base);
 
                         // Stop executing
                         this.isExecuting = false;
+
                         break;
 
                     // Else unknown op code
@@ -849,7 +851,6 @@ module TSOS {
             // Else update mem with out highlight code
             else
             {
-                _Kernel.krnTrace("test");
 
                 TSOS.Control.updateMemoryDisplay();
             }
