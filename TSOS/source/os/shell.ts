@@ -121,6 +121,41 @@ module TSOS {
                 "<int> - Runs a process in memory.");
             this.commandList[this.commandList.length] = sc;
 
+            // clearmem
+            sc = new ShellCommand(this.shellClrmem,
+                "clrmem",
+                "- Clears all processes in memory.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellClrpart,
+                "clrpart",
+                "<int> - Clears specific parttion in memory.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellRunall,
+                "runall",
+                "- Executes all loaded processes.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellQuantum,
+                "quantum",
+                "<int> - Executes all loaded processes.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellPS,
+                "ps",
+                "- Lists all active process.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellKill,
+                "kill",
+                "<int> - Executes all loaded processes.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellLoadAll,
+                "loadall",
+                "- Loads process into all available partitions.");
+            this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -132,6 +167,10 @@ module TSOS {
 
         public putPrompt() {
             _StdOut.putText(this.promptStr);
+        }
+
+        public putPromptOutput() {
+            _StdOut.putText(_OutputPrompt);
         }
 
         public handleInput(buffer) {
@@ -185,7 +224,7 @@ module TSOS {
             }
 
             // Dont draw prompt on kernel crash
-            if( !_KernelCrash && !_ShellWaitForMessage)
+            if( !_KernelCrash )
                 // ... and finally write the prompt again.
                 this.putPrompt();
         }
@@ -219,25 +258,27 @@ module TSOS {
             return retVal;
         }
 
-        // Outputs message on new line, and resets
-        // wait for message flag.
-        public message(msg : string) : void
-        {
-            _StdOut.putText(msg);
-            _StdOut.advanceLine();
 
-            if( _ShellWaitForMessage )
-            {
-                _ShellWaitForMessage = false;
-                this.putPrompt();
-            }
-        }
-
-        // Outputs message but does not reset message flag
+        // Outputs message and restores useer input if any
         public outputMessage(msg : string) : void
         {
-            _StdOut.putText(msg);
-            _StdOut.advanceLine();
+            if( _StdOut.buffer.length > 0 )
+            {
+                var buff : string = _StdOut.buffer;
+                _StdOut.clearLine();
+                _StdOut.putText(msg)
+                _StdOut.advanceLine();
+                this.putPrompt();
+                _StdOut.putText(buff);
+                _StdOut.buffer = buff;
+            }
+            else
+            {
+                _StdOut.putText(msg)
+                _StdOut.advanceLine();
+                this.putPrompt();
+            }
+
         }
 
         //
@@ -377,6 +418,26 @@ module TSOS {
                     case "run":
                         _StdOut.putText("Runs loaded process, identified by givin PID returned at load.");
                         break;
+                    case "clrmem":
+                        _StdOut.putText("Clears all memory partitions.");
+                        break;
+                    case "clrpart":
+                        _StdOut.putText("Clears a specific partition.");
+                        break;
+                    case "runall":
+                        _StdOut.putText("Executes all loaded processess.");
+                        break;
+                    case "quantum":
+                        _StdOut.putText("Changes scheduling quantum to given value.");
+                        break;
+                    case "ps":
+                        _StdOut.putText("Lists all active processes, loaded and running.");
+                        break;
+                    case "kill":
+                        _StdOut.putText("Terminates a processs with given pid.");
+                        break;
+                    case "loadall":
+                        _StdOut.putText("Loads program input into all available partitions.");
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -497,9 +558,6 @@ module TSOS {
 
                     // Create process
                     _Kernel.CreateProcess(input);
-
-                    // Set flag for shell to wait until kernel messages back
-                    _ShellWaitForMessage = true;
                 }
             }
 
@@ -511,15 +569,113 @@ module TSOS {
             // Verify at least one pid given
             if( args.length > 0)
             {
-                // Send interupt to run process
-                _Kernel.ExecuteProcess(args[0]);
-
-                // Set flag for shell to wait until kernel messages back
-                _ShellWaitForMessage = true;
+                if( !isNaN(args[0]))
+                    // Send interupt to run process
+                    _Kernel.ExecuteProcess(args[0]);
+                else
+                    _StdOut.putText("usage: run <int> - Please provide a PID.");
             }
             // Else message user of usage
             else
                 _StdOut.putText("usage: run <int> - Please provide a PID.");
+        }
+
+        public shellClrmem(args)
+        {
+             _Kernel.ClearMemory();
+
+        }
+
+        public shellClrpart(args)
+        {
+            if( args.length > 0)
+            {
+                if( !isNaN(args[0]))
+                    _Kernel.ClearMemory(args[0]);
+                else
+                    _StdOut.putText("usage: clrpart <int> - Please enter a partition index.");
+            }
+            else
+            {
+                _StdOut.putText("usage: clrpart <int> - Please enter a partition index.");
+            }
+        }
+
+        public shellRunall(args)
+        {
+            _Kernel.ExecuteAllProcessess();
+        }
+
+        public shellQuantum(args)
+        {
+            if( args.length > 0)
+            {
+                if( !isNaN(args[0]))
+                    _Kernel.ChangeQuantum(args[0]);
+                else
+                    _StdOut.putText("usage: quantum <int> - Please enter a quantum.");
+
+            }
+            else
+            {
+                _StdOut.putText("usage: quantum <int> - Please enter a quantum.");
+            }
+        }
+
+        public shellPS(args)
+        {
+            _Kernel.ListAllProcessess();
+        }
+
+        public shellKill(args)
+        {
+            if( args.length > 0)
+            {
+                if( !isNaN(args[0]))
+                    _Kernel.TerminateProcessByPID(args[0]);
+                else
+                    _StdOut.putText("usage: kill <int> - Please enter a pid of a running processs.");
+            }
+            else
+            {
+                _StdOut.putText("usage: kill <int> - Please enter a pid of a running processs.");
+            }
+        }
+
+        public shellLoadAll(args)
+        {
+            // Inits
+            var programInput : string = (<HTMLInputElement>document.getElementById("taProgramInput")).value;
+
+
+            // Check if empty input
+            if( programInput.length == 0 )
+                _StdOut.putText("Empty program input.")
+            // Check if valid characters
+            else if( programInput.match("[^a-f|A-F|0-9| |\n|\r]+") )
+                _StdOut.putText("Invalid program input, only hex values and spaces allowed.");
+            // Else valid input
+            else
+            {
+                // Remove white space and carrieg returns
+                var reg = new RegExp("[ |\n\r]+");
+                var hex = programInput.split(reg);
+                var input = hex.join('');
+
+                // Verify inputs not over 256 bytes
+                if( input.length > 512)
+                {
+                    _StdOut.putText("Program is valid, but over 256 bytes.")
+                }
+                // Else send create process interupt
+                else
+                {
+
+                    // Create process
+                    _Kernel.LoadAllProcesses(input);
+                }
+            }
+
         }
     }
 }

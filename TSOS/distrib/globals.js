@@ -30,6 +30,13 @@ var UNKNOWN_SYSCALL_IRQ = 9;
 var PRINT_INTEGER_IRQ = 10;
 var PRINT_STRING_IRQ = 11;
 var READ_PAST_EOP_IRQ = 12;
+var MEMORY_FULL_IRQ = 13;
+var CONTEXT_SWITCH_IRQ = 14;
+var CLEAR_MEMORY_IRQ = 15;
+var EXECUTE_ALL_IRQ = 16;
+var LIST_PROCESS_IRQ = 17;
+var CHANGE_QUANTUM_IRQ = 18;
+var CREATE_ALL_PROCESS_IRQ = 19;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
@@ -53,8 +60,8 @@ var _KernelTabInput = false; // A flag to take tab input, as cant put tab on inp
 var _KernelReadyQueue;
 var _KernelRunningProcesses = null;
 var _ProcessScheduler;
+var _FirstStart = false;
 // Flags
-var _ShellWaitForMessage = false; // Tells shell to wait for message from kernel after sending system call
 var _TraceMode = false;
 var _NextInstruction = false;
 // Standard input and output
@@ -64,11 +71,17 @@ var _StdOut;
 var _Console;
 var _OsShell;
 var _Utils;
+var _OutputPrompt = '#';
 // Memory
-var _MemoryMax = 256;
+var _MemoryMax = 768;
+var _MemoryPartitions = 3;
 var _MemoryPartitionSize = 256;
 var _Memory;
 var _MemoryManager;
+// Process Scheduling
+var _TimerOn = false;
+var _TimerCounter = 0;
+var _Quantum = 6;
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode = false;
 // Global Device Driver Objects - page 12

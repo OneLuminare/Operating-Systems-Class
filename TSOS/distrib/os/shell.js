@@ -70,6 +70,21 @@ var TSOS;
             // run
             sc = new TSOS.ShellCommand(this.shellRun, "run", "<int> - Runs a process in memory.");
             this.commandList[this.commandList.length] = sc;
+            // clearmem
+            sc = new TSOS.ShellCommand(this.shellClrmem, "clrmem", "- Clears all processes in memory.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellClrpart, "clrpart", "<int> - Clears specific parttion in memory.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRunall, "runall", "- Executes all loaded processes.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellQuantum, "quantum", "<int> - Executes all loaded processes.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellPS, "ps", "- Lists all active process.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellKill, "kill", "<int> - Executes all loaded processes.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellLoadAll, "loadall", "- Loads process into all available partitions.");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             //
@@ -78,6 +93,9 @@ var TSOS;
         };
         Shell.prototype.putPrompt = function () {
             _StdOut.putText(this.promptStr);
+        };
+        Shell.prototype.putPromptOutput = function () {
+            _StdOut.putText(_OutputPrompt);
         };
         Shell.prototype.handleInput = function (buffer) {
             _Kernel.krnTrace("Shell Command~" + buffer);
@@ -132,7 +150,7 @@ var TSOS;
                 _StdOut.advanceLine();
             }
             // Dont draw prompt on kernel crash
-            if (!_KernelCrash && !_ShellWaitForMessage)
+            if (!_KernelCrash)
                 // ... and finally write the prompt again.
                 this.putPrompt();
         };
@@ -159,20 +177,22 @@ var TSOS;
             }
             return retVal;
         };
-        // Outputs message on new line, and resets
-        // wait for message flag.
-        Shell.prototype.message = function (msg) {
-            _StdOut.putText(msg);
-            _StdOut.advanceLine();
-            if (_ShellWaitForMessage) {
-                _ShellWaitForMessage = false;
+        // Outputs message and restores useer input if any
+        Shell.prototype.outputMessage = function (msg) {
+            if (_StdOut.buffer.length > 0) {
+                var buff = _StdOut.buffer;
+                _StdOut.clearLine();
+                _StdOut.putText(msg);
+                _StdOut.advanceLine();
+                this.putPrompt();
+                _StdOut.putText(buff);
+                _StdOut.buffer = buff;
+            }
+            else {
+                _StdOut.putText(msg);
+                _StdOut.advanceLine();
                 this.putPrompt();
             }
-        };
-        // Outputs message but does not reset message flag
-        Shell.prototype.outputMessage = function (msg) {
-            _StdOut.putText(msg);
-            _StdOut.advanceLine();
         };
         //
         // Shell Command Functions.  Kinda not part of Shell() class exactly, but
@@ -304,6 +324,26 @@ var TSOS;
                     case "run":
                         _StdOut.putText("Runs loaded process, identified by givin PID returned at load.");
                         break;
+                    case "clrmem":
+                        _StdOut.putText("Clears all memory partitions.");
+                        break;
+                    case "clrpart":
+                        _StdOut.putText("Clears a specific partition.");
+                        break;
+                    case "runall":
+                        _StdOut.putText("Executes all loaded processess.");
+                        break;
+                    case "quantum":
+                        _StdOut.putText("Changes scheduling quantum to given value.");
+                        break;
+                    case "ps":
+                        _StdOut.putText("Lists all active processes, loaded and running.");
+                        break;
+                    case "kill":
+                        _StdOut.putText("Terminates a processs with given pid.");
+                        break;
+                    case "loadall":
+                        _StdOut.putText("Loads program input into all available partitions.");
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -404,8 +444,6 @@ var TSOS;
                 else {
                     // Create process
                     _Kernel.CreateProcess(input);
-                    // Set flag for shell to wait until kernel messages back
-                    _ShellWaitForMessage = true;
                 }
             }
         };
@@ -413,13 +451,79 @@ var TSOS;
         Shell.prototype.shellRun = function (args) {
             // Verify at least one pid given
             if (args.length > 0) {
-                // Send interupt to run process
-                _Kernel.ExecuteProcess(args[0]);
-                // Set flag for shell to wait until kernel messages back
-                _ShellWaitForMessage = true;
+                if (!isNaN(args[0]))
+                    // Send interupt to run process
+                    _Kernel.ExecuteProcess(args[0]);
+                else
+                    _StdOut.putText("usage: run <int> - Please provide a PID.");
             }
             else
                 _StdOut.putText("usage: run <int> - Please provide a PID.");
+        };
+        Shell.prototype.shellClrmem = function (args) {
+            _Kernel.ClearMemory();
+        };
+        Shell.prototype.shellClrpart = function (args) {
+            if (args.length > 0) {
+                if (!isNaN(args[0]))
+                    _Kernel.ClearMemory(args[0]);
+                else
+                    _StdOut.putText("usage: clrpart <int> - Please enter a partition index.");
+            }
+            else {
+                _StdOut.putText("usage: clrpart <int> - Please enter a partition index.");
+            }
+        };
+        Shell.prototype.shellRunall = function (args) {
+            _Kernel.ExecuteAllProcessess();
+        };
+        Shell.prototype.shellQuantum = function (args) {
+            if (args.length > 0) {
+                if (!isNaN(args[0]))
+                    _Kernel.ChangeQuantum(args[0]);
+                else
+                    _StdOut.putText("usage: quantum <int> - Please enter a quantum.");
+            }
+            else {
+                _StdOut.putText("usage: quantum <int> - Please enter a quantum.");
+            }
+        };
+        Shell.prototype.shellPS = function (args) {
+            _Kernel.ListAllProcessess();
+        };
+        Shell.prototype.shellKill = function (args) {
+            if (args.length > 0) {
+                if (!isNaN(args[0]))
+                    _Kernel.TerminateProcessByPID(args[0]);
+                else
+                    _StdOut.putText("usage: kill <int> - Please enter a pid of a running processs.");
+            }
+            else {
+                _StdOut.putText("usage: kill <int> - Please enter a pid of a running processs.");
+            }
+        };
+        Shell.prototype.shellLoadAll = function (args) {
+            // Inits
+            var programInput = document.getElementById("taProgramInput").value;
+            // Check if empty input
+            if (programInput.length == 0)
+                _StdOut.putText("Empty program input.");
+            else if (programInput.match("[^a-f|A-F|0-9| |\n|\r]+"))
+                _StdOut.putText("Invalid program input, only hex values and spaces allowed.");
+            else {
+                // Remove white space and carrieg returns
+                var reg = new RegExp("[ |\n\r]+");
+                var hex = programInput.split(reg);
+                var input = hex.join('');
+                // Verify inputs not over 256 bytes
+                if (input.length > 512) {
+                    _StdOut.putText("Program is valid, but over 256 bytes.");
+                }
+                else {
+                    // Create process
+                    _Kernel.LoadAllProcesses(input);
+                }
+            }
         };
         return Shell;
     })();

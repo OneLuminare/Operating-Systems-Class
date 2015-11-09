@@ -268,14 +268,14 @@ var TSOS;
             // Check if address is within limi
             if (rawAddress < (this.base + this.limit)) {
                 // Get value
-                value = _Memory.getAddress(address);
+                value = _Memory.getAddress(rawAddress);
                 // Inc by 1
                 value++;
                 // If over a byte, set to 0
                 if (value > 255)
                     value = 0;
                 // Set new value
-                _Memory.setAddress(address, value);
+                _Memory.setAddress(rawAddress, value);
             }
             else
                 return false;
@@ -410,7 +410,7 @@ var TSOS;
                     }
                     else {
                         // Convert little endian address to base 10 address
-                        dword = _MemoryManager.getDWordLittleEndian(address + 1, this.base, this.limit);
+                        dword = _MemoryManager.getDWordLittleEndian(address + 1, limitAddress);
                         // Run instruction
                         if (!this.LDA2(dword)) {
                             // Send memory violation interrupt
@@ -431,7 +431,7 @@ var TSOS;
                     }
                     else {
                         // Convert little endian address to base 10 address
-                        dword = _MemoryManager.getDWordLittleEndian(address + 1, this.base, this.limit);
+                        dword = _MemoryManager.getDWordLittleEndian(address + 1, limitAddress);
                         // Run instruction
                         if (!this.STA(dword)) {
                             // Send memory violation interrupt
@@ -452,7 +452,7 @@ var TSOS;
                     }
                     else {
                         // Convert little endian address to base 10 address
-                        dword = _MemoryManager.getDWordLittleEndian(address + 1, this.base, this.limit);
+                        dword = _MemoryManager.getDWordLittleEndian(address + 1, limitAddress);
                         // Run instruction
                         if (!this.ADC(dword)) {
                             // Send memory violation interrupt
@@ -485,7 +485,7 @@ var TSOS;
                     }
                     else {
                         // Convert little endian address to base 10 address
-                        dword = _MemoryManager.getDWordLittleEndian(address + 1, this.base, this.limit);
+                        dword = _MemoryManager.getDWordLittleEndian(address + 1, limitAddress);
                         // Run instruction
                         if (!this.LDX2(dword)) {
                             // Send memory violation interrupt
@@ -519,7 +519,7 @@ var TSOS;
                     }
                     else {
                         // Convert little endian address to base 10 address
-                        dword = _MemoryManager.getDWordLittleEndian(address + 1, this.base, this.limit);
+                        dword = _MemoryManager.getDWordLittleEndian(address + 1, limitAddress);
                         // Run instruction
                         if (!this.LDY2(dword)) {
                             // Send memory violation interrupt
@@ -544,7 +544,7 @@ var TSOS;
                     }
                     else {
                         // Convert little endian address to base 10 address
-                        dword = _MemoryManager.getDWordLittleEndian(address + 1, this.base, this.limit);
+                        dword = _MemoryManager.getDWordLittleEndian(address + 1, limitAddress);
                         // Run instruction
                         if (!this.CPX(dword)) {
                             // Send memory violation interrupt
@@ -569,7 +569,7 @@ var TSOS;
                     }
                     else {
                         // Convert little endian address to base 10 address
-                        dword = _MemoryManager.getDWordLittleEndian(address + 1, this.base, this.limit);
+                        dword = _MemoryManager.getDWordLittleEndian(address + 1, limitAddress);
                         // Run instruction
                         if (!this.INC(dword)) {
                             // Send memory violation interrupt
@@ -591,7 +591,7 @@ var TSOS;
                 // Break instruction
                 case "0":
                     // Trace
-                    _Kernel.krnTrace('Executing break.');
+                    _Kernel.krnTrace('Executing break. Base ' + this.base);
                     // Send exit process interrupt
                     _Kernel.TerminateProcess(this.base);
                     // Stop executing
@@ -608,13 +608,14 @@ var TSOS;
             // Get next instruction address
             address = this.base + this.PC;
             // check if this address is with in memory, and update mem with highlight code
-            if (address < limitAddress) {
+            if ((address < limitAddress) && ((_TimerCounter + 1) != _Quantum)) {
                 inst = _Memory.getAddress(address).toString(16);
                 // Update memory display with highlighted code
                 TSOS.Control.updateMemoryDisplay(address, this.getParamCount(inst));
             }
-            else
+            else {
                 TSOS.Control.updateMemoryDisplay();
+            }
             // Update cput display
             TSOS.Control.updateCPUDisplay();
         };

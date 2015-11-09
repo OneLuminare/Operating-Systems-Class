@@ -374,7 +374,7 @@ module TSOS {
             if ( rawAddress < (this. base + this.limit) )
             {
                 // Get value
-                value = _Memory.getAddress(address);
+                value = _Memory.getAddress(rawAddress);
 
                 // Inc by 1
                 value++;
@@ -384,7 +384,7 @@ module TSOS {
                     value = 0;
 
                 // Set new value
-                _Memory.setAddress(address,value);
+                _Memory.setAddress(rawAddress,value);
             }
             // Else memory access violation return false
             else
@@ -528,6 +528,8 @@ module TSOS {
             var inst : string = _Memory.getAddress(address).toString(16);
             var dword : number = 0;
 
+
+
             // Switch on instruction
             switch (inst)
             {
@@ -563,7 +565,7 @@ module TSOS {
                     else
                     {
                         // Convert little endian address to base 10 address
-                        dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+                        dword = _MemoryManager.getDWordLittleEndian(address + 1,limitAddress);
 
                         // Run instruction
                         if(!this.LDA2(dword))
@@ -592,7 +594,7 @@ module TSOS {
                         else
                         {
                             // Convert little endian address to base 10 address
-                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,limitAddress);
 
                             // Run instruction
                             if(!this.STA(dword))
@@ -621,7 +623,7 @@ module TSOS {
                         else
                         {
                             // Convert little endian address to base 10 address
-                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,limitAddress);
 
                             // Run instruction
                             if(!this.ADC(dword))
@@ -667,7 +669,7 @@ module TSOS {
                         else
                         {
                             // Convert little endian address to base 10 address
-                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,limitAddress);
 
                             // Run instruction
                             if(!this.LDX2(dword))
@@ -713,7 +715,7 @@ module TSOS {
                         else
                         {
                             // Convert little endian address to base 10 address
-                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,limitAddress);
 
                             // Run instruction
                             if(!this.LDY2(dword))
@@ -730,7 +732,7 @@ module TSOS {
 
                     // No op EA
                     case "ea":
-                        _Kernel.krnTrace("Executing EA : no op.")
+                        _Kernel.krnTrace("Executing EA : no op.");
                         break;
 
                     // CPX
@@ -747,7 +749,7 @@ module TSOS {
                         else
                         {
                             // Convert little endian address to base 10 address
-                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,limitAddress);
 
                             // Run instruction
                             if(!this.CPX(dword))
@@ -782,7 +784,7 @@ module TSOS {
                         else
                         {
                             // Convert little endian address to base 10 address
-                            dword = _MemoryManager.getDWordLittleEndian(address + 1,this.base,this.limit);
+                            dword = _MemoryManager.getDWordLittleEndian(address + 1,limitAddress);
 
                             // Run instruction
                             if(!this.INC(dword))
@@ -806,6 +808,7 @@ module TSOS {
                             _KernelInterruptQueue.enqueue(new Interrupt(UNKNOWN_SYSCALL_IRQ, new Array(this.base, this.PC)));
                         }
 
+
                         // Stop executing (either on failure or success)
                         this.isExecuting = false;
 
@@ -814,13 +817,14 @@ module TSOS {
                     // Break instruction
                     case "0":
                         // Trace
-                        _Kernel.krnTrace('Executing break.');
+                        _Kernel.krnTrace('Executing break. Base ' + this.base);
 
                         // Send exit process interrupt
                         _Kernel.TerminateProcess(this.base);
 
                         // Stop executing
                         this.isExecuting = false;
+
                         break;
 
                     // Else unknown op code
@@ -837,7 +841,7 @@ module TSOS {
             address = this.base + this.PC;
 
             // check if this address is with in memory, and update mem with highlight code
-            if( address < limitAddress )
+            if( (address < limitAddress) && ((_TimerCounter + 1) != _Quantum) )
             {
                     inst = _Memory.getAddress(address).toString(16);
 
@@ -846,7 +850,10 @@ module TSOS {
             }
             // Else update mem with out highlight code
             else
+            {
+
                 TSOS.Control.updateMemoryDisplay();
+            }
 
 
 
