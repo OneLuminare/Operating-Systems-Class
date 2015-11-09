@@ -33,8 +33,46 @@ module TSOS {
         public static hostClockPulse(): void {
             // Increment the hardware (host) clock.
             _OSclock++;
+
+            /*
+            // Call timer
+            if( _TimerOn == true) {
+
+
+                if(_TimerCounter == _Quantum )
+                {
+                    _KernelInterruptQueue.enqueue(new Interrupt(TIMER_IRQ, null));
+                    _TimerCounter = 0;
+                }
+
+            }
+*/
             // Call the kernel clock pulse event handler.
             _Kernel.krnOnCPUClockPulse();
+        }
+
+        // Timer, increments timer value (clock cycles) and sends TIMER_IRQ if
+        // reached quantum.
+        public static timerCycle() : void
+        {
+            _TimerCounter++;
+            if(_TimerCounter == _Quantum )
+            {
+                _KernelInterruptQueue.enqueue(new Interrupt(TIMER_IRQ, null));
+                _TimerCounter = 0;
+            }
+        }
+
+        public static stopTimer()
+        {
+            _TimerOn = false;
+            _TimerCounter = 0;
+        }
+
+        public static startTimer()
+        {
+            _TimerOn = true;
+            _TimerCounter = 0;
         }
 
         //
@@ -59,7 +97,7 @@ module TSOS {
                 // Note the pressed key code in the params (Mozilla-specific).
                 var params = new Array(event.which || event.keyCode, event.shiftKey);
 
-                // Enqueue this interrupt on the kernel interrupt queue so that it gets to the Interrupt handler.
+                // Enqueue this interrupt on the kernel inter$rupt queue so that it gets to the Interrupt handler.
                 _KernelInterruptQueue.enqueue(new Interrupt(KEYBOARD_IRQ, params));
             }
         }

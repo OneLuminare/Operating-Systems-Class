@@ -332,6 +332,22 @@ module TSOS {
             this.buffer = this.buffer.substr(0, this.buffer.length - 1);
         }
 
+        public clearLine() : void
+        {
+            // Get dimensions. If buffer only contains backspace, clear rect will have 0 size stopping overwritting prompt
+            var eraseWidth:number = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer);
+            var yWidth:number = _DefaultFontSize + (2 * _DrawingContext.fontDescent(this.currentFont, this.currentFontSize));
+
+            // Move current x pos
+            this.currentXPosition -= eraseWidth;
+
+            // Erase block
+            _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - _DefaultFontSize, eraseWidth, yWidth);
+
+            // Remove backspace char from buffer
+            this.buffer = "";
+        }
+
         public reprintBuffer()
         {
             this.putText(this.buffer);
