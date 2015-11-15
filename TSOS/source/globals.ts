@@ -99,6 +99,18 @@ var _TimerOn : boolean = false;
 var _TimerCounter : number = 0;
 var _Quantum : number = 6;
 
+// File codes
+const EOF = 255;
+const NEWLINE = 10; // Note: in this file system, I am not using a line feed/carrage return pair for new line
+
+// Error codes
+const CR_SUCCESS = 1;
+const CR_FILE_LENGTH_TO_LONG = -100;
+const CR_DRIVE_FULL = -101;
+const CR_FILE_DIRECTORY_FULL = -103;
+const CR_FILE_NOT_FOUND = -104;
+const CR_DID_NOT_WRITE_ALL_DATA = -105;
+
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode: boolean = false;
 
