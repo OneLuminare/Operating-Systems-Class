@@ -390,13 +390,12 @@ module TSOS
         // Returns: string in memory
         // Throws: RangeError - on memory address out of range
         //         Error - on read past end of partition
-        public getString(address:number):string
+        public getString(address:number, base : number):string
         {
             // Inits
             var ret:string = "";
             var found:boolean = false;
-            var base : number = _ProcessScheduler.runningProcess.base;
-            var limit : number = _ProcessScheduler.runningProcess.limit;
+            var limit : number = base + _MemoryPartitionSize;
             var newAdd: number = base + address;
             var curAddress:number = newAdd;
 

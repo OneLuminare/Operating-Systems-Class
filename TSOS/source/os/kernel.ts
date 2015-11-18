@@ -436,7 +436,7 @@ module TSOS {
 
             try
             {
-                str = _MemoryManager.getString(_CPU.Yreg);
+                str = _MemoryManager.getString(_CPU.Yreg,_CPU.base);
                 _KernelInterruptQueue.enqueue(new Interrupt(PRINT_STRING_IRQ,str));
             }
 
