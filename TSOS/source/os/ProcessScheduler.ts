@@ -170,7 +170,6 @@ module TSOS {
                 }
                 // Else get pcb
                 else
-                    _Kernel.krnTrace("found");
                     found = pcb;
             }
 
@@ -179,7 +178,6 @@ module TSOS {
             // Copy temp array back into queue
             for( var i = 0; i < tempArr.length; i++)
             {
-                _Kernel.krnTrace(tempArr[i].pid.toString());
                 this.readyQueue.enqueue(tempArr[i]);
             }
 
@@ -191,11 +189,8 @@ module TSOS {
         {
             var ret : TSOS.ProcessControlBlock = null;
 
-            _Kernel.krnTrace("index " + index.toString() + " size " + this.readyQueue.getSize().toString());
             if( index >= 0 && index < this.readyQueue.getSize()) {
                 ret = this.readyQueue.q[index];
-                _Kernel.krnTrace("good index");
-                _Kernel.krnTrace(ret.toString());
             }
 
 
@@ -447,7 +442,6 @@ module TSOS {
 
                     // Set partition free
                     var part = _MemoryManager.partitionFromBase(pcb.base);
-                    _Kernel.krnTrace("part:" + part);
 
                     _MemoryManager.freePartition(part);
 
@@ -464,7 +458,6 @@ module TSOS {
                 // Else remove from ready queue
                 else
                 {
-                    _Kernel.krnTrace("here");
                     // Removes from ready queue, or
                     // gets null for return value
                     pcb = this.removeFromReadyQueue(pid);

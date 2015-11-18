@@ -295,12 +295,11 @@ var TSOS;
         // Returns: string in memory
         // Throws: RangeError - on memory address out of range
         //         Error - on read past end of partition
-        MemoryManager.prototype.getString = function (address) {
+        MemoryManager.prototype.getString = function (address, base) {
             // Inits
             var ret = "";
             var found = false;
-            var base = _ProcessScheduler.runningProcess.base;
-            var limit = _ProcessScheduler.runningProcess.limit;
+            var limit = base + _MemoryPartitionSize;
             var newAdd = base + address;
             var curAddress = newAdd;
             // Check if address is out of range
