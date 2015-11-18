@@ -13,9 +13,14 @@ module TSOS
 		constructor(public track:number,
 					public sector:number,
 					public block:number,
-					public data:Array = null)
+					loadOnCreate : boolean = true,
+					public data:number[] = null)
+
 		{
-			this.loadBlock(this.track,this.sector,this.block);
+			_Kernel.krnTrace("wtf");
+			if(loadOnCreate)
+				this.loadBlock(this.track,this.sector,this.block);
+			_Kernel.krnTrace("wtf2");
 		}
 
 		// Gets the session storage key for this block,
@@ -49,6 +54,7 @@ module TSOS
 
 			// Get data from session storage, making sure to turn back into array
 			this.data = JSON.parse(sessionStorage.getItem(this.getKey()));
+
 		}
 
 		// Writes block header to memory. First byte is in use flag, next 3 are
@@ -75,6 +81,7 @@ module TSOS
 			this.data[1] = track;
 			this.data[2] = sector;
 			this.data[3] = block;
+
 
 			// Write data, storing array in JSON
 			sessionStorage.setItem(this.getKey(),JSON.stringify(this.data));
@@ -253,6 +260,30 @@ module TSOS
 
 			// Return in use
 			return (this.data[0] == 1) ? true : false;
+		}
+
+		// Sets in use flag, preserving tsb pointer,
+		// and saves data.
+		//
+		// Params: inUse <boolean> - in use or not
+		// Returns: false on data not loaded.
+		public setInUse(inUse : boolean) : boolean
+		{
+			// Return false if data not loaded
+			if( this.data == null)
+				return false;
+
+			// Set in use byte
+			if( inUse )
+				this.data[0] = 1;
+			else
+				this.data[0] = 0;
+
+			// Write data, converting to JSON string
+			sessionStorage.setItem(this.getKey(),JSON.stringify(this.data));
+
+			// Return success
+			return true;
 		}
 
 

@@ -231,6 +231,38 @@ module TSOS {
                 case CONTEXT_SWITCH_IRQ:
                     _ProcessScheduler.contextSwitch();
                     break;
+                case CREATE_FILE_IRQ:
+                    var hret = _HDDriver.createFile(params);
+
+                    switch(hret)
+                    {
+                        case CR_SUCCESS:
+                            _OsShell.outputMessage("Successfully create file.");
+                            break;
+                        case CR_DRIVE_NOT_FORMATED:
+                            _OsShell.outputMessage("Hard drive not formatted, cannot create file.");
+                            break;
+                        case CR_FILE_LENGTH_TO_LONG:
+                            _OsShell.outputMessage("File name to long, file name must be 60 character or less.");
+                            break;
+                        case CR_EMPTY_FILE_NAME:
+                            _OsShell.outputMessage("Empty file name, file name must be 1 to 60 characters.");
+                            break;
+                        case CR_FILE_DIRECTORY_FULL:
+                            _OsShell.outputMessage("File directory full, cannot create file.");
+                            break;
+                        case CR_DUPLICATE_FILE_NAME:
+                            _OsShell.outputMessage("File already exists.");
+                            break;
+                        case CR_DRIVE_FULL:
+                            _OsShell.outputMessage("Hard drive is full, cannot create file.");
+                            break;
+                        default:
+                            _OsShell.outputMessage("Unknown return value for createFile().");
+                            break;
+                    }
+
+                    break;
                 case CLEAR_MEMORY_IRQ:
                     if( params < 0)
                     {
@@ -301,6 +333,8 @@ module TSOS {
 
                     break;
 
+
+
                 case CHANGE_QUANTUM_IRQ:
                     if( params < 0)
                     {
@@ -317,6 +351,13 @@ module TSOS {
                     }
 
                     break;
+
+                case  FORMAT_HD_IRQ:
+                    _HDDriver.formatDrive();
+                    _OsShell.outputMessage("Formated hard drive.");
+                    break;
+
+
 
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
@@ -453,6 +494,20 @@ module TSOS {
                     _KernelInterruptQueue.enqueue(new Interrupt(READ_PAST_EOP_IRQ,new Array(_CPU.base, _CPU.limit)));
                 }
             }
+        }
+
+        // Formats drive
+        public FormatHD() : void
+        {
+            // Send memory violation interrupt
+            _KernelInterruptQueue.enqueue(new Interrupt(FORMAT_HD_IRQ,null));
+        }
+
+        // Formats drive
+        public CreateFile(fileName : string) : void
+        {
+            // Send memory violation interrupt
+            _KernelInterruptQueue.enqueue(new Interrupt(CREATE_FILE_IRQ,fileName));
         }
 
 

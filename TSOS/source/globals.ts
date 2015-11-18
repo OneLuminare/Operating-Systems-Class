@@ -41,6 +41,8 @@ const EXECUTE_ALL_IRQ : number = 16;
 const LIST_PROCESS_IRQ : number = 17;
 const CHANGE_QUANTUM_IRQ : number = 18;
 const CREATE_ALL_PROCESS_IRQ : number = 19;
+const FORMAT_HD_IRQ : number = 20;
+const CREATE_FILE_IRQ : number = 21;
 
 
 //
@@ -94,6 +96,9 @@ const _MemoryPartitionSize : number = 256;
 var _Memory : TSOS.MemoryAccessor;
 var _MemoryManager : TSOS.MemoryManager;
 
+// Devices
+var _HDDriver : TSOS.HardDriveDriver = null;
+
 // Process Scheduling
 var _TimerOn : boolean = false;
 var _TimerCounter : number = 0;
@@ -110,6 +115,9 @@ const CR_DRIVE_FULL = -101;
 const CR_FILE_DIRECTORY_FULL = -103;
 const CR_FILE_NOT_FOUND = -104;
 const CR_DID_NOT_WRITE_ALL_DATA = -105;
+const CR_DUPLICATE_FILE_NAME = -106
+const CR_DRIVE_NOT_FORMATED = -107;
+const CR_EMPTY_FILE_NAME = -108;
 
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode: boolean = false;

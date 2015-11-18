@@ -82,6 +82,10 @@ var TSOS;
             _CPU.init(); //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
             // Create new memory object
             _Memory = new TSOS.MemoryAccessor();
+            // Creae new hard drive driver with:
+            // 4 tracks, 8 sectors, and 8 blocks per sector. Sectors are 64 bytes long.
+            // totals 16,384 bytes
+            _HDDriver = new TSOS.HardDriveDriver(4, 8, 8, 64);
             if (!_FirstStart) {
                 // Create table
                 this.createMemoryDisplay();

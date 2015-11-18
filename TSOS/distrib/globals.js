@@ -37,6 +37,8 @@ var EXECUTE_ALL_IRQ = 16;
 var LIST_PROCESS_IRQ = 17;
 var CHANGE_QUANTUM_IRQ = 18;
 var CREATE_ALL_PROCESS_IRQ = 19;
+var FORMAT_HD_IRQ = 20;
+var CREATE_FILE_IRQ = 21;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
@@ -78,10 +80,25 @@ var _MemoryPartitions = 3;
 var _MemoryPartitionSize = 256;
 var _Memory;
 var _MemoryManager;
+// Devices
+var _HDDriver = null;
 // Process Scheduling
 var _TimerOn = false;
 var _TimerCounter = 0;
 var _Quantum = 6;
+// File codes
+var EOF = 255;
+var NEWLINE = 10; // Note: in this file system, I am not using a line feed/carrage return pair for new line
+// Error codes
+var CR_SUCCESS = 1;
+var CR_FILE_LENGTH_TO_LONG = -100;
+var CR_DRIVE_FULL = -101;
+var CR_FILE_DIRECTORY_FULL = -103;
+var CR_FILE_NOT_FOUND = -104;
+var CR_DID_NOT_WRITE_ALL_DATA = -105;
+var CR_DUPLICATE_FILE_NAME = -106;
+var CR_DRIVE_NOT_FORMATED = -107;
+var CR_EMPTY_FILE_NAME = -108;
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode = false;
 // Global Device Driver Objects - page 12

@@ -85,6 +85,10 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellLoadAll, "loadall", "- Loads process into all available partitions.");
             this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellFormat, "format", "- Formats hard drive.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellCreateFile, "createfile", "<string> - creates a file.");
+            this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
             //
@@ -344,8 +348,16 @@ var TSOS;
                         break;
                     case "loadall":
                         _StdOut.putText("Loads program input into all available partitions.");
+                        break;
+                    case "format":
+                        _StdOut.putText("Formats hard drive. Must be done before any file operations are performed.");
+                        break;
+                    case "createfile":
+                        _StdOut.putText("Creates an empty file with given file name.");
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
+                        break;
                 }
             }
             else {
@@ -524,6 +536,16 @@ var TSOS;
                     _Kernel.LoadAllProcesses(input);
                 }
             }
+        };
+        Shell.prototype.shellFormat = function (args) {
+            _Kernel.FormatHD();
+        };
+        Shell.prototype.shellCreateFile = function (args) {
+            if (args.length > 0) {
+                _Kernel.CreateFile(args[0]);
+            }
+            else
+                _StdOut.putText("Usage - createfile <string : fileName>");
         };
         return Shell;
     })();
