@@ -357,7 +357,7 @@ var TSOS;
         Kernel.prototype.PrintString = function () {
             var str = "";
             try {
-                str = _MemoryManager.getString(_CPU.Yreg);
+                str = _MemoryManager.getString(_CPU.Yreg, _CPU.base);
                 _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PRINT_STRING_IRQ, str));
             }
             catch (er) {

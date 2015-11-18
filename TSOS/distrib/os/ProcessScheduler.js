@@ -131,12 +131,10 @@ var TSOS;
                     tempArr.push(pcb);
                 }
                 else
-                    _Kernel.krnTrace("found");
-                found = pcb;
+                    found = pcb;
             }
             // Copy temp array back into queue
             for (var i = 0; i < tempArr.length; i++) {
-                _Kernel.krnTrace(tempArr[i].pid.toString());
                 this.readyQueue.enqueue(tempArr[i]);
             }
             // Return pcb or null
@@ -144,11 +142,8 @@ var TSOS;
         };
         ProcessScheduler.prototype.getReadyQueueItem = function (index) {
             var ret = null;
-            _Kernel.krnTrace("index " + index.toString() + " size " + this.readyQueue.getSize().toString());
             if (index >= 0 && index < this.readyQueue.getSize()) {
                 ret = this.readyQueue.q[index];
-                _Kernel.krnTrace("good index");
-                _Kernel.krnTrace(ret.toString());
             }
             return ret;
         };
@@ -330,7 +325,6 @@ var TSOS;
                     pcb.Acc = _CPU.Acc;
                     // Set partition free
                     var part = _MemoryManager.partitionFromBase(pcb.base);
-                    _Kernel.krnTrace("part:" + part);
                     _MemoryManager.freePartition(part);
                     // Set running process to null
                     this.runningProcess = null;
@@ -339,7 +333,6 @@ var TSOS;
                     this.contextSwitch();
                 }
                 else {
-                    _Kernel.krnTrace("here");
                     // Removes from ready queue, or
                     // gets null for return value
                     pcb = this.removeFromReadyQueue(pid);
