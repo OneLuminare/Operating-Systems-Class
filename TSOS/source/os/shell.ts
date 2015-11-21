@@ -167,6 +167,26 @@ module TSOS {
                 "<string> - creates a file.");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellWriteFile,
+                "writefile",
+                "<string> <string> - writes to a file.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellReadFile,
+                "readfile",
+                "<string> - prints file content.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellDeleteFile,
+                "deletefile",
+                "<string> - delete a file.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellListFiles,
+                "listfiles",
+                "Lists all files");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -455,6 +475,18 @@ module TSOS {
                     case "createfile":
                         _StdOut.putText("Creates an empty file with given file name.");
                         break;
+                    case "writefile":
+                        _StdOut.putText("Writes given text to an existing file.");
+                        break;
+                    case "readfile":
+                        _StdOut.putText("Reads and displays file text.");
+                        break;
+                    case "deletefile":
+                        _StdOut.putText("Deletes a file.");
+                        break;
+                    case "listfiles":
+                        _StdOut.putText("Lists all active files.");
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                         break;
@@ -710,6 +742,47 @@ module TSOS {
             else
                 _StdOut.putText("Usage - createfile <string : fileName>");
 
+        }
+
+        public shellWriteFile(args)
+        {
+
+            if( args.length > 1 )
+            {
+                _Kernel.WriteToFile(args[0],args[1]);
+            }
+            else
+                _StdOut.putText("Usage - writefile <string : fileName> <string : text>");
+
+        }
+
+        public shellReadFile(args)
+        {
+
+            if( args.length > 0 )
+            {
+                _Kernel.ReadFile(args[0]);
+            }
+            else
+                _StdOut.putText("Usage - readfile <string : fileName>");
+
+        }
+
+        public shellDeleteFile(args)
+        {
+
+            if( args.length > 0 )
+            {
+                _Kernel.DeleteFile(args[0]);
+            }
+            else
+                _StdOut.putText("Usage - deletefile <string : fileName>");
+
+        }
+
+        public shellListFiles(args)
+        {
+            _Kernel.ListFiles();
         }
     }
 }

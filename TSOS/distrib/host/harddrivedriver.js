@@ -53,6 +53,8 @@ var TSOS;
                     }
                 }
             }
+            // Update hard drive display
+            //TSOS.Control.updateHardDriveDisplay();
         };
         // Sets all bytes to 0, and creates block header
         // which includes in first four bytes, an in use flag,
@@ -91,6 +93,8 @@ var TSOS;
             }
             // Set formated flag
             this.formated = true;
+            // Update hard drive display
+            TSOS.Control.updateHardDriveDisplay();
         };
         // Creates an empty file. Finds if block available, creates entry in file directory,
         // sets pointer in entry to first block, sets in use flag to true, and writes file name
@@ -117,35 +121,29 @@ var TSOS;
             // If file name too long, report error
             if (fileName.length > 60)
                 return CR_FILE_LENGTH_TO_LONG;
-            _Kernel.krnTrace("before findDirBl");
             // Get next directory block
             directoryBlock = this.findNextFileDirectoryBlock();
-            _Kernel.krnTrace("b nextAvailBlock");
             // Check if enties available in file directory
             if (directoryBlock == null)
                 return CR_FILE_DIRECTORY_FULL;
             // Get next available file block
             firstBlock = this.findNextAvailableBlock();
-            _Kernel.krnTrace("b isDuplicate");
             // If not block available, return error
             if (firstBlock == null)
                 return CR_DRIVE_FULL;
             // Check if duplicate file name
             if (this.isDuplicateFileName(fileName))
                 return CR_DUPLICATE_FILE_NAME;
-            _Kernel.krnTrace("db wfh");
             // Write file directory header
             directoryBlock.writeFileHeader(true, firstBlock.track, firstBlock.sector, firstBlock.block);
-            _Kernel.krnTrace("db wd");
             // Write file name
             directoryBlock.writeData(fileName);
-            _Kernel.krnTrace("fb wrh");
             // Write new file block header
             firstBlock.writeFileHeader(true, -1, -1, -1);
-            _Kernel.krnTrace("fb cd");
             // Clear data in file block
             firstBlock.clearData();
-            _Kernel.krnTrace("done");
+            // Update hard drive display
+            TSOS.Control.updateHardDriveDisplay();
             // Return success value
             return CR_SUCCESS;
         };
@@ -157,13 +155,16 @@ var TSOS;
         //          CR_FILE_NOT_FOUND on file not found,
         //          CR_DRIVE_NOT_FORMATED if drive not formatted,
         //          CR_DID_NOT_WRITE_ALL_DATA  if text uses more space than available.
+        //          CR_CORRUPTED_FILE_BLOCK if missing a file block
         HardDriveDriver.prototype.writeToFile = function (fileName, text) {
             // Inits
             var block = null;
-            var curBlock = null;
+            var curBlock = new TSOS.FileBlock(0, 0, 0, false);
             var driveFull = false;
             var freeBytes = 0;
-            var b = 0;
+            var temp = 0;
+            var strIndex = 0;
+            var newBlock = false;
             // Report error if not formated
             if (!this.formated)
                 return CR_DRIVE_NOT_FORMATED;
@@ -172,51 +173,72 @@ var TSOS;
                 // Check if first sector, if so set start block to 1.
                 // This skips boot record
                 if (s == 0)
-                    b = 1;
+                    temp = 1;
                 else
-                    b = 0;
+                    temp = 0;
                 // Cycle through blocks
-                for (b; b < (this.blocksPerSector) && (block == null); b++) {
+                for (var b = temp; b < (this.blocksPerSector) && (block == null); b++) {
                     // Get block from memory
-                    curBlock = new TSOS.FileBlock(0, s, b);
+                    curBlock.loadBlock(0, s, b);
                     // If in use flag 0, set as ret block
-                    if ((curBlock.getDataText() == fileName) && (!curBlock.isInUse()))
+                    if ((curBlock.getDataText() == fileName) && curBlock.isInUse())
                         block = curBlock;
                 }
             }
             // If block not found, return file not found
             if (block == null)
                 return CR_FILE_NOT_FOUND;
+            // Get first file block
+            block = block.nextBlock();
+            // Get last block in chain
+            curBlock = block.lastBlock();
+            // If curBlock is null, use first block
+            if (curBlock != null)
+                block = curBlock;
+            // If file block is not found, data is corrupted
+            if (block == null)
+                return CR_CORRUPTED_FILE_BLOCK;
+            // Init text index
+            strIndex = 0;
             // Write data until no more, or drive full
-            while (text.length > 0 && !driveFull) {
+            while ((strIndex < text.length) && !driveFull) {
                 // Get available bytes in block
                 freeBytes = block.findFreeBytes();
                 // If string shorter than available bytes, just write string
-                if (text.length <= freeBytes) {
-                    block.appendData(text);
+                if ((text.length - strIndex) <= freeBytes) {
+                    strIndex += block.appendData(text);
                     // Set text lenght to 0
-                    text = "";
+                    //text = "";
+                    // Set create new block
+                    newBlock = false;
                 }
                 else {
-                    block.appendData(text.substring(0, freeBytes));
-                    // Remove this from text
-                    text = text.substring(freeBytes);
+                    if (freeBytes > 0) {
+                        strIndex += block.appendData(text.substr(strIndex, freeBytes));
+                    }
+                    newBlock = true;
                 }
                 // Check if more text to be written
-                if (text.length > 0) {
+                if (newBlock) {
                     // Get next available block
                     curBlock = this.findNextAvailableBlock();
                     // If not more, set drive full flag
                     if (curBlock == null)
                         driveFull = true;
-                    else
+                    else {
+                        // Write block header
                         block.writeFileHeader(true, curBlock.track, curBlock.sector, curBlock.block);
+                        // Clear old data
+                        curBlock.clearData();
+                    }
                     // Set next block
                     block = curBlock;
                 }
                 else
                     block.writeFileHeader(true, -1, -1, -1);
             }
+            // Update hard drive display
+            TSOS.Control.updateHardDriveDisplay();
             // If drive full return CR_DID_NOT_WRITE_ALL_DATA
             if (driveFull)
                 return CR_DID_NOT_WRITE_ALL_DATA;
@@ -253,6 +275,8 @@ var TSOS;
                 // Get next block
                 fBlock = fBlock.nextBlock();
             }
+            // Update hard drive display
+            TSOS.Control.updateHardDriveDisplay();
             // Return file text
             return [CR_SUCCESS, buffer];
         };
@@ -286,6 +310,8 @@ var TSOS;
             }
             // Set directory block not in use
             dirBlock.setInUse(false);
+            // Update hard drive display
+            TSOS.Control.updateHardDriveDisplay();
             // Return success
             return CR_SUCCESS;
         };
@@ -364,7 +390,7 @@ var TSOS;
         HardDriveDriver.prototype.findNextAvailableBlock = function () {
             // Inits
             var block = null;
-            var curBlock = null;
+            var curBlock = new TSOS.FileBlock(0, 0, 0, false);
             var b = 0;
             // Cycle through tracks, skipping track 0
             for (var t = 1; (t < this.tracks) && (block == null); t++) {
@@ -373,7 +399,7 @@ var TSOS;
                     // Cycle through blocks
                     for (b = 0; b < (this.blocksPerSector) && (block == null); b++) {
                         // Get block from memory
-                        curBlock = new TSOS.FileBlock(t, s, b);
+                        curBlock.loadBlock(t, s, b);
                         // If in use flag 0, set as ret block
                         if (!curBlock.isInUse())
                             block = curBlock;

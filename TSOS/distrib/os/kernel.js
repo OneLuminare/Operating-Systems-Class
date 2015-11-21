@@ -204,35 +204,6 @@ var TSOS;
                 case CONTEXT_SWITCH_IRQ:
                     _ProcessScheduler.contextSwitch();
                     break;
-                case CREATE_FILE_IRQ:
-                    var hret = _HDDriver.createFile(params);
-                    switch (hret) {
-                        case CR_SUCCESS:
-                            _OsShell.outputMessage("Successfully create file.");
-                            break;
-                        case CR_DRIVE_NOT_FORMATED:
-                            _OsShell.outputMessage("Hard drive not formatted, cannot create file.");
-                            break;
-                        case CR_FILE_LENGTH_TO_LONG:
-                            _OsShell.outputMessage("File name to long, file name must be 60 character or less.");
-                            break;
-                        case CR_EMPTY_FILE_NAME:
-                            _OsShell.outputMessage("Empty file name, file name must be 1 to 60 characters.");
-                            break;
-                        case CR_FILE_DIRECTORY_FULL:
-                            _OsShell.outputMessage("File directory full, cannot create file.");
-                            break;
-                        case CR_DUPLICATE_FILE_NAME:
-                            _OsShell.outputMessage("File already exists.");
-                            break;
-                        case CR_DRIVE_FULL:
-                            _OsShell.outputMessage("Hard drive is full, cannot create file.");
-                            break;
-                        default:
-                            _OsShell.outputMessage("Unknown return value for createFile().");
-                            break;
-                    }
-                    break;
                 case CLEAR_MEMORY_IRQ:
                     if (params < 0) {
                         _MemoryManager.freeAllPartitions(true);
@@ -303,6 +274,109 @@ var TSOS;
                 case FORMAT_HD_IRQ:
                     _HDDriver.formatDrive();
                     _OsShell.outputMessage("Formated hard drive.");
+                    break;
+                case CREATE_FILE_IRQ:
+                    var hret = _HDDriver.createFile(params);
+                    switch (hret) {
+                        case CR_SUCCESS:
+                            _OsShell.outputMessage("Successfully create file.");
+                            break;
+                        case CR_DRIVE_NOT_FORMATED:
+                            _OsShell.outputMessage("Hard drive not formatted, cannot create file.");
+                            break;
+                        case CR_FILE_LENGTH_TO_LONG:
+                            _OsShell.outputMessage("File name to long, file name must be 60 character or less.");
+                            break;
+                        case CR_EMPTY_FILE_NAME:
+                            _OsShell.outputMessage("Empty file name, file name must be 1 to 60 characters.");
+                            break;
+                        case CR_FILE_DIRECTORY_FULL:
+                            _OsShell.outputMessage("File directory full, cannot create files.");
+                            break;
+                        case CR_DUPLICATE_FILE_NAME:
+                            _OsShell.outputMessage("File already exists.");
+                            break;
+                        case CR_DRIVE_FULL:
+                            _OsShell.outputMessage("Hard drive is full, cannot create file.");
+                            break;
+                        default:
+                            _OsShell.outputMessage("Unknown return value for createFile().");
+                            break;
+                    }
+                    break;
+                case WRITE_FILE_IRQ:
+                    var hret = _HDDriver.writeToFile(params[0], params[1]);
+                    switch (hret) {
+                        case CR_SUCCESS:
+                            _OsShell.outputMessage("Successfully wrote to file.");
+                            break;
+                        case CR_DRIVE_NOT_FORMATED:
+                            _OsShell.outputMessage("Hard drive not formatted, cannot write to files.");
+                            break;
+                        case CR_FILE_NOT_FOUND:
+                            _OsShell.outputMessage("File does not exist.");
+                            break;
+                        case CR_DID_NOT_WRITE_ALL_DATA:
+                            _OsShell.outputMessage("All data could not be written, as drive is now full.");
+                            break;
+                        case CR_CORRUPTED_FILE_BLOCK:
+                            _OsShell.outputMessage("Missing file block, file data corrupted.");
+                            break;
+                        default:
+                            _OsShell.outputMessage("Unknown return value for writeToFile().");
+                            break;
+                    }
+                    break;
+                case READ_FILE_IRQ:
+                    var hretArray = _HDDriver.readFile(params);
+                    switch (hretArray[0]) {
+                        case CR_SUCCESS:
+                            _OsShell.outputMessage(hretArray[1]);
+                            break;
+                        case CR_DRIVE_NOT_FORMATED:
+                            _OsShell.outputMessage("Hard drive not formatted, cannot read files.");
+                            break;
+                        case CR_FILE_NOT_FOUND:
+                            _OsShell.outputMessage("File does not exist.");
+                            break;
+                        default:
+                            _OsShell.outputMessage("Unknown return value for readFile().");
+                            break;
+                    }
+                    break;
+                case DELETE_FILE_IRQ:
+                    var hret = _HDDriver.deleteFile(params);
+                    switch (hret) {
+                        case CR_SUCCESS:
+                            _OsShell.outputMessage("Successfully deleted file.");
+                            break;
+                        case CR_DRIVE_NOT_FORMATED:
+                            _OsShell.outputMessage("Hard drive not formatted, cannot delete files.");
+                            break;
+                        case CR_FILE_NOT_FOUND:
+                            _OsShell.outputMessage("File does not exist.");
+                            break;
+                        default:
+                            _OsShell.outputMessage("Unknown return value for deleteFile().");
+                            break;
+                    }
+                    break;
+                case LIST_FILES_IRQ:
+                    var hretArr = _HDDriver.listFiles();
+                    switch (hretArr[0]) {
+                        case CR_SUCCESS:
+                            for (var i = 1; i < hretArr.length; i++) {
+                                _OsShell.outputMessage(hretArr[i]);
+                            }
+                            _OsShell.outputMessage("Total files: " + (hretArr.length - 1).toString());
+                            break;
+                        case CR_DRIVE_NOT_FORMATED:
+                            _OsShell.outputMessage("Hard drive not formatted, cannot delete files.");
+                            break;
+                        default:
+                            _OsShell.outputMessage("Unknown return value for listFiles().");
+                            break;
+                    }
                     break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
@@ -409,10 +483,22 @@ var TSOS;
             // Send memory violation interrupt
             _KernelInterruptQueue.enqueue(new TSOS.Interrupt(FORMAT_HD_IRQ, null));
         };
-        // Formats drive
+        // Creates afile
         Kernel.prototype.CreateFile = function (fileName) {
             // Send memory violation interrupt
             _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_FILE_IRQ, fileName));
+        };
+        Kernel.prototype.WriteToFile = function (fileName, text) {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(WRITE_FILE_IRQ, [fileName, text]));
+        };
+        Kernel.prototype.ReadFile = function (fileName) {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(READ_FILE_IRQ, fileName));
+        };
+        Kernel.prototype.DeleteFile = function (fileName) {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(DELETE_FILE_IRQ, fileName));
+        };
+        Kernel.prototype.ListFiles = function () {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(LIST_FILES_IRQ, null));
         };
         //
         // OS Utility Routines

@@ -233,8 +233,45 @@ module TSOS {
                 // Get size of text
                 var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 var inWord : boolean = true;
+                var tempText : string = "";
                 var extraText : String = "";
+                var chars : number = 1;
 
+                // Check if over width
+                if( (this.currentXPosition + offset) > _Canvas.width )
+                {
+                    // Get first character of text
+                    tempText = text.substr(0,chars);
+
+                    // Remeasure
+                    offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, tempText);
+
+                    // Add chars from text until greater than a line
+                    while( (this.currentXPosition + offset) <= _Canvas.width  )
+                    {
+                        // Inc char counter
+                        chars++;
+
+                        // Add character to temp text
+                        tempText = text.substr(0,chars);
+
+
+                        // Recalculate offset
+                        offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, tempText);
+                    }
+
+                    // Get unprocessed text (that wont fit on line)
+                    extraText = text.substr(chars - 1);
+
+                    // Get one line full of text
+                    text = tempText.substr(0,tempText.length - 1);
+
+                    // Recalculate offset
+                    offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+                }
+
+
+                /*
                 // Check if drawn text will go over width of canvas
                 while( (this.currentXPosition + offset) > _Canvas.width )
                 {
@@ -263,6 +300,7 @@ module TSOS {
                     // Recalculate offset
                     offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 }
+                */
 
 
                 // Draw the text at the current X and Y coordinates.

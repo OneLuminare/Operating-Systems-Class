@@ -15,10 +15,8 @@ var TSOS;
             this.sector = sector;
             this.block = block;
             this.data = data;
-            _Kernel.krnTrace("wtf");
             if (loadOnCreate)
                 this.loadBlock(this.track, this.sector, this.block);
-            _Kernel.krnTrace("wtf2");
         }
         // Gets the session storage key for this block,
         // in form "<track>.<sector>.<block>" .
@@ -34,7 +32,7 @@ var TSOS;
         // Returns: True on success, False on invalid indices, or access 0.0.0
         FileBlock.prototype.loadBlock = function (track, sector, block) {
             // If accessing boot record return false
-            if (!(track == 0 && sector == 0 && block == 0))
+            if ((track == 0 && sector == 0 && block == 0))
                 return false;
             // If indices out of range, return false
             if ((track < 0 || track > 7) || (sector < 0 || sector > 7) || (block < 0 || block > 7))
@@ -45,6 +43,8 @@ var TSOS;
             this.block = block;
             // Get data from session storage, making sure to turn back into array
             this.data = JSON.parse(sessionStorage.getItem(this.getKey()));
+            // Return success
+            return true;
         };
         // Writes block header to memory. First byte is in use flag, next 3 are
         // track, sector, and block of next block pointer.
@@ -58,7 +58,7 @@ var TSOS;
             if (this.data == null)
                 return false;
             // If accessing boot record return false
-            if (!(track == 0 && sector == 0 && block == 0))
+            if ((track == 0 && sector == 0 && block == 0))
                 return false;
             // Write in use byte
             this.data[0] = (inUse == true) ? 1 : 0;
@@ -79,6 +79,7 @@ var TSOS;
             // Inits
             var text = "";
             var eof = false;
+            var data;
             // Return "" if data not loaded
             if (this.data == null)
                 return '';
@@ -87,8 +88,10 @@ var TSOS;
                 // If data is null , set eof flag
                 if (this.data[i] == 0)
                     eof = true;
-                else
-                    text += TSOS.Utils.asciiChar(this.data[i]);
+                else {
+                    data = TSOS.Utils.asciiChar(this.data[i]);
+                    text += data;
+                }
             }
             // Return text
             return text;
@@ -102,11 +105,12 @@ var TSOS;
             // If data too long, return false
             if (data.length > 60 || this.data == null)
                 return false;
+            _Kernel.krnTrace("Passed write data test.");
             // Cycle through data section
             for (var i = 4; i < 64; i++) {
                 // If more chars to write, write ascii value to data
                 if ((i - 4) < data.length) {
-                    this.data[i] = TSOS.Utils.asciiValue(data[i]);
+                    this.data[i] = TSOS.Utils.asciiValue(data[i - 4]);
                 }
                 else {
                     this.data[i] = 0;
@@ -121,21 +125,23 @@ var TSOS;
         // String is converted to ascii values.
         //
         // Params:	data <string> : text to store
-        // Returns: False on no data loaded or string greater than used bytes
+        // Returns: Number of bytes written
         FileBlock.prototype.appendData = function (data) {
             // Return false if block not loaded
             if (this.data == null)
-                return false;
+                return 0;
             // Find eof
             var eof = this.findEOF();
+            var written = 0;
             // If data too long, return false
             if (data.length > (64 - eof))
-                return false;
+                return 0;
             // Cycle through remaining bytes
             for (var i = eof; i < 64; i++) {
                 // If more chars, write char in ascii format
                 if ((i - eof) < data.length) {
-                    this.data[i] = TSOS.Utils.asciiValue(data[i]);
+                    this.data[i] = TSOS.Utils.asciiValue(data[i - eof]);
+                    written++;
                 }
                 else {
                     this.data[i] = 0;
@@ -144,7 +150,7 @@ var TSOS;
             // Write data, converting to JSON string
             sessionStorage.setItem(this.getKey(), JSON.stringify(this.data));
             // Return success
-            return true;
+            return written;
         };
         // Clear data in block.
         //
@@ -157,20 +163,22 @@ var TSOS;
             for (var i = 4; i < 64; i++) {
                 this.data[i] = 0;
             }
+            // Write data, converting to JSON string
+            sessionStorage.setItem(this.getKey(), JSON.stringify(this.data));
             // Return success
             return true;
         };
         // Find index in data of first null byte.
         //
-        // Returns: Index of first null byte, or -1 if data not loaded
+        // Returns: Index of first null byte, or 0 if data not loaded
         FileBlock.prototype.findEOF = function () {
             // Return -1 if data not loaded
             if (this.data == null)
-                return -1;
+                return 0;
             // Inits
-            var eof = -1;
+            var eof = 64;
             // Cycle through data
-            for (var i = 4; ((i < 64) && (eof == -1)); i++) {
+            for (var i = 4; ((i < 64) && (eof == 64)); i++) {
                 // If null byte, set flag
                 if (this.data[i] == 0)
                     eof = i;
@@ -196,8 +204,11 @@ var TSOS;
             // Return false if data not loaded
             if (this.data == null)
                 return false;
+            var inUse = false;
+            if (this.data[0] == 1)
+                inUse = true;
             // Return in use
-            return (this.data[0] == 1) ? true : false;
+            return inUse;
         };
         // Sets in use flag, preserving tsb pointer,
         // and saves data.
@@ -230,6 +241,25 @@ var TSOS;
                 return null;
             // Return next block
             return new FileBlock(this.data[1], this.data[2], this.data[3]);
+        };
+        // Returns next last block in chain of blocks
+        //
+        // Returns: Last block in chain, or null if pointer is not set or data not loaded.
+        FileBlock.prototype.lastBlock = function () {
+            // Return null if data not loaded
+            if (this.data == null)
+                return null;
+            // Return null if pointer not set (or invalid)
+            if (this.data[1] < 0 || this.data[2] < 0 || this.data[3] < 0)
+                return null;
+            // Load next block
+            var fblock = this.nextBlock();
+            // Cycle through blocks until end of chain
+            while (!(fblock.data[1] < 0 || fblock.data[2] < 0 || fblock.data[3] < 0)) {
+                fblock = fblock.nextBlock();
+            }
+            // Return last block
+            return fblock;
         };
         return FileBlock;
     })();

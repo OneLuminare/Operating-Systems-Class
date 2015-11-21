@@ -120,7 +120,7 @@ module TSOS {
             ' ' : 32,
 
             '!' : 33,
-            '\"' : 34,
+            '"' : 34,
             '#': 35,
             '$': 36,
             '%': 37,
@@ -221,10 +221,12 @@ module TSOS {
             '~': 126
         }
 
-        public static asciiValue(char : string) : number
+        public static asciiValue(char) : number
         {
-            if( char.length != 1)
-                return -1;
+            //if( char.length != 1)
+                //return -1;
+
+            _Kernel.krnTrace(this.asciiValues[char]);
 
             return this.asciiValues[char];
         }

@@ -43,6 +43,10 @@ const CHANGE_QUANTUM_IRQ : number = 18;
 const CREATE_ALL_PROCESS_IRQ : number = 19;
 const FORMAT_HD_IRQ : number = 20;
 const CREATE_FILE_IRQ : number = 21;
+const WRITE_FILE_IRQ : number = 22;
+const READ_FILE_IRQ : number = 23;
+const DELETE_FILE_IRQ : number = 24;
+const LIST_FILES_IRQ: number = 25;
 
 
 //
@@ -118,6 +122,7 @@ const CR_DID_NOT_WRITE_ALL_DATA = -105;
 const CR_DUPLICATE_FILE_NAME = -106
 const CR_DRIVE_NOT_FORMATED = -107;
 const CR_EMPTY_FILE_NAME = -108;
+const CR_CORRUPTED_FILE_BLOCK = -109;
 
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode: boolean = false;

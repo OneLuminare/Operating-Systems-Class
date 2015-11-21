@@ -39,6 +39,10 @@ var CHANGE_QUANTUM_IRQ = 18;
 var CREATE_ALL_PROCESS_IRQ = 19;
 var FORMAT_HD_IRQ = 20;
 var CREATE_FILE_IRQ = 21;
+var WRITE_FILE_IRQ = 22;
+var READ_FILE_IRQ = 23;
+var DELETE_FILE_IRQ = 24;
+var LIST_FILES_IRQ = 25;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
@@ -99,6 +103,7 @@ var CR_DID_NOT_WRITE_ALL_DATA = -105;
 var CR_DUPLICATE_FILE_NAME = -106;
 var CR_DRIVE_NOT_FORMATED = -107;
 var CR_EMPTY_FILE_NAME = -108;
+var CR_CORRUPTED_FILE_BLOCK = -109;
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode = false;
 // Global Device Driver Objects - page 12

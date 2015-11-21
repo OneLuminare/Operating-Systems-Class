@@ -9,8 +9,9 @@ var TSOS;
         function Utils() {
         }
         Utils.asciiValue = function (char) {
-            if (char.length != 1)
-                return -1;
+            //if( char.length != 1)
+            //return -1;
+            _Kernel.krnTrace(this.asciiValues[char]);
             return this.asciiValues[char];
         };
         Utils.asciiChar = function (val) {
@@ -253,7 +254,7 @@ var TSOS;
         Utils.asciiValues = {
             ' ': 32,
             '!': 33,
-            '\"': 34,
+            '"': 34,
             '#': 35,
             '$': 36,
             '%': 37,

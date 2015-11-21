@@ -187,28 +187,61 @@ var TSOS;
                 // Get size of text
                 var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 var inWord = true;
+                var tempText = "";
                 var extraText = "";
-                // Check if drawn text will go over width of canvas
-                while ((this.currentXPosition + offset) > _Canvas.width) {
-                    // Copy last character from text, and store for later input
-                    extraText = text.charAt(text.length - 1) + extraText;
-                    // Remove last char from text
-                    text = text.substr(0, text.length - 1);
+                var chars = 1;
+                // Check if over width
+                if ((this.currentXPosition + offset) > _Canvas.width) {
+                    // Get first character of text
+                    tempText = text.substr(0, chars);
+                    // Remeasure
+                    offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, tempText);
+                    // Add chars from text until greater than a line
+                    while ((this.currentXPosition + offset) <= _Canvas.width) {
+                        // Inc char counter
+                        chars++;
+                        // Add character to temp text
+                        tempText = text.substr(0, chars);
+                        // Recalculate offset
+                        offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, tempText);
+                    }
+                    // Get unprocessed text (that wont fit on line)
+                    extraText = text.substr(chars - 1);
+                    // Get one line full of text
+                    text = tempText.substr(0, tempText.length - 1);
                     // Recalculate offset
                     offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 }
+                /*
+                // Check if drawn text will go over width of canvas
+                while( (this.currentXPosition + offset) > _Canvas.width )
+                {
+                    // Copy last character from text, and store for later input
+                    extraText = text.charAt(text.length - 1) + extraText;
+
+                    // Remove last char from text
+                    text = text.substr(0,text.length - 1);
+
+                    // Recalculate offset
+                    offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
+                }
+
                 // Check if wrap was started
-                if (extraText.length > 0) {
+                if( extraText.length > 0)
+                {
                     // Now cycle until beginning of word
-                    while (text.length > 1 && (text.charAt(text.length - 1) != " ")) {
+                    while (text.length > 1 && ( text.charAt(text.length - 1) != " ")) {
                         // Copy last character from text, and store for later input
                         extraText = text.charAt(text.length - 1) + extraText;
+
                         // Remove last char from text
                         text = text.substr(0, text.length - 1);
                     }
+
                     // Recalculate offset
                     offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 }
+                */
                 // Draw the text at the current X and Y coordinates.
                 _DrawingContext.drawText(this.currentFont, this.currentFontSize, this.currentXPosition, this.currentYPosition, text);
                 // Move the current X position.

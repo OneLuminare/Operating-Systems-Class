@@ -105,6 +105,11 @@ module TSOS {
             // Create new memory object
             _Memory = new TSOS.MemoryAccessor();
 
+            // ... then set the host clock pulse ...
+            _hardwareClockID = setInterval(Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
+            // .. and call the OS Kernel Bootstrap routine.
+            _Kernel = new Kernel();
+
             // Creae new hard drive driver with:
             // 4 tracks, 8 sectors, and 8 blocks per sector. Sectors are 64 bytes long.
             // totals 16,384 bytes
@@ -118,14 +123,12 @@ module TSOS {
                 this.createRunningProcessDisplay();
                 this.createReadyQueueDisplay();
                 this.createTerminatedQueueDisplay();
+                this.createHardDriveDisplay();
 
                 _FirstStart = true;
             }
 
-            // ... then set the host clock pulse ...
-            _hardwareClockID = setInterval(Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
-            // .. and call the OS Kernel Bootstrap routine.
-            _Kernel = new Kernel();
+
 
             // Set status
             this.updateHostStatus("OS running.");
@@ -540,26 +543,163 @@ module TSOS {
 
         public static updateTerminatedQueueDisplay() : void
         {
-            var tbl = (<HTMLTableElement>document.getElementById("tblTerminatedQueue"));
+            var tbl : HTMLTableElement = (<HTMLTableElement>document.getElementById("tblTerminatedQueue"));
             var row : HTMLTableRowElement = null;
+            var cell : HTMLTableCellElement = null;
             var pcb : TSOS.ProcessControlBlock = null;
+            var entries : number = 0;
+
+            entries = tbl.rows.length - 1;
+
+            while( entries < _ProcessScheduler.terminatedQueue.q.length)
+            {
+                row = (<HTMLTableRowElement>tbl.insertRow());
+
+                pcb = _ProcessScheduler.terminatedQueue.q[entries];
+
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.pid.toString(),2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.PC.toString(16),2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.Acc.toString(16),2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.xReg.toString(16),2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.yReg.toString(16),2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.zFlag.toString(16),2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.base.toString(16),2);
+                row.insertCell().innerHTML = TSOS.Utils.padString((pcb.limit + pcb.base).toString(16),2);
+                row.insertCell().innerHTML = TSOS.Utils.timeString(pcb.created);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.turnAroundCycles.toString(),2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.waitCycles.toString(),2);
+
+                entries++;
+            }
+
+
+        }
+
+        public static createHardDriveDisplay() : void
+        {
+            var tbl : HTMLTableElement = (<HTMLTableElement>document.getElementById("tblHardDrive"));
+            var row : HTMLTableRowElement = null;
+            var cell : HTMLTableCellElement = null;
+            var data : string = '00';
 
             row = (<HTMLTableRowElement>tbl.insertRow());
-            pcb = _ProcessScheduler.terminatedQueue.q[_ProcessScheduler.terminatedQueue.getSize() - 1];
 
-            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.pid.toString(),2).toUpperCase();
-            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.PC.toString(16),2).toUpperCase();
-            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.Acc.toString(16),2).toUpperCase();
-            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.xReg.toString(16),2).toUpperCase();
-            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.yReg.toString(16),2).toUpperCase();
-            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.zFlag.toString(16),2).toUpperCase();
-            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.base.toString(16),4).toUpperCase();
-            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16),4).toUpperCase();
-            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.timeString(pcb.created);
-            (<HTMLTableCellElement>row.insertCell()).innerHTML = pcb.turnAroundCycles.toString();
-            (<HTMLTableCellElement>row.insertCell()).innerHTML = pcb.waitCycles.toString();
+            row.insertCell().innerHTML = '<b>Track</b>';
+            row.insertCell().innerHTML = '<b>Sector</b>';
+            row.insertCell().innerHTML = '<b>Block</b>';
+
+            for( var i = 0; (i < _HDDriver.blockSize); i++)
+            {
+                row.insertCell().innerHTML = '<b>' + TSOS.Utils.padString(i.toString(),2) + '</b>';
+            }
 
 
+            for( var t = 0; (t < _HDDriver.tracks); t++)
+            {
+                for( var s = 0; s < _HDDriver.sectors; s++)
+                {
+                    for( var b = 0; b < _HDDriver.blocksPerSector; b++)
+                    {
+                        row = (<HTMLTableRowElement>tbl.insertRow());
+
+                        row.insertCell().innerHTML = t.toString();
+                        row.insertCell().innerHTML = s.toString();
+                        row.insertCell().innerHTML = b.toString();
+
+                        for(var d = 0; d < _HDDriver.blockSize; d++)
+                        {
+
+                            cell = (<HTMLTableCellElement>row.insertCell());
+
+                            if( d == 0 )
+                            {
+                                cell.style.backgroundColor = 'yellow';
+                                cell.style.color = 'black';
+                            }
+                            else if (d > 0 && d < 4)
+                            {
+                                cell.style.backgroundColor = 'blue';
+                                cell.style.color = 'yellow';
+                            }
+                            else
+                            {
+                                cell.style.backgroundColor = 'white';
+                                cell.style.color = 'black';
+                            }
+
+                            cell.innerHTML = data;
+                        }
+                    }
+                }
+            }
+
+        }
+
+
+        public static updateHardDriveDisplay() : void
+        {
+
+            var tbl : HTMLTableElement = (<HTMLTableElement>document.getElementById("tblHardDrive"));
+            var row : HTMLTableRowElement = null;
+            var cell : HTMLTableCellElement = null;
+            var fblock : TSOS.FileBlock = new TSOS.FileBlock(0,0,0,false);
+            var rowCount : number = 1;
+            var data : string;
+
+
+            for( var t = 0; (t < _HDDriver.tracks); t++)
+            {
+                for( var s = 0; s < _HDDriver.sectors; s++)
+                {
+                    for( var b = 0; b < _HDDriver.blocksPerSector; b++)
+                    {
+
+                        if( fblock.loadBlock(t,s,b) == true )
+                        {
+
+                            row = (<HTMLTableRowElement>tbl.rows.item(rowCount));
+
+                            (<HTMLTableCellElement>row.cells.item(0)).innerHTML = fblock.track.toString();
+                            (<HTMLTableCellElement>row.cells.item(1)).innerHTML = fblock.sector.toString();
+                            (<HTMLTableCellElement>row.cells.item(2)).innerHTML = fblock.block.toString();
+
+                            for(var d = 0; d < _HDDriver.blockSize; d++)
+                            {
+                                if( d < fblock.data.length )
+                                    data = TSOS.Utils.padString(fblock.data[d].toString(16),2);
+                                else
+                                    data = '--';
+
+
+
+                                cell = (<HTMLTableCellElement>row.cells.item(d + 3));
+
+                                /*
+                                if( d == 0 )
+                                {
+                                    cell.style.backgroundColor = 'yellow';
+                                    cell.style.color = 'black';
+                                }
+                                else if (d > 0 && d < 4)
+                                {
+                                    cell.style.backgroundColor = 'blue';
+                                    cell.style.color = 'yellow';
+                                }
+                                else
+                                {
+                                    cell.style.backgroundColor = 'white';
+                                    cell.style.color = 'black';
+                                }
+                                */
+
+                                cell.innerHTML = data;
+                            }
+                        }
+
+                        rowCount++;
+                    }
+                }
+            }
         }
     }
 }

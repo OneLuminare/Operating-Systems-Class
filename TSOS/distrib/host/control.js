@@ -82,6 +82,10 @@ var TSOS;
             _CPU.init(); //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
             // Create new memory object
             _Memory = new TSOS.MemoryAccessor();
+            // ... then set the host clock pulse ...
+            _hardwareClockID = setInterval(TSOS.Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
+            // .. and call the OS Kernel Bootstrap routine.
+            _Kernel = new TSOS.Kernel();
             // Creae new hard drive driver with:
             // 4 tracks, 8 sectors, and 8 blocks per sector. Sectors are 64 bytes long.
             // totals 16,384 bytes
@@ -93,12 +97,9 @@ var TSOS;
                 this.createRunningProcessDisplay();
                 this.createReadyQueueDisplay();
                 this.createTerminatedQueueDisplay();
+                this.createHardDriveDisplay();
                 _FirstStart = true;
             }
-            // ... then set the host clock pulse ...
-            _hardwareClockID = setInterval(TSOS.Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
-            // .. and call the OS Kernel Bootstrap routine.
-            _Kernel = new TSOS.Kernel();
             // Set status
             this.updateHostStatus("OS running.");
             _Kernel.krnBootstrap(); // _GLaDOS.afterStartup() will get called in there, if configured.
@@ -417,20 +418,111 @@ var TSOS;
         Control.updateTerminatedQueueDisplay = function () {
             var tbl = document.getElementById("tblTerminatedQueue");
             var row = null;
+            var cell = null;
             var pcb = null;
+            var entries = 0;
+            entries = tbl.rows.length - 1;
+            while (entries < _ProcessScheduler.terminatedQueue.q.length) {
+                row = tbl.insertRow();
+                pcb = _ProcessScheduler.terminatedQueue.q[entries];
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.pid.toString(), 2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.PC.toString(16), 2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.Acc.toString(16), 2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.xReg.toString(16), 2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.yReg.toString(16), 2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.zFlag.toString(16), 2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.base.toString(16), 2);
+                row.insertCell().innerHTML = TSOS.Utils.padString((pcb.limit + pcb.base).toString(16), 2);
+                row.insertCell().innerHTML = TSOS.Utils.timeString(pcb.created);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.turnAroundCycles.toString(), 2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.waitCycles.toString(), 2);
+                entries++;
+            }
+        };
+        Control.createHardDriveDisplay = function () {
+            var tbl = document.getElementById("tblHardDrive");
+            var row = null;
+            var cell = null;
+            var data = '00';
             row = tbl.insertRow();
-            pcb = _ProcessScheduler.terminatedQueue.q[_ProcessScheduler.terminatedQueue.getSize() - 1];
-            row.insertCell().innerHTML = TSOS.Utils.padString(pcb.pid.toString(), 2).toUpperCase();
-            row.insertCell().innerHTML = TSOS.Utils.padString(pcb.PC.toString(16), 2).toUpperCase();
-            row.insertCell().innerHTML = TSOS.Utils.padString(pcb.Acc.toString(16), 2).toUpperCase();
-            row.insertCell().innerHTML = TSOS.Utils.padString(pcb.xReg.toString(16), 2).toUpperCase();
-            row.insertCell().innerHTML = TSOS.Utils.padString(pcb.yReg.toString(16), 2).toUpperCase();
-            row.insertCell().innerHTML = TSOS.Utils.padString(pcb.zFlag.toString(16), 2).toUpperCase();
-            row.insertCell().innerHTML = TSOS.Utils.padString(pcb.base.toString(16), 4).toUpperCase();
-            row.insertCell().innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16), 4).toUpperCase();
-            row.insertCell().innerHTML = TSOS.Utils.timeString(pcb.created);
-            row.insertCell().innerHTML = pcb.turnAroundCycles.toString();
-            row.insertCell().innerHTML = pcb.waitCycles.toString();
+            row.insertCell().innerHTML = '<b>Track</b>';
+            row.insertCell().innerHTML = '<b>Sector</b>';
+            row.insertCell().innerHTML = '<b>Block</b>';
+            for (var i = 0; (i < _HDDriver.blockSize); i++) {
+                row.insertCell().innerHTML = '<b>' + TSOS.Utils.padString(i.toString(), 2) + '</b>';
+            }
+            for (var t = 0; (t < _HDDriver.tracks); t++) {
+                for (var s = 0; s < _HDDriver.sectors; s++) {
+                    for (var b = 0; b < _HDDriver.blocksPerSector; b++) {
+                        row = tbl.insertRow();
+                        row.insertCell().innerHTML = t.toString();
+                        row.insertCell().innerHTML = s.toString();
+                        row.insertCell().innerHTML = b.toString();
+                        for (var d = 0; d < _HDDriver.blockSize; d++) {
+                            cell = row.insertCell();
+                            if (d == 0) {
+                                cell.style.backgroundColor = 'yellow';
+                                cell.style.color = 'black';
+                            }
+                            else if (d > 0 && d < 4) {
+                                cell.style.backgroundColor = 'blue';
+                                cell.style.color = 'yellow';
+                            }
+                            else {
+                                cell.style.backgroundColor = 'white';
+                                cell.style.color = 'black';
+                            }
+                            cell.innerHTML = data;
+                        }
+                    }
+                }
+            }
+        };
+        Control.updateHardDriveDisplay = function () {
+            var tbl = document.getElementById("tblHardDrive");
+            var row = null;
+            var cell = null;
+            var fblock = new TSOS.FileBlock(0, 0, 0, false);
+            var rowCount = 1;
+            var data;
+            for (var t = 0; (t < _HDDriver.tracks); t++) {
+                for (var s = 0; s < _HDDriver.sectors; s++) {
+                    for (var b = 0; b < _HDDriver.blocksPerSector; b++) {
+                        if (fblock.loadBlock(t, s, b) == true) {
+                            row = tbl.rows.item(rowCount);
+                            row.cells.item(0).innerHTML = fblock.track.toString();
+                            row.cells.item(1).innerHTML = fblock.sector.toString();
+                            row.cells.item(2).innerHTML = fblock.block.toString();
+                            for (var d = 0; d < _HDDriver.blockSize; d++) {
+                                if (d < fblock.data.length)
+                                    data = TSOS.Utils.padString(fblock.data[d].toString(16), 2);
+                                else
+                                    data = '--';
+                                cell = row.cells.item(d + 3);
+                                /*
+                                if( d == 0 )
+                                {
+                                    cell.style.backgroundColor = 'yellow';
+                                    cell.style.color = 'black';
+                                }
+                                else if (d > 0 && d < 4)
+                                {
+                                    cell.style.backgroundColor = 'blue';
+                                    cell.style.color = 'yellow';
+                                }
+                                else
+                                {
+                                    cell.style.backgroundColor = 'white';
+                                    cell.style.color = 'black';
+                                }
+                                */
+                                cell.innerHTML = data;
+                            }
+                        }
+                        rowCount++;
+                    }
+                }
+            }
         };
         return Control;
     })();
