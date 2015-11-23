@@ -7,7 +7,7 @@
 var TSOS;
 (function (TSOS) {
     var ProcessControlBlock = (function () {
-        function ProcessControlBlock(pid, base, limit, PC, xReg, yReg, Acc, zFlag, created, turnAroundCycles, startCycle, waitCycles, lastContextSwitchCycle, setTurnAroundTime) {
+        function ProcessControlBlock(pid, base, limit, PC, xReg, yReg, Acc, zFlag, created, onHD, hdFileName, turnAroundCycles, startCycle, waitCycles, lastContextSwitchCycle, setTurnAroundTime) {
             if (base === void 0) { base = 0; }
             if (limit === void 0) { limit = 0; }
             if (PC === void 0) { PC = 0; }
@@ -16,6 +16,8 @@ var TSOS;
             if (Acc === void 0) { Acc = 0; }
             if (zFlag === void 0) { zFlag = 0; }
             if (created === void 0) { created = new Date(); }
+            if (onHD === void 0) { onHD = false; }
+            if (hdFileName === void 0) { hdFileName = ""; }
             if (turnAroundCycles === void 0) { turnAroundCycles = 0; }
             if (startCycle === void 0) { startCycle = 0; }
             if (waitCycles === void 0) { waitCycles = 0; }
@@ -30,6 +32,8 @@ var TSOS;
             this.Acc = Acc;
             this.zFlag = zFlag;
             this.created = created;
+            this.onHD = onHD;
+            this.hdFileName = hdFileName;
             this.turnAroundCycles = turnAroundCycles;
             this.startCycle = startCycle;
             this.waitCycles = waitCycles;

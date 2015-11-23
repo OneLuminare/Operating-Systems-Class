@@ -87,15 +87,15 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellFormat, "format", "- Formats hard drive.");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellCreateFile, "createfile", "<string> - creates a file.");
+            sc = new TSOS.ShellCommand(this.shellCreateFile, "create", "<string> - creates a file.");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellWriteFile, "writefile", "<string> <string> - writes to a file.");
+            sc = new TSOS.ShellCommand(this.shellWriteFile, "write", "<string> \"<string>\" - writes to a file.");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellReadFile, "readfile", "<string> - prints file content.");
+            sc = new TSOS.ShellCommand(this.shellReadFile, "read", "<string> - prints file content.");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellDeleteFile, "deletefile", "<string> - delete a file.");
+            sc = new TSOS.ShellCommand(this.shellDeleteFile, "delete", "<string> - delete a file.");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellListFiles, "listfiles", "Lists all files");
+            sc = new TSOS.ShellCommand(this.shellListFiles, "ls", "Lists all files");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -360,19 +360,19 @@ var TSOS;
                     case "format":
                         _StdOut.putText("Formats hard drive. Must be done before any file operations are performed.");
                         break;
-                    case "createfile":
+                    case "create":
                         _StdOut.putText("Creates an empty file with given file name.");
                         break;
-                    case "writefile":
-                        _StdOut.putText("Writes given text to an existing file.");
+                    case "write":
+                        _StdOut.putText("Writes given text to an existing file. Must put data in quotes.");
                         break;
-                    case "readfile":
+                    case "read":
                         _StdOut.putText("Reads and displays file text.");
                         break;
-                    case "deletefile":
+                    case "delete":
                         _StdOut.putText("Deletes a file.");
                         break;
-                    case "listfiles":
+                    case "ls":
                         _StdOut.putText("Lists all active files.");
                         break;
                     default:
@@ -569,10 +569,29 @@ var TSOS;
         };
         Shell.prototype.shellWriteFile = function (args) {
             if (args.length > 1) {
-                _Kernel.WriteToFile(args[0], args[1]);
+                var fargs = [];
+                for (var i = 1; i < args.length; i++)
+                    fargs.push(args[i]);
+                var str = fargs.join(' ');
+                var sindex = -1;
+                var valid = false;
+                if (str[0] == '"') {
+                    for (var s = 1; (s < str.length) && sindex == -1; s++) {
+                        if (str[s] == '"')
+                            sindex = s;
+                    }
+                    if (sindex != -1) {
+                        str = str.substr(1, sindex - 1);
+                        valid = true;
+                    }
+                }
+                if (valid)
+                    _Kernel.WriteToFile(args[0], str);
+                else
+                    _StdOut.putText("Text to be written must be enclosed in quotes(\"text here\")");
             }
             else
-                _StdOut.putText("Usage - writefile <string : fileName> <string : text>");
+                _StdOut.putText("Usage - writefile <string : fileName> \"<string : text>\"");
         };
         Shell.prototype.shellReadFile = function (args) {
             if (args.length > 0) {

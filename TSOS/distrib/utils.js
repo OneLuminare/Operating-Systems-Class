@@ -9,9 +9,6 @@ var TSOS;
         function Utils() {
         }
         Utils.asciiValue = function (char) {
-            //if( char.length != 1)
-            //return -1;
-            _Kernel.krnTrace(this.asciiValues[char]);
             return this.asciiValues[char];
         };
         Utils.asciiChar = function (val) {

@@ -223,10 +223,6 @@ module TSOS {
 
         public static asciiValue(char) : number
         {
-            //if( char.length != 1)
-                //return -1;
-
-            _Kernel.krnTrace(this.asciiValues[char]);
 
             return this.asciiValues[char];
         }

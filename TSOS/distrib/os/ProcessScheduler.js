@@ -147,6 +147,14 @@ var TSOS;
             }
             return ret;
         };
+        ProcessScheduler.prototype.findReadyQueueIndex = function (pid) {
+            var ret = -1;
+            for (var i = 0; (i < this.readyQueue.q.length) && (ret == -1); i++) {
+                if (this.readyQueue.q[i].pid == pid)
+                    ret = i;
+            }
+            return ret;
+        };
         ProcessScheduler.prototype.readyQueueSize = function () { return this.readyQueue.getSize(); };
         // Returns true if running processes
         ProcessScheduler.prototype.areProcessesRunning = function () {
@@ -190,20 +198,43 @@ var TSOS;
             // Inits - create pcb
             var pcb = new TSOS.ProcessControlBlock(this.nextPID);
             var part = 0;
+            var aret;
+            var swapfile = false;
             // Load program input to memory
             part = _MemoryManager.loadMemory(processCode, this.nextPID);
-            // Set next avaible pid
-            this.nextPID++;
             // Check if parition wasn't  loaded
             if (part == -1) {
-                // Send interrupt
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_FULL_IRQ, this.nextPID - 1));
-                // Return null
-                return null;
+                // Check if drive formated
+                if (_HDDriver.formated == true) {
+                    // Try to create swap file
+                    aret = _MemoryManager.loadToHDD(processCode, this.nextPID);
+                    // Return on failure to create swap file
+                    if (aret[0] < 0)
+                        return null;
+                    // Set swap file flag
+                    swapfile = true;
+                }
+                else {
+                    // Send interrupt
+                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_FULL_IRQ, this.nextPID));
+                    // Return null
+                    return null;
+                }
             }
-            // Set base and limit of pcb
-            pcb.base = _MemoryManager.getPartitionBaseAddress(part);
-            pcb.limit = _MemoryPartitionSize;
+            // Set next avaible pid
+            this.nextPID++;
+            if (swapfile) {
+                pcb.base = -1;
+                pcb.limit = -1;
+                pcb.onHD = true;
+                pcb.hdFileName = aret[1];
+            }
+            else {
+                // Set base and limit of pcb
+                pcb.base = _MemoryManager.getPartitionBaseAddress(part);
+                pcb.limit = _MemoryPartitionSize;
+                pcb.onHD = false;
+            }
             // Add to resident list
             this.residentList.push(pcb);
             // Update memory display
@@ -337,9 +368,16 @@ var TSOS;
                     // gets null for return value
                     pcb = this.removeFromReadyQueue(pid);
                     TSOS.Control.updateReadyQueueDisplay();
-                    // Set partition free
-                    var part = _MemoryManager.partitionFromBase(pcb.base);
-                    _MemoryManager.freePartition(part);
+                    // Check if pcb has a swap file
+                    if (!pcb.onHD) {
+                        // Set partition free
+                        var part = _MemoryManager.partitionFromBase(pcb.base);
+                        _MemoryManager.freePartition(part);
+                    }
+                    else {
+                        // Remove swap file
+                        _MemoryManager.removeSwapFile(pid);
+                    }
                 }
             }
             // Check if not null pcb
@@ -361,6 +399,16 @@ var TSOS;
             // Return pcb or null on not found
             return pcb;
         };
+        ProcessScheduler.prototype.findLastInQueueLoadedPartition = function () {
+            var part = -1;
+            for (var i = this.readyQueue.q.length - 1; (i >= 0) && part == -1; i--) {
+                if (!this.readyQueue.q[i].onHD)
+                    part = _MemoryManager.partitionFromBase(this.readyQueue.q[i].base);
+            }
+            if (part == -1)
+                part = 0;
+            return part;
+        };
         // Switches running procesess.
         // If no more running process, stops
         // timer and sets is executing false just in case.
@@ -368,6 +416,10 @@ var TSOS;
             // Inits
             var pcb = null;
             var date = new Date();
+            var part = 0;
+            var oldpid = 0;
+            var index = 0;
+            var tempPCB = null;
             // Trace
             _Kernel.krnTrace("Context Switch");
             // Check if running process
@@ -388,6 +440,28 @@ var TSOS;
                     pcb.lastContextSwitchCycle = _OSclock;
                     // Get next process
                     pcb = this.readyQueue.dequeue();
+                    // Check if swap file
+                    if (pcb.onHD) {
+                        part = this.findLastInQueueLoadedPartition();
+                        if (part == -1)
+                            part = _MemoryManager.nextPartitionAvailable();
+                        oldpid = _MemoryManager.swapFile(part, pcb.pid);
+                        _Kernel.krnTrace("Swapping process pid " + oldpid + " from hd.");
+                        _Kernel.krnTrace("Swapping process pid " + pcb.pid + " to hd.");
+                        if (oldpid == -1) {
+                        }
+                        else {
+                            index = this.findReadyQueueIndex(oldpid);
+                            tempPCB = this.getReadyQueueItem(index);
+                            tempPCB.base = -1;
+                            tempPCB.limit = -1;
+                            tempPCB.onHD = true;
+                            tempPCB.hdFileName = _MemoryManager.findHDLoadedFName(oldpid);
+                            pcb.base = _MemoryManager.partitionBaseAddress[part];
+                            pcb.limit = _MemoryPartitionSize;
+                            pcb.onHD = false;
+                        }
+                    }
                     pcb.waitCycles += _OSclock - pcb.lastContextSwitchCycle;
                     // Set registers back
                     _CPU.base = pcb.base;
@@ -418,6 +492,28 @@ var TSOS;
                     // Get next resdient
                     pcb = this.readyQueue.dequeue();
                     pcb.waitCycles += _OSclock - pcb.lastContextSwitchCycle;
+                    // Check if swap file
+                    if (pcb.onHD) {
+                        part = this.findLastInQueueLoadedPartition();
+                        oldpid = _MemoryManager.swapFile(part, pcb.pid);
+                        _Kernel.krnTrace("Swapping process pid " + oldpid + " from hd.");
+                        _Kernel.krnTrace("Swapping process pid " + pcb.pid + " to hd.");
+                        if (oldpid == -1) {
+                        }
+                        else {
+                            index = this.findReadyQueueIndex(oldpid);
+                            if (part == -1)
+                                part = _MemoryManager.nextPartitionAvailable();
+                            tempPCB = this.getReadyQueueItem(index);
+                            tempPCB.base = -1;
+                            tempPCB.limit = -1;
+                            tempPCB.onHD = true;
+                            tempPCB.hdFileName = _MemoryManager.findHDLoadedFName(oldpid);
+                            pcb.base = _MemoryManager.partitionBaseAddress[part];
+                            pcb.limit = _MemoryPartitionSize;
+                            pcb.onHD = false;
+                        }
+                    }
                     // Set cpu values
                     _CPU.base = pcb.base;
                     _CPU.limit = pcb.limit;
@@ -426,6 +522,7 @@ var TSOS;
                     _CPU.Zflag = pcb.zFlag;
                     _CPU.Acc = pcb.Acc;
                     _CPU.PC = pcb.PC;
+                    // Check if
                     // Update cput display
                     TSOS.Control.updateCPUDisplay();
                     // Set as running process

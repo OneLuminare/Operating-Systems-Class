@@ -91,7 +91,7 @@ var _TimerOn = false;
 var _TimerCounter = 0;
 var _Quantum = 6;
 // File codes
-var EOF = 255;
+var EOF = -1;
 var NEWLINE = 10; // Note: in this file system, I am not using a line feed/carrage return pair for new line
 // Error codes
 var CR_SUCCESS = 1;

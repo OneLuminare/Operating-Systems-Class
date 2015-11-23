@@ -16,6 +16,8 @@ var TSOS;
             this.partitionsLoaded = new Array(_MemoryPartitions);
             this.partitionBaseAddress = new Array(_MemoryPartitions);
             this.partitionPIDs = new Array(_MemoryPartitions);
+            this.hdLoadedPIDs = [];
+            this.hdLoadedFNames = [];
             // Populate arrays
             this.populateArrays();
             // Zero memory
@@ -182,6 +184,218 @@ var TSOS;
             }
             // Return dword value fliped, or -1 on invalid start address
             return dword;
+        };
+        MemoryManager.prototype.loadToHDDBytes = function (data, pid) {
+            // Inits
+            var fname;
+            var ret;
+            var error = false;
+            var val;
+            var data = [];
+            // Create swap file name
+            fname = "~proc-" + pid.toString();
+            // Try to create file
+            ret = _HDDriver.createFile(fname);
+            // Keep trying until file created or error,
+            // while adding a ~ to fname to avoid duplicates
+            while ((ret != CR_SUCCESS) && !error) {
+                // IF duplicate, add ~ to fname and try again
+                if (ret == CR_DUPLICATE_FILE_NAME) {
+                    fname = "~" + fname;
+                    ret = _HDDriver.createFile(fname);
+                }
+                else
+                    error = true;
+            }
+            // Check if no error
+            if (!error) {
+                // Load data into memory splitting on hex pairs.
+                // Makes sure its 256 bytes.
+                for (var i = 0; i < _MemoryPartitionSize; i++) {
+                    if (i < data.length) {
+                        data.push(data[i]);
+                    }
+                    else
+                        data.push(0);
+                }
+                // Write to file
+                ret = _HDDriver.writeToFileBytes(fname, data);
+                // If not error, put pid on loaded hdd pid array
+                if (ret == CR_SUCCESS) {
+                    this.addHDLoaded(pid, fname);
+                    _Kernel.krnTrace("Created swap file: " + fname);
+                }
+            }
+            // Return array of [ret value, fname]
+            return [ret, fname];
+        };
+        MemoryManager.prototype.loadToHDD = function (source, pid) {
+            // Inits
+            var fname;
+            var ret;
+            var error = false;
+            var val;
+            var data = [];
+            var sindex = 0;
+            // Create swap file name
+            fname = "~proc-" + pid.toString();
+            // Try to create file
+            ret = _HDDriver.createFile(fname);
+            // Keep trying until file created or error,
+            // while adding a ~ to fname to avoid duplicates
+            while ((ret != CR_SUCCESS) && !error) {
+                // IF duplicate, add ~ to fname and try again
+                if (ret == CR_DUPLICATE_FILE_NAME) {
+                    fname = "~" + fname;
+                    ret = _HDDriver.createFile(fname);
+                }
+                else
+                    error = true;
+            }
+            // Check if no error
+            if (!error) {
+                // Load data into memory splitting on hex pairs.
+                // Makes sure its 256 bytes.
+                for (var i = 0; i < _MemoryPartitionSize; i++) {
+                    if (sindex < source.length) {
+                        if (source.length > sindex + 1)
+                            val = source[sindex] + source[sindex + 1];
+                        else
+                            val = source[sindex] + '0';
+                        sindex += 2;
+                        data.push(parseInt(val, 16));
+                    }
+                    else
+                        data.push(0);
+                }
+                // Write to file
+                ret = _HDDriver.writeToFileBytes(fname, data);
+                // If not error, put pid on loaded hdd pid array
+                if (ret == CR_SUCCESS) {
+                    this.addHDLoaded(pid, fname);
+                    _Kernel.krnTrace("Created swap file: " + fname);
+                }
+            }
+            // Return array of [ret value, fname]
+            return [ret, fname];
+        };
+        MemoryManager.prototype.addHDLoaded = function (pid, fname) {
+            this.hdLoadedPIDs.push(pid);
+            this.hdLoadedFNames.push(fname);
+        };
+        MemoryManager.prototype.removeHDLoaded = function (pid) {
+            var ret = false;
+            var temp = [];
+            var temps = [];
+            for (var i = 0; i < this.hdLoadedPIDs.length; i++) {
+                if (this.hdLoadedPIDs[i] != pid) {
+                    temp.push(this.hdLoadedPIDs[i]);
+                    temps.push(this.hdLoadedFNames[i]);
+                }
+                else
+                    ret = true;
+            }
+            if (ret) {
+                this.hdLoadedPIDs = temp;
+                this.hdLoadedFNames = temps;
+            }
+            return ret;
+        };
+        MemoryManager.prototype.findHDLoadedPID = function (pid) {
+            var ret = -1;
+            for (var i = 0; (i < this.hdLoadedPIDs.length) && (ret == -1); i++)
+                if (this.hdLoadedPIDs[i] == pid)
+                    ret = i;
+            return ret;
+        };
+        MemoryManager.prototype.findHDLoadedFName = function (pid) {
+            var index = this.findHDLoadedPID(pid);
+            if (index != -1)
+                return this.hdLoadedFNames[index];
+            else
+                return null;
+        };
+        MemoryManager.prototype.getPartitionBytes = function (part) {
+            var data = [];
+            var len = 0;
+            // Check if valid partition
+            if (part < 0 || part >= _MemoryPartitions)
+                return null;
+            len = this.partitionBaseAddress[part] + _MemoryPartitionSize;
+            for (var i = this.partitionBaseAddress[part]; i < len; i++) {
+                data.push(_Memory.programMemory[i]);
+            }
+            return data;
+        };
+        MemoryManager.prototype.loadPartitionBytes = function (part, data) {
+            // Check if valid partition
+            if (part < 0 || part >= _MemoryPartitions)
+                return false;
+            this.zeroMemory(part);
+            var mem = this.partitionBaseAddress[part];
+            for (var i = 0; (i < data.length) && (i < _MemoryPartitionSize); i++) {
+                _Memory.programMemory[mem] = data[i];
+                mem++;
+            }
+            return true;
+        };
+        MemoryManager.prototype.swapFile = function (partition, hdpid) {
+            // Inits
+            var data;
+            var aret;
+            var oldfname;
+            var oldpid;
+            var swappid;
+            // Check if valid partition
+            if (partition < 0 || partition >= _MemoryPartitions)
+                return -1;
+            // Check if hdpid is currently on hd
+            if (this.findHDLoadedPID(hdpid) == -1)
+                return -1;
+            // Get partition bytes
+            data = this.getPartitionBytes(partition);
+            // Create swap file
+            aret = this.loadToHDDBytes(data, this.partitionPIDs[partition]);
+            // Return error if could not load
+            if (aret[0] < 0)
+                return -1;
+            // Get swap fname if error occurs and need to delete
+            oldfname = aret[1];
+            oldpid = this.partitionPIDs[partition];
+            // Get hd swap file bytes
+            aret = _HDDriver.readFileBytes(this.findHDLoadedFName(hdpid));
+            // Verify valid data
+            if (aret[0] < 0) {
+                // Remove created swap file
+                _HDDriver.deleteFile(oldfname);
+                // Return error
+                return -1;
+            }
+            // Load into partition
+            if (!this.loadPartitionBytes(partition, aret[1])) {
+                // Remove created swap file
+                _HDDriver.deleteFile(oldfname);
+                // Return error
+                return -1;
+            }
+            // Change loaded pid
+            this.partitionPIDs[partition] = hdpid;
+            // Remove old swap file
+            this.removeSwapFile(hdpid);
+            return oldpid;
+        };
+        MemoryManager.prototype.removeSwapFile = function (pid) {
+            // Inits
+            var index;
+            var ret = false;
+            index = this.findHDLoadedPID(pid);
+            if (index != -1) {
+                _HDDriver.deleteFile(this.hdLoadedFNames[index]);
+                this.removeHDLoaded(pid);
+                ret = true;
+            }
+            _Kernel.krnTrace("Removed swap file : " + this.hdLoadedFNames[index]);
+            return ret;
         };
         // Loads program into memory. Will change, only one partion at the moment.
         // Implies data was validated before hand, with no spaces or carriage returns

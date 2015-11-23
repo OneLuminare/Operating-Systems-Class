@@ -163,27 +163,27 @@ module TSOS {
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellCreateFile,
-                "createfile",
+                "create",
                 "<string> - creates a file.");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellWriteFile,
-                "writefile",
-                "<string> <string> - writes to a file.");
+                "write",
+                "<string> \"<string>\" - writes to a file.");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellReadFile,
-                "readfile",
+                "read",
                 "<string> - prints file content.");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellDeleteFile,
-                "deletefile",
+                "delete",
                 "<string> - delete a file.");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellListFiles,
-                "listfiles",
+                "ls",
                 "Lists all files");
             this.commandList[this.commandList.length] = sc;
 
@@ -472,19 +472,19 @@ module TSOS {
                     case "format":
                         _StdOut.putText("Formats hard drive. Must be done before any file operations are performed.");
                         break;
-                    case "createfile":
+                    case "create":
                         _StdOut.putText("Creates an empty file with given file name.");
                         break;
-                    case "writefile":
-                        _StdOut.putText("Writes given text to an existing file.");
+                    case "write":
+                        _StdOut.putText("Writes given text to an existing file. Must put data in quotes.");
                         break;
-                    case "readfile":
+                    case "read":
                         _StdOut.putText("Reads and displays file text.");
                         break;
-                    case "deletefile":
+                    case "delete":
                         _StdOut.putText("Deletes a file.");
                         break;
-                    case "listfiles":
+                    case "ls":
                         _StdOut.putText("Lists all active files.");
                         break;
                     default:
@@ -749,10 +749,38 @@ module TSOS {
 
             if( args.length > 1 )
             {
-                _Kernel.WriteToFile(args[0],args[1]);
+                var fargs = [];
+
+                for( var i = 1; i < args.length; i++)
+                    fargs.push(args[i]);
+
+                var str = fargs.join(' ');
+                var sindex = -1;
+                var valid = false;
+
+                if( str[0] == '"' )
+                {
+                    for( var s = 1; (s < str.length) && sindex == -1; s++ )
+                    {
+                        if( str[s] == '"')
+                            sindex = s;
+                    }
+
+                    if( sindex != -1) {
+
+                        str = str.substr(1, sindex - 1);
+                        valid = true;
+                    }
+
+                }
+
+                if( valid )
+                    _Kernel.WriteToFile(args[0],str);
+                else
+                    _StdOut.putText("Text to be written must be enclosed in quotes(\"text here\")");
             }
             else
-                _StdOut.putText("Usage - writefile <string : fileName> <string : text>");
+                _StdOut.putText("Usage - writefile <string : fileName> \"<string : text>\"");
 
         }
 

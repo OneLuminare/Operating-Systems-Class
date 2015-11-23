@@ -19,6 +19,8 @@ module TSOS {
                     public Acc : number = 0,
                     public zFlag : number = 0,
                     public created : Date = new Date(),
+                    public onHD : boolean = false,
+                    public hdFileName : string = "",
                     public turnAroundCycles : number = 0,
                     public startCycle : number = 0,
                     public waitCycles : number = 0,

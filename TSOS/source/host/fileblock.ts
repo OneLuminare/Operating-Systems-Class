@@ -76,7 +76,10 @@ module TSOS
 				return false;
 
 			// Write in use byte
-			this.data[0] = (inUse == true) ? 1 : 0;
+			if( inUse )
+				this.data[0] = 1;
+			else
+				this.data[0] = 0;
 
 			// Write next block pointer
 			this.data[1] = track;
@@ -112,7 +115,7 @@ module TSOS
 			for( var i = 4; (i < 64) && !eof; i++)
 			{
 				// If data is null , set eof flag
-				if( this.data[i] == 0)
+				if( this.data[i] == EOF)
 					eof = true;
 				// Else get data, and convert to char from ascii value
 				else
@@ -126,6 +129,38 @@ module TSOS
 			return text;
 		}
 
+		// Gets data text from file. Returns all data until null character,
+		// and returns an array of byte values.
+		//
+		// Returns: Bytes from data.
+		public getDataBytes() : number[]
+		{
+			// Inits
+			var data : number[] = [];
+			var eof = false;
+
+			// Return "" if data not loaded
+			if( this.data == null)
+				return null;
+
+
+			// Cycle through data section
+			for( var i = 4; (i < 64) && !eof; i++)
+			{
+				// If data is null , set eof flag
+				if( this.data[i] == EOF)
+					eof = true;
+				// Else get data, and convert to char from ascii value
+				else
+				{
+					data.push(this.data[i]);
+				}
+			}
+
+			// Return data
+			return data;
+		}
+
 		// Writes data into block in memory. Overwrites existing data.
 		// String is converted into ascii values.
 		//
@@ -137,7 +172,6 @@ module TSOS
 			if( data.length > 60 || this.data == null)
 				return false;
 
-			_Kernel.krnTrace("Passed write data test.");
 
 			// Cycle through data section
 			for( var i = 4; i < 64; i++)
@@ -151,7 +185,41 @@ module TSOS
 				// Else write null byte
 				else
 				{
-					this.data[i] = 0;
+					this.data[i] = EOF;
+				}
+			}
+
+			// Write data, converting to JSON string
+			sessionStorage.setItem(this.getKey(),JSON.stringify(this.data));
+
+			// Return sucess
+			return true;
+		}
+
+		// Writes data into block in memory. Overwrites existing data.
+		// Takes an array of byte values as numbers.
+		//
+		// Params:	data <number[]> : data to store
+		// Returns: False on no data loaded
+		public writeDataBytes(data : number[]) : boolean
+		{
+			// If data too long, return false
+			if( data.length > 60 || this.data == null)
+				return false;
+
+			// Cycle through data section
+			for( var i = 4; i < 64; i++)
+			{
+				// If more chars to write, write ascii value to data
+				if( (i - 4) < data.length )
+				{
+					this.data[i] = data[i - 4];
+
+				}
+				// Else write null byte
+				else
+				{
+					this.data[i] = EOF;
 				}
 			}
 
@@ -177,10 +245,6 @@ module TSOS
 			var eof : number = this.findEOF();
 			var written : number = 0;
 
-			// If data too long, return false
-			if( data.length > (64 - eof))
-				return 0;
-
 			// Cycle through remaining bytes
 			for( var i = eof; i < 64; i++)
 			{
@@ -193,7 +257,45 @@ module TSOS
 				// Else write null byte
 				else
 				{
-					this.data[i] = 0;
+					this.data[i] = EOF;
+				}
+			}
+
+			// Write data, converting to JSON string
+			sessionStorage.setItem(this.getKey(),JSON.stringify(this.data));
+
+			// Return success
+			return written;
+		}
+
+		// Appends string to existing block data.
+		// Takes an array of byte values.
+		//
+		// Params:	data <number[]> : data to store
+		// Returns: Number of bytes written
+		public appendDataBytes(data : number[]) : number
+		{
+			// Return false if block not loaded
+			if( this.data == null)
+				return 0;
+
+			// Find eof
+			var eof : number = this.findEOF();
+			var written : number = 0;
+
+			// Cycle through remaining bytes
+			for( var i = eof; i < 64; i++)
+			{
+				// If more chars, write char in ascii format
+				if( (i - eof) < data.length )
+				{
+					this.data[i] = data[i - eof];
+					written++;
+				}
+				// Else write null byte
+				else
+				{
+					this.data[i] = EOF;
 				}
 			}
 
@@ -216,7 +318,7 @@ module TSOS
 			// Write null to all data bytes
 			for( var i = 4; i < 64; i++)
 			{
-				this.data[i] = 0;
+				this.data[i] = EOF;
 			}
 
 			// Write data, converting to JSON string
@@ -242,7 +344,7 @@ module TSOS
 			for( var i = 4; ((i < 64) && (eof == 64)); i++)
 			{
 				// If null byte, set flag
-				if( this.data[i] == 0 )
+				if( this.data[i] == EOF )
 					eof = i;
 			}
 

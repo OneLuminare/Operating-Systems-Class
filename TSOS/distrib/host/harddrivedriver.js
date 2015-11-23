@@ -46,7 +46,7 @@ var TSOS;
                         data = [];
                         // Populate rest of data
                         for (var a = 0; a < this.blockSize; a++) {
-                            data.push(0);
+                            data.push(EOF);
                         }
                         // Create key value pair
                         sessionStorage.setItem(key, JSON.stringify(data));
@@ -83,7 +83,7 @@ var TSOS;
                             data.push(-1);
                             // Populate rest of data
                             for (var a = 4; a < this.blockSize; a++) {
-                                data.push(0);
+                                data.push(EOF);
                             }
                             // Create key value pair
                             sessionStorage.setItem(key, JSON.stringify(data));
@@ -230,6 +230,110 @@ var TSOS;
                         block.writeFileHeader(true, curBlock.track, curBlock.sector, curBlock.block);
                         // Clear old data
                         curBlock.clearData();
+                        // Write in use
+                        curBlock.writeFileHeader(true, -1, -1, -1);
+                    }
+                    // Set next block
+                    block = curBlock;
+                }
+                else
+                    block.writeFileHeader(true, -1, -1, -1);
+            }
+            // Update hard drive display
+            TSOS.Control.updateHardDriveDisplay();
+            // If drive full return CR_DID_NOT_WRITE_ALL_DATA
+            if (driveFull)
+                return CR_DID_NOT_WRITE_ALL_DATA;
+            else
+                return CR_SUCCESS;
+        };
+        // Writes data to existing file. Appends data to it.
+        //
+        // Params:  fileName <string> - name of file
+        //          text <string> - text to be written
+        // Returns: CR_SUCCESS on success,
+        //          CR_FILE_NOT_FOUND on file not found,
+        //          CR_DRIVE_NOT_FORMATED if drive not formatted,
+        //          CR_DID_NOT_WRITE_ALL_DATA  if text uses more space than available.
+        //          CR_CORRUPTED_FILE_BLOCK if missing a file block
+        HardDriveDriver.prototype.writeToFileBytes = function (fileName, data) {
+            // Inits
+            var block = null;
+            var curBlock = new TSOS.FileBlock(0, 0, 0, false);
+            var driveFull = false;
+            var freeBytes = 0;
+            var temp = 0;
+            var strIndex = 0;
+            var newBlock = false;
+            // Report error if not formated
+            if (!this.formated)
+                return CR_DRIVE_NOT_FORMATED;
+            // Cycle through directory sectors
+            for (var s = 0; (s < this.sectors) && (block == null); s++) {
+                // Check if first sector, if so set start block to 1.
+                // This skips boot record
+                if (s == 0)
+                    temp = 1;
+                else
+                    temp = 0;
+                // Cycle through blocks
+                for (var b = temp; b < (this.blocksPerSector) && (block == null); b++) {
+                    // Get block from memory
+                    curBlock.loadBlock(0, s, b);
+                    // If in use flag 0, set as ret block
+                    if ((curBlock.getDataText() == fileName) && curBlock.isInUse())
+                        block = curBlock;
+                }
+            }
+            // If block not found, return file not found
+            if (block == null)
+                return CR_FILE_NOT_FOUND;
+            // Get first file block
+            block = block.nextBlock();
+            // Get last block in chain
+            curBlock = block.lastBlock();
+            // If curBlock is null, use first block
+            if (curBlock != null)
+                block = curBlock;
+            // If file block is not found, data is corrupted
+            if (block == null)
+                return CR_CORRUPTED_FILE_BLOCK;
+            // Init text index
+            strIndex = 0;
+            // Write data until no more, or drive full
+            while ((data.length > 0) && !driveFull) {
+                // Get available bytes in block
+                freeBytes = block.findFreeBytes();
+                // If string shorter than available bytes, just write string
+                if (data.length <= freeBytes) {
+                    strIndex += block.appendDataBytes(data);
+                    data = [];
+                    // Set text lenght to 0
+                    //text = "";
+                    // Set create new block
+                    newBlock = false;
+                }
+                else {
+                    if (freeBytes > 0) {
+                        block.appendDataBytes(data);
+                        data.splice(0, freeBytes);
+                    }
+                    newBlock = true;
+                }
+                // Check if more text to be written
+                if (newBlock) {
+                    // Get next available block
+                    curBlock = this.findNextAvailableBlock();
+                    // If not more, set drive full flag
+                    if (curBlock == null)
+                        driveFull = true;
+                    else {
+                        // Write block header
+                        block.writeFileHeader(true, curBlock.track, curBlock.sector, curBlock.block);
+                        // Clear old data
+                        curBlock.clearData();
+                        // Write in use
+                        curBlock.writeFileHeader(true, -1, -1, -1);
                     }
                     // Set next block
                     block = curBlock;
@@ -272,6 +376,45 @@ var TSOS;
             while (fBlock != null) {
                 // Add text to buffer
                 buffer += fBlock.getDataText();
+                // Get next block
+                fBlock = fBlock.nextBlock();
+            }
+            // Update hard drive display
+            TSOS.Control.updateHardDriveDisplay();
+            // Return file text
+            return [CR_SUCCESS, buffer];
+        };
+        // Reads data from a file, and returns text.
+        //
+        // Params: fileName <string> - name of file to read
+        // Returns: An array of [<Return value>,<text>]
+        //          Return values can include:
+        //          CR_SUCCESS on success,
+        //          CR_DRIVE_NOT_FORMATED if drive not formatted,
+        //          CR_FILE_NOT_FOUND if file not in directory
+        HardDriveDriver.prototype.readFileBytes = function (fileName) {
+            // Inits
+            var dirBlock = null;
+            var fBlock = null;
+            var buffer = [];
+            var temp = [];
+            // Report error if not formated
+            if (!this.formated)
+                return [CR_DRIVE_NOT_FORMATED, buffer];
+            // Find directory block
+            dirBlock = this.findDirectoryBlock(fileName);
+            // If not found return null
+            if (dirBlock == null)
+                return [CR_FILE_NOT_FOUND, buffer];
+            // Load first file block
+            fBlock = dirBlock.nextBlock();
+            // Cycle through chain of file blocks
+            while (fBlock != null) {
+                // Get block bytes
+                temp = fBlock.getDataBytes();
+                // Add bytes to buffer
+                for (var i = 0; i < temp.length; i++)
+                    buffer.push(temp[i]);
                 // Get next block
                 fBlock = fBlock.nextBlock();
             }
@@ -432,7 +575,6 @@ var TSOS;
                     fBlock.loadBlock(0, s, b);
                     // Check if in use
                     if (fBlock.isInUse()) {
-                        _Kernel.krnTrace("data : " + fBlock.getDataText());
                         // Set found true if file names the same
                         if (fileName == fBlock.getDataText())
                             found = true;

@@ -61,7 +61,10 @@ var TSOS;
             if ((track == 0 && sector == 0 && block == 0))
                 return false;
             // Write in use byte
-            this.data[0] = (inUse == true) ? 1 : 0;
+            if (inUse)
+                this.data[0] = 1;
+            else
+                this.data[0] = 0;
             // Write next block pointer
             this.data[1] = track;
             this.data[2] = sector;
@@ -86,7 +89,7 @@ var TSOS;
             // Cycle through data section
             for (var i = 4; (i < 64) && !eof; i++) {
                 // If data is null , set eof flag
-                if (this.data[i] == 0)
+                if (this.data[i] == EOF)
                     eof = true;
                 else {
                     data = TSOS.Utils.asciiChar(this.data[i]);
@@ -95,6 +98,29 @@ var TSOS;
             }
             // Return text
             return text;
+        };
+        // Gets data text from file. Returns all data until null character,
+        // and returns an array of byte values.
+        //
+        // Returns: Bytes from data.
+        FileBlock.prototype.getDataBytes = function () {
+            // Inits
+            var data = [];
+            var eof = false;
+            // Return "" if data not loaded
+            if (this.data == null)
+                return null;
+            // Cycle through data section
+            for (var i = 4; (i < 64) && !eof; i++) {
+                // If data is null , set eof flag
+                if (this.data[i] == EOF)
+                    eof = true;
+                else {
+                    data.push(this.data[i]);
+                }
+            }
+            // Return data
+            return data;
         };
         // Writes data into block in memory. Overwrites existing data.
         // String is converted into ascii values.
@@ -105,7 +131,6 @@ var TSOS;
             // If data too long, return false
             if (data.length > 60 || this.data == null)
                 return false;
-            _Kernel.krnTrace("Passed write data test.");
             // Cycle through data section
             for (var i = 4; i < 64; i++) {
                 // If more chars to write, write ascii value to data
@@ -113,7 +138,31 @@ var TSOS;
                     this.data[i] = TSOS.Utils.asciiValue(data[i - 4]);
                 }
                 else {
-                    this.data[i] = 0;
+                    this.data[i] = EOF;
+                }
+            }
+            // Write data, converting to JSON string
+            sessionStorage.setItem(this.getKey(), JSON.stringify(this.data));
+            // Return sucess
+            return true;
+        };
+        // Writes data into block in memory. Overwrites existing data.
+        // Takes an array of byte values as numbers.
+        //
+        // Params:	data <number[]> : data to store
+        // Returns: False on no data loaded
+        FileBlock.prototype.writeDataBytes = function (data) {
+            // If data too long, return false
+            if (data.length > 60 || this.data == null)
+                return false;
+            // Cycle through data section
+            for (var i = 4; i < 64; i++) {
+                // If more chars to write, write ascii value to data
+                if ((i - 4) < data.length) {
+                    this.data[i] = data[i - 4];
+                }
+                else {
+                    this.data[i] = EOF;
                 }
             }
             // Write data, converting to JSON string
@@ -133,9 +182,6 @@ var TSOS;
             // Find eof
             var eof = this.findEOF();
             var written = 0;
-            // If data too long, return false
-            if (data.length > (64 - eof))
-                return 0;
             // Cycle through remaining bytes
             for (var i = eof; i < 64; i++) {
                 // If more chars, write char in ascii format
@@ -144,7 +190,35 @@ var TSOS;
                     written++;
                 }
                 else {
-                    this.data[i] = 0;
+                    this.data[i] = EOF;
+                }
+            }
+            // Write data, converting to JSON string
+            sessionStorage.setItem(this.getKey(), JSON.stringify(this.data));
+            // Return success
+            return written;
+        };
+        // Appends string to existing block data.
+        // Takes an array of byte values.
+        //
+        // Params:	data <number[]> : data to store
+        // Returns: Number of bytes written
+        FileBlock.prototype.appendDataBytes = function (data) {
+            // Return false if block not loaded
+            if (this.data == null)
+                return 0;
+            // Find eof
+            var eof = this.findEOF();
+            var written = 0;
+            // Cycle through remaining bytes
+            for (var i = eof; i < 64; i++) {
+                // If more chars, write char in ascii format
+                if ((i - eof) < data.length) {
+                    this.data[i] = data[i - eof];
+                    written++;
+                }
+                else {
+                    this.data[i] = EOF;
                 }
             }
             // Write data, converting to JSON string
@@ -161,7 +235,7 @@ var TSOS;
                 return false;
             // Write null to all data bytes
             for (var i = 4; i < 64; i++) {
-                this.data[i] = 0;
+                this.data[i] = EOF;
             }
             // Write data, converting to JSON string
             sessionStorage.setItem(this.getKey(), JSON.stringify(this.data));
@@ -180,7 +254,7 @@ var TSOS;
             // Cycle through data
             for (var i = 4; ((i < 64) && (eof == 64)); i++) {
                 // If null byte, set flag
-                if (this.data[i] == 0)
+                if (this.data[i] == EOF)
                     eof = i;
             }
             // Return index of first null byte

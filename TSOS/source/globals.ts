@@ -109,7 +109,7 @@ var _TimerCounter : number = 0;
 var _Quantum : number = 6;
 
 // File codes
-const EOF = 255;
+const EOF = -1;
 const NEWLINE = 10; // Note: in this file system, I am not using a line feed/carrage return pair for new line
 
 // Error codes
@@ -123,6 +123,8 @@ const CR_DUPLICATE_FILE_NAME = -106
 const CR_DRIVE_NOT_FORMATED = -107;
 const CR_EMPTY_FILE_NAME = -108;
 const CR_CORRUPTED_FILE_BLOCK = -109;
+
+
 
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode: boolean = false;
