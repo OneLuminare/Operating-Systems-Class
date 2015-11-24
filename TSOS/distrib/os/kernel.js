@@ -134,9 +134,11 @@ var TSOS;
                     _StdIn.handleInput();
                     break;
                 case CREATE_PROCESS_IRQ:
-                    pcb = _ProcessScheduler.createProcess(params);
+                    pcb = _ProcessScheduler.createProcess(params[0], params[1]);
                     if (pcb != null)
-                        _OsShell.outputMessage("Loaded process with PID " + pcb.pid.toString() + ".");
+                        _OsShell.outputMessage("Loaded process with PID " + pcb.pid.toString() + ", with priority " + params[1].toString() + ".");
+                    else
+                        _OsShell.outputMessage("Memory full. To load more process's, format drive to allow swapping.");
                     break;
                 case EXECUTE_PROCESS_IRQ:
                     if (!_ProcessScheduler.executeProcess(params))
@@ -378,6 +380,50 @@ var TSOS;
                             break;
                     }
                     break;
+                case SWAP_ERROR_IRQ:
+                    switch (params) {
+                        case CR_FILE_DIRECTORY_FULL:
+                            _OsShell.outputMessage("Could not create swap file, file directory full.");
+                            break;
+                        case CR_DRIVE_FULL:
+                            _OsShell.outputMessage("Could not create swap file, hard drive full.");
+                            break;
+                        case CR_CORRUPTED_FILE_BLOCK:
+                            _OsShell.outputMessage("Could not read swap file, corrupted file block.");
+                            break;
+                        case CR_FILE_NOT_FOUND:
+                            _OsShell.outputMessage("Could not read swap file, file not found.");
+                            break;
+                        default:
+                            _OsShell.outputMessage("File I/0 error occured when reading/writing to swap file.");
+                            break;
+                    }
+                    break;
+                case CHANGE_SCHEDULING_METHOD_IRQ:
+                    switch (params) {
+                        case SM_ROUND_ROBIN:
+                            _OsShell.outputMessage("Changed scheduling method to round robin.");
+                            _TimerOn = true;
+                            _TimerCounter = 0;
+                            _ScheduleMethod = SM_ROUND_ROBIN;
+                            break;
+                        case SM_FJF:
+                            _OsShell.outputMessage("Changed scheduling method to first job first.");
+                            _TimerOn = false;
+                            _TimerCounter = 0;
+                            _ScheduleMethod = SM_FJF;
+                            break;
+                        case SM_PRIORITY:
+                            _OsShell.outputMessage("Changed scheduling method to non-premptive priority.");
+                            _TimerOn = false;
+                            _TimerCounter = 0;
+                            _ScheduleMethod = SM_PRIORITY;
+                            break;
+                        default:
+                            _OsShell.outputMessage("Unknown scheduling method.");
+                            break;
+                    }
+                    break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }
@@ -407,9 +453,10 @@ var TSOS;
         // - WriteFile
         // - CloseFile
         // Create Process
-        Kernel.prototype.CreateProcess = function (program) {
+        Kernel.prototype.CreateProcess = function (program, priority) {
+            if (priority === void 0) { priority = 10; }
             // Send create process interrupt
-            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_PROCESS_IRQ, program));
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_PROCESS_IRQ, [program, priority]));
         };
         // Execute Process based on pid
         Kernel.prototype.ExecuteProcess = function (pid) {
@@ -418,8 +465,11 @@ var TSOS;
         };
         // Executes all loaded process
         Kernel.prototype.ExecuteAllProcessess = function () {
+            // Cycle through resident list
+            for (var i = 0; i < _ProcessScheduler.residentList.length; i++)
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(EXECUTE_PROCESS_IRQ, _ProcessScheduler.residentList[i].pid));
             // Send interupt to run process
-            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(EXECUTE_ALL_IRQ, null));
+            //_KernelInterruptQueue.enqueue(new Interrupt(EXECUTE_ALL_IRQ, null));
         };
         // Terminates process on base (cpu break)
         Kernel.prototype.TerminateProcess = function (base) {
@@ -449,10 +499,11 @@ var TSOS;
             // Send interupt to run process
             _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CHANGE_QUANTUM_IRQ, quantum));
         };
-        Kernel.prototype.LoadAllProcesses = function (input) {
+        Kernel.prototype.LoadAllProcesses = function (input, priority) {
+            if (priority === void 0) { priority = 10; }
             var availPart = _MemoryManager.totalAvailablePartitions();
             for (var i = 0; i < availPart; i++)
-                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_PROCESS_IRQ, input));
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_PROCESS_IRQ, [input, priority]));
         };
         // Print integer value in YReg
         Kernel.prototype.PrintInteger = function () {
@@ -499,6 +550,9 @@ var TSOS;
         };
         Kernel.prototype.ListFiles = function () {
             _KernelInterruptQueue.enqueue(new TSOS.Interrupt(LIST_FILES_IRQ, null));
+        };
+        Kernel.prototype.ChangeSchedulingMethod = function (method) {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CHANGE_SCHEDULING_METHOD_IRQ, method));
         };
         //
         // OS Utility Routines

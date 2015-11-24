@@ -65,7 +65,7 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellError, "error", "<string> - Triggers an OS error.");
             this.commandList[this.commandList.length] = sc;
             // load
-            sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Loads validates and loads program input into memory.");
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "<optional: priority> - Loads validates and loads program input into memory.");
             this.commandList[this.commandList.length] = sc;
             // run
             sc = new TSOS.ShellCommand(this.shellRun, "run", "<int> - Runs a process in memory.");
@@ -83,7 +83,7 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellKill, "kill", "<int> - Executes all loaded processes.");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellLoadAll, "loadall", "- Loads process into all available partitions.");
+            sc = new TSOS.ShellCommand(this.shellLoadAll, "loadall", "<optional: priority> - Loads process into all available partitions.");
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellFormat, "format", "- Formats hard drive.");
             this.commandList[this.commandList.length] = sc;
@@ -95,7 +95,9 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellDeleteFile, "delete", "<string> - delete a file.");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellListFiles, "ls", "Lists all files");
+            sc = new TSOS.ShellCommand(this.shellListFiles, "ls", "Lists all files.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellSetSchedule, "setschedule", "<string> : (rr,fjf, or priority) - changes scheduling method. ");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -331,7 +333,7 @@ var TSOS;
                         _StdOut.putText("Triggers an os error, with given message. For testing purposes.");
                         break;
                     case "load":
-                        _StdOut.putText("Loads and validates program input into memory. Displays PID of newly created PCB.");
+                        _StdOut.putText("Loads and validates program input into memory. Displays PID of newly created PCB. Excepts an optional priority.");
                         break;
                     case "run":
                         _StdOut.putText("Runs loaded process, identified by givin PID returned at load.");
@@ -355,7 +357,7 @@ var TSOS;
                         _StdOut.putText("Terminates a processs with given pid.");
                         break;
                     case "loadall":
-                        _StdOut.putText("Loads program input into all available partitions.");
+                        _StdOut.putText("Loads program input into all available partitions. Excepts an optional priority.");
                         break;
                     case "format":
                         _StdOut.putText("Formats hard drive. Must be done before any file operations are performed.");
@@ -374,6 +376,9 @@ var TSOS;
                         break;
                     case "ls":
                         _StdOut.putText("Lists all active files.");
+                        break;
+                    case "setschedule":
+                        _StdOut.putText("Changes scheduling method. Can be: rr (Round Robin), fjf (First Job First), or priority (priority scheduling). ");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -474,8 +479,12 @@ var TSOS;
                     _StdOut.putText("Program is valid, but over 256 bytes.");
                 }
                 else {
+                    var pri = 10;
+                    if (args.length > 0)
+                        if (!isNaN(args[0]))
+                            pri = args[0];
                     // Create process
-                    _Kernel.CreateProcess(input);
+                    _Kernel.CreateProcess(input, pri);
                 }
             }
         };
@@ -552,8 +561,12 @@ var TSOS;
                     _StdOut.putText("Program is valid, but over 256 bytes.");
                 }
                 else {
+                    var pri = 10;
+                    if (args.length > 0)
+                        if (!isNaN(args[0]))
+                            pri = args[0];
                     // Create process
-                    _Kernel.LoadAllProcesses(input);
+                    _Kernel.LoadAllProcesses(input, pri);
                 }
             }
         };
@@ -609,6 +622,20 @@ var TSOS;
         };
         Shell.prototype.shellListFiles = function (args) {
             _Kernel.ListFiles();
+        };
+        Shell.prototype.shellSetSchedule = function (args) {
+            if (args.length > 0) {
+                var method = -1;
+                if (args[0] == "rr")
+                    method = SM_ROUND_ROBIN;
+                else if (args[0] == "fjf")
+                    method = SM_FJF;
+                else if (args[0] == "priority")
+                    method = SM_PRIORITY;
+                _Kernel.ChangeSchedulingMethod(method);
+            }
+            else
+                _StdOut.putText("Usage - setschedule <string> : can be rr, fjf, or priority.");
         };
         return Shell;
     })();

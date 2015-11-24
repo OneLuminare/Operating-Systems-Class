@@ -47,6 +47,14 @@ const WRITE_FILE_IRQ : number = 22;
 const READ_FILE_IRQ : number = 23;
 const DELETE_FILE_IRQ : number = 24;
 const LIST_FILES_IRQ: number = 25;
+const SWAP_ERROR_IRQ: number = 26;
+const CHANGE_SCHEDULING_METHOD_IRQ : number = 27;
+
+// Scheduling Method
+var _ScheduleMethod : number = 500;
+const SM_ROUND_ROBIN = 500;
+const SM_FJF = 501;
+const SM_PRIORITY = 502;
 
 
 //
@@ -123,6 +131,10 @@ const CR_DUPLICATE_FILE_NAME = -106
 const CR_DRIVE_NOT_FORMATED = -107;
 const CR_EMPTY_FILE_NAME = -108;
 const CR_CORRUPTED_FILE_BLOCK = -109;
+const CR_SWAP_FILE_NOT_LOADED = -110;
+const CR_PARTITION_NOT_LOADED = -111;
+const CR_INVALID_PARTITION = -112;
+const CR_MEMORY_SWAP_FILE_NOT_NEEDED = -113;
 
 
 

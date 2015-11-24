@@ -112,7 +112,7 @@ module TSOS {
             // load
             sc = new ShellCommand(this.shellLoad,
                 "load",
-                "- Loads validates and loads program input into memory.");
+                "<optional: priority> - Loads validates and loads program input into memory.");
             this.commandList[this.commandList.length] = sc;
 
             // run
@@ -154,7 +154,7 @@ module TSOS {
 
             sc = new ShellCommand(this.shellLoadAll,
                 "loadall",
-                "- Loads process into all available partitions.");
+                "<optional: priority> - Loads process into all available partitions.");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellFormat,
@@ -184,7 +184,12 @@ module TSOS {
 
             sc = new ShellCommand(this.shellListFiles,
                 "ls",
-                "Lists all files");
+                "Lists all files.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellSetSchedule,
+                "setschedule",
+                "<string> : (rr,fjf, or priority) - changes scheduling method. ");
             this.commandList[this.commandList.length] = sc;
 
             // ps  - list the running processes and their IDs
@@ -443,7 +448,7 @@ module TSOS {
                         _StdOut.putText("Triggers an os error, with given message. For testing purposes.");
                         break;
                     case "load":
-                        _StdOut.putText("Loads and validates program input into memory. Displays PID of newly created PCB.");
+                        _StdOut.putText("Loads and validates program input into memory. Displays PID of newly created PCB. Excepts an optional priority.");
                         break;
                     case "run":
                         _StdOut.putText("Runs loaded process, identified by givin PID returned at load.");
@@ -467,7 +472,7 @@ module TSOS {
                         _StdOut.putText("Terminates a processs with given pid.");
                         break;
                     case "loadall":
-                        _StdOut.putText("Loads program input into all available partitions.");
+                        _StdOut.putText("Loads program input into all available partitions. Excepts an optional priority.");
                         break;
                     case "format":
                         _StdOut.putText("Formats hard drive. Must be done before any file operations are performed.");
@@ -486,6 +491,9 @@ module TSOS {
                         break;
                     case "ls":
                         _StdOut.putText("Lists all active files.");
+                        break;
+                    case "setschedule":
+                        _StdOut.putText("Changes scheduling method. Can be: rr (Round Robin), fjf (First Job First), or priority (priority scheduling). ");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -605,9 +613,14 @@ module TSOS {
                 // Else send create process interupt
                 else
                 {
+                    var pri = 10;
+
+                    if( args.length > 0 )
+                        if( !isNaN(args[0]))
+                            pri = args[0]
 
                     // Create process
-                    _Kernel.CreateProcess(input);
+                    _Kernel.CreateProcess(input,pri);
                 }
             }
 
@@ -721,8 +734,14 @@ module TSOS {
                 else
                 {
 
+                    var pri = 10;
+
+                    if( args.length > 0 )
+                        if( !isNaN(args[0]))
+                            pri = args[0]
+
                     // Create process
-                    _Kernel.LoadAllProcesses(input);
+                    _Kernel.LoadAllProcesses(input, pri);
                 }
             }
 
@@ -811,6 +830,25 @@ module TSOS {
         public shellListFiles(args)
         {
             _Kernel.ListFiles();
+        }
+
+        public shellSetSchedule(args)
+        {
+            if( args.length > 0)
+            {
+                var method = -1;
+
+                if( args[0] == "rr")
+                    method = SM_ROUND_ROBIN;
+                else if( args[0] == "fjf")
+                    method = SM_FJF;
+                else if( args[0] == "priority")
+                    method = SM_PRIORITY;
+
+                _Kernel.ChangeSchedulingMethod(method);
+            }
+            else
+                _StdOut.putText("Usage - setschedule <string> : can be rr, fjf, or priority.");
         }
     }
 }

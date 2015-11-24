@@ -43,6 +43,13 @@ var WRITE_FILE_IRQ = 22;
 var READ_FILE_IRQ = 23;
 var DELETE_FILE_IRQ = 24;
 var LIST_FILES_IRQ = 25;
+var SWAP_ERROR_IRQ = 26;
+var CHANGE_SCHEDULING_METHOD_IRQ = 27;
+// Scheduling Method
+var _ScheduleMethod = 500;
+var SM_ROUND_ROBIN = 500;
+var SM_FJF = 501;
+var SM_PRIORITY = 502;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
@@ -104,6 +111,10 @@ var CR_DUPLICATE_FILE_NAME = -106;
 var CR_DRIVE_NOT_FORMATED = -107;
 var CR_EMPTY_FILE_NAME = -108;
 var CR_CORRUPTED_FILE_BLOCK = -109;
+var CR_SWAP_FILE_NOT_LOADED = -110;
+var CR_PARTITION_NOT_LOADED = -111;
+var CR_INVALID_PARTITION = -112;
+var CR_MEMORY_SWAP_FILE_NOT_NEEDED = -113;
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode = false;
 // Global Device Driver Objects - page 12

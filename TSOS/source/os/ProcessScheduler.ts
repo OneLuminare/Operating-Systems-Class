@@ -262,7 +262,7 @@ module TSOS {
         //
         // Params: processCode <string> - program input.
         // Returns: PCB of created process, or null if mem full
-        public createProcess(processCode : string) : TSOS.ProcessControlBlock
+        public createProcess(processCode : string, priority : number = 10) : TSOS.ProcessControlBlock
         {
             // Inits - create pcb
             var pcb : TSOS.ProcessControlBlock = new TSOS.ProcessControlBlock(this.nextPID);
@@ -319,6 +319,9 @@ module TSOS {
 
                 pcb.onHD = false;
             }
+
+            // Set priority
+            pcb.priority = priority;
 
             // Add to resident list
             this.residentList.push(pcb);
@@ -409,7 +412,14 @@ module TSOS {
 
                 pcb.lastContextSwitchCycle = _OSclock;
 
-                TSOS.Control.updateReadyQueueDisplay();
+                // Check if method is priority
+                if( _ScheduleMethod == SM_PRIORITY )
+                {
+                    if( this.isHigherPriorityProcess(pcb.priority) )
+                        this.contextSwitch();
+                }
+                else
+                    TSOS.Control.updateReadyQueueDisplay();
 
             }
 
@@ -487,9 +497,7 @@ module TSOS {
 
                     // Set partition free
                     var part = _MemoryManager.partitionFromBase(pcb.base);
-
                     _MemoryManager.freePartition(part);
-
 
                     // Set running process to null
                     this.runningProcess = null;
@@ -610,27 +618,50 @@ module TSOS {
 
                     pcb.lastContextSwitchCycle = _OSclock;
 
-                    // Get next process
-                    pcb = this.readyQueue.dequeue();
+
+
+                    if( _ScheduleMethod != SM_PRIORITY )
+                    {
+                        // Get next process
+                        pcb = this.readyQueue.dequeue();
+                    }
+                    else
+                    {
+                        // Get lowest (highest) priority process
+                        pcb = this.highestPriorityInReadyQueue();
+                    }
 
                     // Check if swap file
                     if( pcb.onHD )
                     {
-                        part = this.findLastInQueueLoadedPartition();
+                        // Check if memory partition available
+                        part = _MemoryManager.nextPartitionAvailable();
 
-                        if( part == -1)
-                            part = _MemoryManager.nextPartitionAvailable();
+                        if( part == -1 )
+                        {
+                            part = this.findLastInQueueLoadedPartition();
+                        }
+
                         oldpid = _MemoryManager.swapFile(part,pcb.pid);
 
-                        _Kernel.krnTrace("Swapping process pid " + oldpid + " from hd.");
-                        _Kernel.krnTrace("Swapping process pid " + pcb.pid + " to hd.");
 
-                        if( oldpid == -1)
+                        _Kernel.krnTrace("Swapping process pid " + pcb.pid + " from hd.");
+
+                        if( oldpid == CR_MEMORY_SWAP_FILE_NOT_NEEDED)
                         {
-                            // Remove swap file and pcb, flag error
+                            pcb.base = _MemoryManager.partitionBaseAddress[part];
+                            pcb.limit = _MemoryPartitionSize;
+                            pcb.onHD = false;
+                        }
+                        else if( oldpid < 0)
+                        {
+                            _Kernel.krnTrace("Swap error occured swapping pid " + pcb.pid + " from hd.");
+                            _KernelInterruptQueue.enqueue(new Interrupt(SWAP_ERROR_IRQ,oldpid) );
+                            _KernelInterruptQueue.enqueue(new Interrupt(TERMINATE_PROCESS_IRQ,pcb.pid) );
                         }
                         else
                         {
+                            _Kernel.krnTrace("Swapping process pid " + oldpid + " to hd.");
                             index = this.findReadyQueueIndex(oldpid);
 
                             tempPCB = this.getReadyQueueItem(index);
@@ -692,30 +723,55 @@ module TSOS {
                 // Check if residents
                 if( this.readyQueue.getSize() > 0 )
                 {
-                    // Get next resdient
-                    pcb = this.readyQueue.dequeue();
+                    if( _ScheduleMethod != SM_PRIORITY )
+                    {
+                        // Get next process
+                        pcb = this.readyQueue.dequeue();
+                    }
+                    else
+                    {
+                        // Get lowest (highest) priority process
+                        pcb = this.highestPriorityInReadyQueue();
+                    }
 
                     pcb.waitCycles += _OSclock - pcb.lastContextSwitchCycle;
 
                     // Check if swap file
                     if( pcb.onHD )
                     {
-                        part = this.findLastInQueueLoadedPartition();
+                        // Check if memory partition available
+                        part = _MemoryManager.nextPartitionAvailable();
+
+                        if( part == -1 )
+                        {
+                            part = this.findLastInQueueLoadedPartition();
+                        }
+
                         oldpid = _MemoryManager.swapFile(part,pcb.pid);
 
-                        _Kernel.krnTrace("Swapping process pid " + oldpid + " from hd.");
-                        _Kernel.krnTrace("Swapping process pid " + pcb.pid + " to hd.");
+                        _Kernel.krnTrace("Swapping process pid " + pcb.pid + " from hd.");
 
-                        if( oldpid == -1)
+                        if( oldpid == CR_MEMORY_SWAP_FILE_NOT_NEEDED)
                         {
-                            // Remove swap file and pcb, flag error
+                            pcb.base = _MemoryManager.partitionBaseAddress[part];
+                            pcb.limit = _MemoryPartitionSize;
+                            pcb.onHD = false;
+                        }
+                        else if( oldpid < 0)
+                        {
+                            _Kernel.krnTrace("Swap error occured swapping pid " + pcb.pid + " from hd.");
+                            //          CR_FILE_DIRECTORY_FULL  if no more space in file directory,
+                            //          CR_DRIVE_FULL if no free blocks.
+                            //          CR_CORRUPTED_FILE_BLOCK if missing a file block
+                            //          CR_FILE_NOT_FOUND on file not found,
+                            _KernelInterruptQueue.enqueue(new Interrupt(SWAP_ERROR_IRQ,oldpid) );
+                            _KernelInterruptQueue.enqueue(new Interrupt(TERMINATE_PROCESS_IRQ,pcb.pid) );
                         }
                         else
                         {
+                            _Kernel.krnTrace("Swapping process pid " + oldpid + " to hd.");
                             index = this.findReadyQueueIndex(oldpid);
 
-                            if( part == -1)
-                                part = _MemoryManager.nextPartitionAvailable();
 
                             tempPCB = this.getReadyQueueItem(index);
 
@@ -760,11 +816,14 @@ module TSOS {
                         TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
                     }
 
-                    // Turn on timer
-                    _TimerOn = true;
+                    if( _ScheduleMethod == SM_ROUND_ROBIN )
+                    {
+                        // Turn on timer
+                        _TimerOn = true;
 
-                    // Reset counter
-                    _TimerCounter = 0;
+                        // Reset counter
+                        _TimerCounter = 0;
+                    }
 
                     // Set is executing flag
                     _CPU.isExecuting = true;
@@ -774,11 +833,14 @@ module TSOS {
                     // Update memory display with no highlighted next instruction
                     TSOS.Control.updateMemoryDisplay();
 
-                    // Turn on timer
-                    _TimerOn = false;
+                    if( _ScheduleMethod == SM_ROUND_ROBIN )
+                    {
+                        // Turn on timer
+                        _TimerOn = false;
 
-                    // Reset counter
-                    _TimerCounter = 0;
+                        // Reset counter
+                        _TimerCounter = 0;
+                    }
 
 
                     // Stop executing
@@ -791,6 +853,35 @@ module TSOS {
             // Update running processes nd ready queue tables
             TSOS.Control.updateRunningProcessDisplay();
             TSOS.Control.updateReadyQueueDisplay();
+        }
+
+        public highestPriorityInReadyQueue() : TSOS.ProcessControlBlock
+        {
+            var low = 9999;
+            var pcb = null;
+
+            for( var i = this.readyQueue.q.length - 1; i >= 0; i--)
+            {
+                if( this.readyQueue.q[i].priority <= low )
+                {
+                    pcb = this.readyQueue.q[i];
+                    low = pcb.priority;
+                }
+            }
+
+
+            return pcb;
+        }
+
+        public isHigherPriorityProcess(priority : number) : boolean
+        {
+            var found = false;
+
+            for( var i = 0; (i < this.readyQueue.q.length) && !found; i++)
+                if( this.readyQueue.q[i].priority < priority)
+                    found = true;
+
+            return found;
         }
 
         // Retrieves PID of process by given base, as running process might switch before termination

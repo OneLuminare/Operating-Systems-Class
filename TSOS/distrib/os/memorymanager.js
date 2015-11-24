@@ -185,13 +185,22 @@ var TSOS;
             // Return dword value fliped, or -1 on invalid start address
             return dword;
         };
+        //          CR_FILE_NOT_FOUND on file not found,
+        //          CR_DRIVE_NOT_FORMATED if drive not formatted,
+        //          CR_DID_NOT_WRITE_ALL_DATA  if text uses more space than available.
+        //          CR_CORRUPTED_FILE_BLOCK if missing a file block
+        //          CR_FILE_LENGTH_TO_LONG if file name to long,
+        //          CR_EMPTY_FILE_NAME if empty file name,
+        //          CR_FILE_DIRECTORY_FULL  if no more space in file directory,
+        //          CR_DRIVE_FULL if no free blocks.
+        //          CR_FILE_NOT_FOUND if file not in directory
         MemoryManager.prototype.loadToHDDBytes = function (data, pid) {
             // Inits
             var fname;
             var ret;
             var error = false;
             var val;
-            var data = [];
+            var wdata = [];
             // Create swap file name
             fname = "~proc-" + pid.toString();
             // Try to create file
@@ -213,13 +222,13 @@ var TSOS;
                 // Makes sure its 256 bytes.
                 for (var i = 0; i < _MemoryPartitionSize; i++) {
                     if (i < data.length) {
-                        data.push(data[i]);
+                        wdata.push(data[i]);
                     }
                     else
-                        data.push(0);
+                        wdata.push(0);
                 }
                 // Write to file
-                ret = _HDDriver.writeToFileBytes(fname, data);
+                ret = _HDDriver.writeToFileBytes(fname, wdata);
                 // If not error, put pid on loaded hdd pid array
                 if (ret == CR_SUCCESS) {
                     this.addHDLoaded(pid, fname);
@@ -346,38 +355,50 @@ var TSOS;
             var oldfname;
             var oldpid;
             var swappid;
+            var savePartToHD = false;
             // Check if valid partition
             if (partition < 0 || partition >= _MemoryPartitions)
-                return -1;
+                return CR_INVALID_PARTITION;
             // Check if hdpid is currently on hd
             if (this.findHDLoadedPID(hdpid) == -1)
-                return -1;
-            // Get partition bytes
-            data = this.getPartitionBytes(partition);
-            // Create swap file
-            aret = this.loadToHDDBytes(data, this.partitionPIDs[partition]);
-            // Return error if could not load
-            if (aret[0] < 0)
-                return -1;
-            // Get swap fname if error occurs and need to delete
-            oldfname = aret[1];
-            oldpid = this.partitionPIDs[partition];
+                return CR_SWAP_FILE_NOT_LOADED;
+            // Check if partition is free
+            if (this.partitionsLoaded[partition]) {
+                // Get partition bytes
+                data = this.getPartitionBytes(partition);
+                // Create swap file
+                aret = this.loadToHDDBytes(data, this.partitionPIDs[partition]);
+                // Return error if could not load
+                if (aret[0] < 0)
+                    return aret[0];
+                // Get swap fname if error occurs and need to delete
+                oldfname = aret[1];
+                oldpid = this.partitionPIDs[partition];
+                // Set save to hd flag
+                savePartToHD = true;
+            }
+            else
+                oldpid = CR_MEMORY_SWAP_FILE_NOT_NEEDED;
             // Get hd swap file bytes
             aret = _HDDriver.readFileBytes(this.findHDLoadedFName(hdpid));
             // Verify valid data
             if (aret[0] < 0) {
-                // Remove created swap file
-                _HDDriver.deleteFile(oldfname);
+                // Remove created swap file if one created
+                if (savePartToHD)
+                    _HDDriver.deleteFile(oldfname);
                 // Return error
-                return -1;
+                return aret[0];
             }
             // Load into partition
             if (!this.loadPartitionBytes(partition, aret[1])) {
                 // Remove created swap file
-                _HDDriver.deleteFile(oldfname);
+                if (savePartToHD)
+                    _HDDriver.deleteFile(oldfname);
                 // Return error
-                return -1;
+                return CR_PARTITION_NOT_LOADED;
             }
+            // Set partition in use
+            this.partitionsLoaded[partition] = true;
             // Change loaded pid
             this.partitionPIDs[partition] = hdpid;
             // Remove old swap file

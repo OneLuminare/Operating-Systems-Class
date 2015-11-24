@@ -19,6 +19,7 @@ module TSOS {
                     public Acc : number = 0,
                     public zFlag : number = 0,
                     public created : Date = new Date(),
+                    public priority : number = 10,
                     public onHD : boolean = false,
                     public hdFileName : string = "",
                     public turnAroundCycles : number = 0,
@@ -35,7 +36,7 @@ module TSOS {
             return "pid: " + this.pid.toString() + " base: " + this.base.toString(16) + " limit: " + this.limit.toString(16)
                 + " PC: " + this.PC.toString(16) + " xReg: " + this.xReg.toString(16) + " yReg: " + this.yReg.toString(16)
                 + " Acc: " + this.Acc.toString(16) + " zFlag: " + this.zFlag.toString(16) + " created: " + TSOS.Utils.timeString(this.created)
-                + " Turnaround Time: " + this.turnAroundCycles + " cycles Wait Time: "  + this.waitCycles + " cycles" ;
+                + "Priority: " + this.priority.toString() + " Turnaround Time: " + this.turnAroundCycles + " cycles Wait Time: "  + this.waitCycles + " cycles" ;
 
         }
     }
