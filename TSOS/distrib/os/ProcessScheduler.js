@@ -305,8 +305,12 @@ var TSOS;
                 pcb.lastContextSwitchCycle = _OSclock;
                 // Check if method is priority
                 if (_ScheduleMethod == SM_PRIORITY) {
-                    if (this.isHigherPriorityProcess(pcb.priority))
+                    if (this.isHigherPriorityProcess(this.runningProcess.priority)) {
                         this.contextSwitch();
+                    }
+                    else {
+                        TSOS.Control.updateReadyQueueDisplay();
+                    }
                 }
                 else
                     TSOS.Control.updateReadyQueueDisplay();
@@ -454,6 +458,7 @@ var TSOS;
                     else {
                         // Get lowest (highest) priority process
                         pcb = this.highestPriorityInReadyQueue();
+                        this.removeFromReadyQueue(pcb.pid);
                     }
                     // Check if swap file
                     if (pcb.onHD) {
@@ -521,6 +526,7 @@ var TSOS;
                     else {
                         // Get lowest (highest) priority process
                         pcb = this.highestPriorityInReadyQueue();
+                        this.removeFromReadyQueue(pcb.pid);
                     }
                     pcb.waitCycles += _OSclock - pcb.lastContextSwitchCycle;
                     // Check if swap file

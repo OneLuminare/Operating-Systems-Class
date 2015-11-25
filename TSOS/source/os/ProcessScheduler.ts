@@ -415,8 +415,14 @@ module TSOS {
                 // Check if method is priority
                 if( _ScheduleMethod == SM_PRIORITY )
                 {
-                    if( this.isHigherPriorityProcess(pcb.priority) )
+                    if( this.isHigherPriorityProcess(this.runningProcess.priority) )
+                    {
                         this.contextSwitch();
+                    }
+                    else
+                    {
+                        TSOS.Control.updateReadyQueueDisplay();
+                    }
                 }
                 else
                     TSOS.Control.updateReadyQueueDisplay();
@@ -495,6 +501,7 @@ module TSOS {
                     pcb.Acc = _CPU.Acc;
 
 
+
                     // Set partition free
                     var part = _MemoryManager.partitionFromBase(pcb.base);
                     _MemoryManager.freePartition(part);
@@ -539,6 +546,7 @@ module TSOS {
             // Check if not null pcb
             if (pcb != null)
             {
+
                 // Compute turnaround time
                 pcb.turnAroundCycles = _OSclock - pcb.startCycle;
 
@@ -619,7 +627,6 @@ module TSOS {
                     pcb.lastContextSwitchCycle = _OSclock;
 
 
-
                     if( _ScheduleMethod != SM_PRIORITY )
                     {
                         // Get next process
@@ -629,6 +636,8 @@ module TSOS {
                     {
                         // Get lowest (highest) priority process
                         pcb = this.highestPriorityInReadyQueue();
+                        this.removeFromReadyQueue(pcb.pid);
+
                     }
 
                     // Check if swap file
@@ -732,6 +741,7 @@ module TSOS {
                     {
                         // Get lowest (highest) priority process
                         pcb = this.highestPriorityInReadyQueue();
+                        this.removeFromReadyQueue(pcb.pid);
                     }
 
                     pcb.waitCycles += _OSclock - pcb.lastContextSwitchCycle;

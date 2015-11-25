@@ -267,7 +267,9 @@ var TSOS;
             hdr.insertCell().innerHTML = '<b>' + 'ZFlag' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Priority' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
+            row.insertCell().innerHTML = '-';
             row.insertCell().innerHTML = '-';
             row.insertCell().innerHTML = '-';
             row.insertCell().innerHTML = '-';
@@ -289,6 +291,7 @@ var TSOS;
             var zflag = "-";
             var base = "-";
             var limit = "-";
+            var pri = "-";
             var created = "-";
             var pcb = _ProcessScheduler.runningProcess;
             if (pcb != null) {
@@ -300,6 +303,7 @@ var TSOS;
                 zflag = TSOS.Utils.padString(pcb.zFlag.toString(16), 2).toUpperCase();
                 base = TSOS.Utils.padString(pcb.base.toString(16), 4).toUpperCase();
                 limit = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16), 4).toUpperCase();
+                pri = TSOS.Utils.padString(pcb.priority.toString(16), 2).toUpperCase();
                 created = TSOS.Utils.timeString(pcb.created);
             }
             row.cells.item(0).innerHTML = pid;
@@ -310,7 +314,8 @@ var TSOS;
             row.cells.item(5).innerHTML = zflag;
             row.cells.item(6).innerHTML = base;
             row.cells.item(7).innerHTML = limit;
-            row.cells.item(8).innerHTML = created;
+            row.cells.item(8).innerHTML = pri;
+            row.cells.item(9).innerHTML = created;
         };
         Control.createReadyQueueDisplay = function () {
             var tbl = document.getElementById("tblReadyQueue");
@@ -324,6 +329,7 @@ var TSOS;
             hdr.insertCell().innerHTML = '<b>' + 'ZFlag' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Priority' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'On HD' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Swap File' + '</b>';
@@ -338,7 +344,9 @@ var TSOS;
             row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
             row = tbl.insertRow();
+            row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
@@ -373,16 +381,18 @@ var TSOS;
                         if (pcb.onHD) {
                             row.cells.item(6).innerHTML = TSOS.Utils.padString(pcb.base.toString(16), 2).toUpperCase();
                             row.cells.item(7).innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16), 2).toUpperCase();
-                            row.cells.item(8).innerHTML = TSOS.Utils.timeString(pcb.created);
-                            row.cells.item(9).innerHTML = "True";
-                            row.cells.item(10).innerHTML = pcb.hdFileName;
+                            row.cells.item(8).innerHTML = TSOS.Utils.padString(pcb.priority.toString(), 2).toUpperCase();
+                            row.cells.item(9).innerHTML = TSOS.Utils.timeString(pcb.created);
+                            row.cells.item(10).innerHTML = "True";
+                            row.cells.item(11).innerHTML = pcb.hdFileName;
                         }
                         else {
                             row.cells.item(6).innerHTML = TSOS.Utils.padString(pcb.base.toString(16), 4).toUpperCase();
                             row.cells.item(7).innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16), 4).toUpperCase();
-                            row.cells.item(8).innerHTML = TSOS.Utils.timeString(pcb.created);
-                            row.cells.item(9).innerHTML = "False";
-                            row.cells.item(10).innerHTML = '-';
+                            row.cells.item(8).innerHTML = TSOS.Utils.padString(pcb.priority.toString(), 2).toUpperCase();
+                            row.cells.item(9).innerHTML = TSOS.Utils.timeString(pcb.created);
+                            row.cells.item(10).innerHTML = "False";
+                            row.cells.item(11).innerHTML = '-';
                         }
                     }
                     else {
@@ -396,6 +406,7 @@ var TSOS;
                         if (pcb.onHD) {
                             row.insertCell().innerHTML = TSOS.Utils.padString(pcb.base.toString(16), 2).toUpperCase();
                             row.insertCell().innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16), 2).toUpperCase();
+                            row.insertCell().innerHTML = TSOS.Utils.padString(pcb.priority.toString(), 2).toUpperCase();
                             row.insertCell().innerHTML = TSOS.Utils.timeString(pcb.created);
                             row.insertCell().innerHTML = "True";
                             row.insertCell().innerHTML = pcb.hdFileName;
@@ -403,6 +414,7 @@ var TSOS;
                         else {
                             row.insertCell().innerHTML = TSOS.Utils.padString(pcb.base.toString(16), 4).toUpperCase();
                             row.insertCell().innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16), 4).toUpperCase();
+                            row.insertCell().innerHTML = TSOS.Utils.padString(pcb.priority.toString(), 2).toUpperCase();
                             row.insertCell().innerHTML = TSOS.Utils.timeString(pcb.created);
                             row.insertCell().innerHTML = "False";
                             row.insertCell().innerHTML = '-';
@@ -427,6 +439,7 @@ var TSOS;
                 row.cells.item(8).innerHTML = "-";
                 row.cells.item(9).innerHTML = "-";
                 row.cells.item(10).innerHTML = "-";
+                row.cells.item(11).innerHTML = "-";
             }
             while (tbl.rows.length > 3)
                 tbl.deleteRow(tbl.rows.length - 1);
@@ -434,7 +447,6 @@ var TSOS;
         Control.createTerminatedQueueDisplay = function () {
             var tbl = document.getElementById("tblTerminatedQueue");
             var hdr = tbl.insertRow();
-            var row = tbl.insertRow();
             hdr.insertCell().innerHTML = '<b>' + 'PID' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'PC' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Acc' + '</b>';
@@ -443,6 +455,7 @@ var TSOS;
             hdr.insertCell().innerHTML = '<b>' + 'ZFlag' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Priority' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Turn Around Time' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Wait Time' + '</b>';
@@ -465,6 +478,7 @@ var TSOS;
                 row.insertCell().innerHTML = TSOS.Utils.padString(pcb.zFlag.toString(16), 2);
                 row.insertCell().innerHTML = TSOS.Utils.padString(pcb.base.toString(16), 2);
                 row.insertCell().innerHTML = TSOS.Utils.padString((pcb.limit + pcb.base).toString(16), 2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.priority.toString(), 2);
                 row.insertCell().innerHTML = TSOS.Utils.timeString(pcb.created);
                 row.insertCell().innerHTML = TSOS.Utils.padString(pcb.turnAroundCycles.toString(), 2);
                 row.insertCell().innerHTML = TSOS.Utils.padString(pcb.waitCycles.toString(), 2);

@@ -358,8 +358,10 @@ module TSOS {
             hdr.insertCell().innerHTML = '<b>' + 'ZFlag' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Priority' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
 
+            row.insertCell().innerHTML = '-';
             row.insertCell().innerHTML = '-';
             row.insertCell().innerHTML = '-';
             row.insertCell().innerHTML = '-';
@@ -383,6 +385,7 @@ module TSOS {
             var zflag = "-";
             var base = "-";
             var limit = "-";
+            var pri = "-";
             var created = "-";
 
             var pcb = _ProcessScheduler.runningProcess;
@@ -397,6 +400,7 @@ module TSOS {
                 zflag = TSOS.Utils.padString(pcb.zFlag.toString(16),2).toUpperCase();
                 base = TSOS.Utils.padString(pcb.base.toString(16),4).toUpperCase();
                 limit = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16),4).toUpperCase();
+                pri = TSOS.Utils.padString(pcb.priority.toString(16),2).toUpperCase();
                 created = TSOS.Utils.timeString(pcb.created);
             }
 
@@ -409,7 +413,8 @@ module TSOS {
             (<HTMLTableCellElement>row.cells.item(5)).innerHTML = zflag;
             (<HTMLTableCellElement>row.cells.item(6)).innerHTML = base;
             (<HTMLTableCellElement>row.cells.item(7)).innerHTML = limit;
-            (<HTMLTableCellElement>row.cells.item(8)).innerHTML = created;
+            (<HTMLTableCellElement>row.cells.item(8)).innerHTML = pri;
+            (<HTMLTableCellElement>row.cells.item(9)).innerHTML = created;
         }
 
         public static createReadyQueueDisplay() : void
@@ -426,6 +431,7 @@ module TSOS {
             hdr.insertCell().innerHTML = '<b>' + 'ZFlag' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Priority' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'On HD' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Swap File' + '</b>';
@@ -441,9 +447,11 @@ module TSOS {
             row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
+            row.insertCell().innerHTML = "-";
 
             row = (<HTMLTableRowElement>tbl.insertRow());
 
+            row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
             row.insertCell().innerHTML = "-";
@@ -493,17 +501,19 @@ module TSOS {
                         {
                             (<HTMLTableCellElement>row.cells.item(6)).innerHTML = TSOS.Utils.padString(pcb.base.toString(16),2).toUpperCase();
                             (<HTMLTableCellElement>row.cells.item(7)).innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16),2).toUpperCase();
-                            (<HTMLTableCellElement>row.cells.item(8)).innerHTML = TSOS.Utils.timeString(pcb.created);
-                            (<HTMLTableCellElement>row.cells.item(9)).innerHTML = "True";
-                            (<HTMLTableCellElement>row.cells.item(10)).innerHTML = pcb.hdFileName;
+                            (<HTMLTableCellElement>row.cells.item(8)).innerHTML = TSOS.Utils.padString(pcb.priority.toString(),2).toUpperCase();
+                            (<HTMLTableCellElement>row.cells.item(9)).innerHTML = TSOS.Utils.timeString(pcb.created);
+                            (<HTMLTableCellElement>row.cells.item(10)).innerHTML = "True";
+                            (<HTMLTableCellElement>row.cells.item(11)).innerHTML = pcb.hdFileName;
                         }
                         else
                         {
                             (<HTMLTableCellElement>row.cells.item(6)).innerHTML = TSOS.Utils.padString(pcb.base.toString(16),4).toUpperCase();
                             (<HTMLTableCellElement>row.cells.item(7)).innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16),4).toUpperCase();
-                            (<HTMLTableCellElement>row.cells.item(8)).innerHTML = TSOS.Utils.timeString(pcb.created);
-                            (<HTMLTableCellElement>row.cells.item(9)).innerHTML = "False";
-                            (<HTMLTableCellElement>row.cells.item(10)).innerHTML = '-';
+                            (<HTMLTableCellElement>row.cells.item(8)).innerHTML = TSOS.Utils.padString(pcb.priority.toString(),2).toUpperCase();
+                            (<HTMLTableCellElement>row.cells.item(9)).innerHTML = TSOS.Utils.timeString(pcb.created);
+                            (<HTMLTableCellElement>row.cells.item(10)).innerHTML = "False";
+                            (<HTMLTableCellElement>row.cells.item(11)).innerHTML = '-';
                         }
                     }
                     else
@@ -523,6 +533,7 @@ module TSOS {
                         {
                             (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.base.toString(16),2).toUpperCase();
                             (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16),2).toUpperCase();
+                            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.priority.toString(),2).toUpperCase();
                             (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.timeString(pcb.created);
                             (<HTMLTableCellElement>row.insertCell()).innerHTML = "True";
                             (<HTMLTableCellElement>row.insertCell()).innerHTML = pcb.hdFileName;
@@ -531,6 +542,7 @@ module TSOS {
                         {
                             (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.base.toString(16),4).toUpperCase();
                             (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString((pcb.base + pcb.limit).toString(16),4).toUpperCase();
+                            (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padString(pcb.priority.toString(),2).toUpperCase();
                             (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.timeString(pcb.created);
                             (<HTMLTableCellElement>row.insertCell()).innerHTML = "False";
                             (<HTMLTableCellElement>row.insertCell()).innerHTML = '-';
@@ -564,6 +576,7 @@ module TSOS {
                 (<HTMLTableCellElement>row.cells.item(8)).innerHTML = "-";
                 (<HTMLTableCellElement>row.cells.item(9)).innerHTML = "-";
                 (<HTMLTableCellElement>row.cells.item(10)).innerHTML = "-";
+                (<HTMLTableCellElement>row.cells.item(11)).innerHTML = "-";
             }
 
             while(tbl.rows.length > 3)
@@ -574,7 +587,6 @@ module TSOS {
         {
             var tbl = (<HTMLTableElement>document.getElementById("tblTerminatedQueue"));
             var hdr = (<HTMLTableRowElement>tbl.insertRow());
-            var row : HTMLTableRowElement = (<HTMLTableRowElement>tbl.insertRow());
 
             hdr.insertCell().innerHTML = '<b>' + 'PID' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'PC' + '</b>';
@@ -584,6 +596,7 @@ module TSOS {
             hdr.insertCell().innerHTML = '<b>' + 'ZFlag' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Priority' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Turn Around Time' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Wait Time' + '</b>';
@@ -614,6 +627,7 @@ module TSOS {
                 row.insertCell().innerHTML = TSOS.Utils.padString(pcb.zFlag.toString(16),2);
                 row.insertCell().innerHTML = TSOS.Utils.padString(pcb.base.toString(16),2);
                 row.insertCell().innerHTML = TSOS.Utils.padString((pcb.limit + pcb.base).toString(16),2);
+                row.insertCell().innerHTML = TSOS.Utils.padString(pcb.priority.toString(),2);
                 row.insertCell().innerHTML = TSOS.Utils.timeString(pcb.created);
                 row.insertCell().innerHTML = TSOS.Utils.padString(pcb.turnAroundCycles.toString(),2);
                 row.insertCell().innerHTML = TSOS.Utils.padString(pcb.waitCycles.toString(),2);
