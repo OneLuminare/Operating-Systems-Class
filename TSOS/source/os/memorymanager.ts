@@ -253,7 +253,7 @@ module TSOS
         //          CR_DRIVE_FULL if no free blocks.
 
         //          CR_FILE_NOT_FOUND if file not in directory
-        public loadToHDDBytes(data : number[],pid:number) : any[]
+        public loadToHDDBytes(data : number[],pid:number, updateHDDisplay : boolean = true) : any[]
         {
             // Inits
             var fname : string;
@@ -266,7 +266,7 @@ module TSOS
             fname = "~proc-" + pid.toString();
 
             // Try to create file
-            ret = _HDDriver.createFile(fname);
+            ret = _HDDriver.createFile(fname,false);
 
 
             // Keep trying until file created or error,
@@ -277,7 +277,7 @@ module TSOS
                 if( ret == CR_DUPLICATE_FILE_NAME)
                 {
                     fname = "~" + fname;
-                    ret = _HDDriver.createFile(fname);
+                    ret = _HDDriver.createFile(fname,false);
                 }
                 // Else error stop
                 else
@@ -301,7 +301,7 @@ module TSOS
 
 
                 // Write to file
-                ret = _HDDriver.writeToFileBytes(fname,wdata);
+                ret = _HDDriver.writeToFileBytes(fname,wdata,false);
 
                 // If not error, put pid on loaded hdd pid array
                 if( ret == CR_SUCCESS)
@@ -311,12 +311,16 @@ module TSOS
                 }
             }
 
+            // Update hd isplay
+            if( updateHDDisplay )
+                TSOS.Control.updateHardDriveDisplay();
+
 
             // Return array of [ret value, fname]
             return [ret,fname];
         }
 
-        public loadToHDD(source:string,pid : number) : any[]
+        public loadToHDD(source:string,pid : number,updateHDDisplay : boolean = true) : any[]
         {
             // Inits
             var fname : string;
@@ -330,7 +334,7 @@ module TSOS
             fname = "~proc-" + pid.toString();
 
             // Try to create file
-            ret = _HDDriver.createFile(fname);
+            ret = _HDDriver.createFile(fname,false);
 
 
             // Keep trying until file created or error,
@@ -342,7 +346,7 @@ module TSOS
                 {
 
                     fname = "~" + fname;
-                    ret = _HDDriver.createFile(fname);
+                    ret = _HDDriver.createFile(fname,false);
                 }
                 // Else error stop
                 else
@@ -373,7 +377,7 @@ module TSOS
                 }
 
                 // Write to file
-                ret = _HDDriver.writeToFileBytes(fname,data);
+                ret = _HDDriver.writeToFileBytes(fname,data,false);
 
                 // If not error, put pid on loaded hdd pid array
                 if( ret == CR_SUCCESS)
@@ -383,6 +387,10 @@ module TSOS
                     _Kernel.krnTrace("Created swap file: " + fname);
                 }
             }
+
+            // Update hd isplay
+            if( updateHDDisplay )
+                TSOS.Control.updateHardDriveDisplay();
 
             // Return array of [ret value, fname]
             return [ret,fname];
@@ -506,7 +514,7 @@ module TSOS
                 data = this.getPartitionBytes(partition);
 
                 // Create swap file
-                aret = this.loadToHDDBytes(data, this.partitionPIDs[partition]);
+                aret = this.loadToHDDBytes(data, this.partitionPIDs[partition],false);
 
 
                 // Return error if could not load
@@ -532,7 +540,10 @@ module TSOS
             {
                 // Remove created swap file if one created
                 if( savePartToHD )
-                     _HDDriver.deleteFile(oldfname);
+                     _HDDriver.deleteFile(oldfname,false);
+
+                // Update display
+                TSOS.Control.updateHardDriveDisplay();
 
                 // Return error
                 return aret[0];
@@ -544,7 +555,10 @@ module TSOS
             {
                 // Remove created swap file
                 if( savePartToHD )
-                    _HDDriver.deleteFile(oldfname);
+                    _HDDriver.deleteFile(oldfname,false);
+
+                // Update display
+                TSOS.Control.updateHardDriveDisplay();
 
                 // Return error
                 return CR_PARTITION_NOT_LOADED;
@@ -557,28 +571,33 @@ module TSOS
             this.partitionPIDs[partition] = hdpid;
 
             // Remove old swap file
-            this.removeSwapFile(hdpid);
+            this.removeSwapFile(hdpid,false);
+
+            // Update display
+            TSOS.Control.updateHardDriveDisplay();
 
             return oldpid;
         }
 
-        public removeSwapFile(pid : number) : boolean
+        public removeSwapFile(pid : number, update : boolean = true) : boolean
         {
             // Inits
             var index;
             var ret = false;
+            var oldfname;
 
             index = this.findHDLoadedPID(pid);
             if( index != -1)
             {
-                _HDDriver.deleteFile(this.hdLoadedFNames[index]);
+                oldfname = this.hdLoadedFNames[index];
+                _HDDriver.deleteFile(oldfname,update);
 
                 this.removeHDLoaded(pid);
 
                 ret = true;
-            }
 
-            _Kernel.krnTrace("Removed swap file : " + this.hdLoadedFNames[index]);
+                _Kernel.krnTrace("Removed swap file : " + oldfname);
+            }
 
             return ret;
         }

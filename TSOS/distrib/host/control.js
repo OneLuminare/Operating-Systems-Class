@@ -27,6 +27,7 @@ var TSOS;
     var Control = (function () {
         function Control() {
         }
+        // Document init method
         Control.hostInit = function () {
             // This is called from index.html's onLoad event via the onDocumentLoad function pointer.
             // Get a global reference to the canvas.  TODO: Should we move this stuff into a Display Device Driver?
@@ -86,10 +87,10 @@ var TSOS;
             _hardwareClockID = setInterval(TSOS.Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
             // .. and call the OS Kernel Bootstrap routine.
             _Kernel = new TSOS.Kernel();
-            // Creae new hard drive driver with:
-            // 4 tracks, 8 sectors, and 8 blocks per sector. Sectors are 64 bytes long.
-            // totals 16,384 bytes
-            _HDDriver = new TSOS.HardDriveDriver(4, 8, 8, 64);
+            // Set status
+            this.updateHostStatus("OS running.");
+            _Kernel.krnBootstrap(); // _GLaDOS.afterStartup() will get called in there, if configured.
+            // If not first start, create display tables
             if (!_FirstStart) {
                 // Create table
                 this.createMemoryDisplay();
@@ -100,9 +101,6 @@ var TSOS;
                 this.createHardDriveDisplay();
                 _FirstStart = true;
             }
-            // Set status
-            this.updateHostStatus("OS running.");
-            _Kernel.krnBootstrap(); // _GLaDOS.afterStartup() will get called in there, if configured.
         };
         Control.hostBtnHaltOS_click = function (btn) {
             Control.hostLog("Emergency halt", "host");
@@ -457,8 +455,8 @@ var TSOS;
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Priority' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'Turn Around Time' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'Wait Time' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Turn Around' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Wait' + '</b>';
         };
         Control.updateTerminatedQueueDisplay = function () {
             var tbl = document.getElementById("tblTerminatedQueue");

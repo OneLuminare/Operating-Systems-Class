@@ -617,7 +617,15 @@ module TSOS {
 
                     if( args.length > 0 )
                         if( !isNaN(args[0]))
-                            pri = args[0]
+                        {
+                            pri = parseInt(args[0]);
+
+                            if( pri < 0 )
+                            {
+                                pri = 0 - pri;
+                                _StdOut.putText("Changed negative priority to " + pri.toString() + ".");
+                            }
+                        }
 
                     // Create process
                     _Kernel.CreateProcess(input,pri);

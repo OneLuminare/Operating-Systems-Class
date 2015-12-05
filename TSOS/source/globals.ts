@@ -56,6 +56,8 @@ const SM_ROUND_ROBIN = 500;
 const SM_FJF = 501;
 const SM_PRIORITY = 502;
 
+// Scrolling Const
+const scrollPoints  = 23.9;
 
 //
 // Global Variables

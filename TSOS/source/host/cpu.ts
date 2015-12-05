@@ -301,7 +301,6 @@ module TSOS {
 
                 }
 
-                _Kernel.krnTrace('Value : ' + value.toString(16) + ' XReg :' + this.Xreg.toString(16) + ' ZFlag : ' + this.Zflag);
             }
             // Else memory access violation return false
             else
@@ -528,8 +527,6 @@ module TSOS {
             var inst : string = _Memory.getAddress(address).toString(16);
             var dword : number = 0;
 
-
-
             // Switch on instruction
             switch (inst)
             {
@@ -628,9 +625,6 @@ module TSOS {
                             // Run instruction
                             if(!this.ADC(dword))
                             {
-                                // Send memory violation interrupt
-                                _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
-
                                 // Stop executing
                                 this.isExecuting = false;
                             }
@@ -830,7 +824,7 @@ module TSOS {
                     // Else unknown op code
                     default:
                         // Send unknown op code interrupt
-                        _KernelInterruptQueue.enqueue(new Interrupt(UNKNOWN_OP_CODE_IRQ, new Array(this.base, this.PC)));
+                        _KernelInterruptQueue.enqueue(new Interrupt(UNKNOWN_OP_CODE_IRQ, [this.base, this.PC, inst]));
 
                         // Stop executing
                         this.isExecuting = false;
@@ -840,13 +834,16 @@ module TSOS {
             // Get next instruction address
             address = this.base + this.PC;
 
+
             // check if this address is with in memory, and update mem with highlight code
-            if( (address < limitAddress) && ((_TimerCounter + 1) != _Quantum) )
+            if( (address < limitAddress) && ((_TimerCounter + 1) != _Quantum) || _ScheduleMethod != SM_ROUND_ROBIN )
             {
                     inst = _Memory.getAddress(address).toString(16);
 
                     // Update memory display with highlighted code
                     TSOS.Control.updateMemoryDisplay(address, this.getParamCount(inst));
+
+                    document.getElementById("scrollMemory").scrollTop = ((this.base ) / 8) * scrollPoints;
             }
             // Else update mem with out highlight code
             else
@@ -854,6 +851,7 @@ module TSOS {
 
                 TSOS.Control.updateMemoryDisplay();
             }
+
 
 
 

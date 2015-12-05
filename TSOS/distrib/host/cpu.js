@@ -219,7 +219,6 @@ var TSOS;
                 else {
                     this.Zflag = 0;
                 }
-                _Kernel.krnTrace('Value : ' + value.toString(16) + ' XReg :' + this.Xreg.toString(16) + ' ZFlag : ' + this.Zflag);
             }
             else
                 return false;
@@ -455,8 +454,6 @@ var TSOS;
                         dword = _MemoryManager.getDWordLittleEndian(address + 1, limitAddress);
                         // Run instruction
                         if (!this.ADC(dword)) {
-                            // Send memory violation interrupt
-                            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, new Array(this.base, dword)));
                             // Stop executing
                             this.isExecuting = false;
                         }
@@ -600,7 +597,7 @@ var TSOS;
                 // Else unknown op code
                 default:
                     // Send unknown op code interrupt
-                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(UNKNOWN_OP_CODE_IRQ, new Array(this.base, this.PC)));
+                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(UNKNOWN_OP_CODE_IRQ, [this.base, this.PC, inst]));
                     // Stop executing
                     this.isExecuting = false;
                     break;
@@ -608,10 +605,11 @@ var TSOS;
             // Get next instruction address
             address = this.base + this.PC;
             // check if this address is with in memory, and update mem with highlight code
-            if ((address < limitAddress) && ((_TimerCounter + 1) != _Quantum)) {
+            if ((address < limitAddress) && ((_TimerCounter + 1) != _Quantum) || _ScheduleMethod != SM_ROUND_ROBIN) {
                 inst = _Memory.getAddress(address).toString(16);
                 // Update memory display with highlighted code
                 TSOS.Control.updateMemoryDisplay(address, this.getParamCount(inst));
+                document.getElementById("scrollMemory").scrollTop = ((this.base) / 8) * scrollPoints;
             }
             else {
                 TSOS.Control.updateMemoryDisplay();

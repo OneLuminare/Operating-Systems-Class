@@ -194,7 +194,8 @@ var TSOS;
         //          CR_FILE_DIRECTORY_FULL  if no more space in file directory,
         //          CR_DRIVE_FULL if no free blocks.
         //          CR_FILE_NOT_FOUND if file not in directory
-        MemoryManager.prototype.loadToHDDBytes = function (data, pid) {
+        MemoryManager.prototype.loadToHDDBytes = function (data, pid, updateHDDisplay) {
+            if (updateHDDisplay === void 0) { updateHDDisplay = true; }
             // Inits
             var fname;
             var ret;
@@ -204,14 +205,14 @@ var TSOS;
             // Create swap file name
             fname = "~proc-" + pid.toString();
             // Try to create file
-            ret = _HDDriver.createFile(fname);
+            ret = _HDDriver.createFile(fname, false);
             // Keep trying until file created or error,
             // while adding a ~ to fname to avoid duplicates
             while ((ret != CR_SUCCESS) && !error) {
                 // IF duplicate, add ~ to fname and try again
                 if (ret == CR_DUPLICATE_FILE_NAME) {
                     fname = "~" + fname;
-                    ret = _HDDriver.createFile(fname);
+                    ret = _HDDriver.createFile(fname, false);
                 }
                 else
                     error = true;
@@ -228,17 +229,21 @@ var TSOS;
                         wdata.push(0);
                 }
                 // Write to file
-                ret = _HDDriver.writeToFileBytes(fname, wdata);
+                ret = _HDDriver.writeToFileBytes(fname, wdata, false);
                 // If not error, put pid on loaded hdd pid array
                 if (ret == CR_SUCCESS) {
                     this.addHDLoaded(pid, fname);
                     _Kernel.krnTrace("Created swap file: " + fname);
                 }
             }
+            // Update hd isplay
+            if (updateHDDisplay)
+                TSOS.Control.updateHardDriveDisplay();
             // Return array of [ret value, fname]
             return [ret, fname];
         };
-        MemoryManager.prototype.loadToHDD = function (source, pid) {
+        MemoryManager.prototype.loadToHDD = function (source, pid, updateHDDisplay) {
+            if (updateHDDisplay === void 0) { updateHDDisplay = true; }
             // Inits
             var fname;
             var ret;
@@ -249,14 +254,14 @@ var TSOS;
             // Create swap file name
             fname = "~proc-" + pid.toString();
             // Try to create file
-            ret = _HDDriver.createFile(fname);
+            ret = _HDDriver.createFile(fname, false);
             // Keep trying until file created or error,
             // while adding a ~ to fname to avoid duplicates
             while ((ret != CR_SUCCESS) && !error) {
                 // IF duplicate, add ~ to fname and try again
                 if (ret == CR_DUPLICATE_FILE_NAME) {
                     fname = "~" + fname;
-                    ret = _HDDriver.createFile(fname);
+                    ret = _HDDriver.createFile(fname, false);
                 }
                 else
                     error = true;
@@ -278,13 +283,16 @@ var TSOS;
                         data.push(0);
                 }
                 // Write to file
-                ret = _HDDriver.writeToFileBytes(fname, data);
+                ret = _HDDriver.writeToFileBytes(fname, data, false);
                 // If not error, put pid on loaded hdd pid array
                 if (ret == CR_SUCCESS) {
                     this.addHDLoaded(pid, fname);
                     _Kernel.krnTrace("Created swap file: " + fname);
                 }
             }
+            // Update hd isplay
+            if (updateHDDisplay)
+                TSOS.Control.updateHardDriveDisplay();
             // Return array of [ret value, fname]
             return [ret, fname];
         };
@@ -367,7 +375,7 @@ var TSOS;
                 // Get partition bytes
                 data = this.getPartitionBytes(partition);
                 // Create swap file
-                aret = this.loadToHDDBytes(data, this.partitionPIDs[partition]);
+                aret = this.loadToHDDBytes(data, this.partitionPIDs[partition], false);
                 // Return error if could not load
                 if (aret[0] < 0)
                     return aret[0];
@@ -385,7 +393,9 @@ var TSOS;
             if (aret[0] < 0) {
                 // Remove created swap file if one created
                 if (savePartToHD)
-                    _HDDriver.deleteFile(oldfname);
+                    _HDDriver.deleteFile(oldfname, false);
+                // Update display
+                TSOS.Control.updateHardDriveDisplay();
                 // Return error
                 return aret[0];
             }
@@ -393,7 +403,9 @@ var TSOS;
             if (!this.loadPartitionBytes(partition, aret[1])) {
                 // Remove created swap file
                 if (savePartToHD)
-                    _HDDriver.deleteFile(oldfname);
+                    _HDDriver.deleteFile(oldfname, false);
+                // Update display
+                TSOS.Control.updateHardDriveDisplay();
                 // Return error
                 return CR_PARTITION_NOT_LOADED;
             }
@@ -402,20 +414,25 @@ var TSOS;
             // Change loaded pid
             this.partitionPIDs[partition] = hdpid;
             // Remove old swap file
-            this.removeSwapFile(hdpid);
+            this.removeSwapFile(hdpid, false);
+            // Update display
+            TSOS.Control.updateHardDriveDisplay();
             return oldpid;
         };
-        MemoryManager.prototype.removeSwapFile = function (pid) {
+        MemoryManager.prototype.removeSwapFile = function (pid, update) {
+            if (update === void 0) { update = true; }
             // Inits
             var index;
             var ret = false;
+            var oldfname;
             index = this.findHDLoadedPID(pid);
             if (index != -1) {
-                _HDDriver.deleteFile(this.hdLoadedFNames[index]);
+                oldfname = this.hdLoadedFNames[index];
+                _HDDriver.deleteFile(oldfname, update);
                 this.removeHDLoaded(pid);
                 ret = true;
+                _Kernel.krnTrace("Removed swap file : " + oldfname);
             }
-            _Kernel.krnTrace("Removed swap file : " + this.hdLoadedFNames[index]);
             return ret;
         };
         // Loads program into memory. Will change, only one partion at the moment.

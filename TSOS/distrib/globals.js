@@ -50,6 +50,8 @@ var _ScheduleMethod = 500;
 var SM_ROUND_ROBIN = 500;
 var SM_FJF = 501;
 var SM_PRIORITY = 502;
+// Scrolling Const
+var scrollPoints = 23.9;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.

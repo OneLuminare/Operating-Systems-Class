@@ -131,6 +131,7 @@ module TSOS
         // to remaining bits. File name can be no longer than 60 characters.
         //
         // Params:  fileName <string> - Name of file
+        //          updateHDDisplay - if true updates display table
         // Returns: CR_SUCCESS on success,
         //          CR_DRIVE_NOT_FORMATED if drive not formated,
         //          CR_FILE_LENGTH_TO_LONG if file name to long,
@@ -138,7 +139,7 @@ module TSOS
         //          CR_FILE_DIRECTORY_FULL  if no more space in file directory,
         //          CR_DUPLICATE_FILE_NAME if duplicate file name,
         //          CR_DRIVE_FULL if no free blocks.
-        public createFile(fileName : string) : number
+        public createFile(fileName : string, updateHDDisplay : boolean = true) : number
         {
             // Inits
             var firstBlock : TSOS.FileBlock = null;
@@ -193,7 +194,8 @@ module TSOS
 
 
             // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
+            if( updateHDDisplay )
+                TSOS.Control.updateHardDriveDisplay();
 
             // Return success value
             return CR_SUCCESS;
@@ -203,12 +205,13 @@ module TSOS
         //
         // Params:  fileName <string> - name of file
         //          text <string> - text to be written
+        //          updateHDDisplay - if true updates display table
         // Returns: CR_SUCCESS on success,
         //          CR_FILE_NOT_FOUND on file not found,
         //          CR_DRIVE_NOT_FORMATED if drive not formatted,
         //          CR_DID_NOT_WRITE_ALL_DATA  if text uses more space than available.
         //          CR_CORRUPTED_FILE_BLOCK if missing a file block
-        public writeToFile(fileName : string, text : string) : number
+        public writeToFile(fileName : string, text : string, updateHDDisplay : boolean = true) : number
         {
             // Inits
             var block : TSOS.FileBlock = null;
@@ -328,7 +331,8 @@ module TSOS
             }
 
             // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
+            if( updateHDDisplay )
+                TSOS.Control.updateHardDriveDisplay();
 
             // If drive full return CR_DID_NOT_WRITE_ALL_DATA
             if( driveFull )
@@ -342,12 +346,13 @@ module TSOS
         //
         // Params:  fileName <string> - name of file
         //          text <string> - text to be written
+        //          updateHDDisplay - if true updates display table
         // Returns: CR_SUCCESS on success,
         //          CR_FILE_NOT_FOUND on file not found,
         //          CR_DRIVE_NOT_FORMATED if drive not formatted,
         //          CR_DID_NOT_WRITE_ALL_DATA  if text uses more space than available.
         //          CR_CORRUPTED_FILE_BLOCK if missing a file block
-        public writeToFileBytes(fileName : string, data : number[]) : number
+        public writeToFileBytes(fileName : string, data : number[], updateHDDisplay : boolean = true) : number
         {
             // Inits
             var block : TSOS.FileBlock = null;
@@ -471,7 +476,8 @@ module TSOS
             }
 
             // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
+            if( updateHDDisplay )
+                TSOS.Control.updateHardDriveDisplay();
 
             // If drive full return CR_DID_NOT_WRITE_ALL_DATA
             if( driveFull )
@@ -519,9 +525,6 @@ module TSOS
                 // Get next block
                 fBlock = fBlock.nextBlock();
             }
-
-            // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
 
             // Return file text
             return [CR_SUCCESS,buffer];
@@ -573,9 +576,6 @@ module TSOS
                 fBlock = fBlock.nextBlock();
             }
 
-            // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
-
             // Return file text
             return [CR_SUCCESS,buffer];
 
@@ -585,10 +585,11 @@ module TSOS
         // then does the same for the directory block.
         //
         // Params: fileName <string> - name of file to read
+        //          updateHDDisplay - if true updates display table
         // Returns: CR_SUCCESS on success,
         //          CR_FILE_NOT_FOUND on no file found,
         //          CR_DRIVE_NOT_FORMATED if not formatted
-        public deleteFile(fileName : string) : number
+        public deleteFile(fileName : string, updateHDDisplay : boolean = true) : number
         {
             // Inits
             var dirBlock : TSOS.FileBlock = null;
@@ -622,7 +623,8 @@ module TSOS
             dirBlock.setInUse(false);
 
             // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
+            if( updateHDDisplay )
+                TSOS.Control.updateHardDriveDisplay();
 
             // Return success
             return CR_SUCCESS;
@@ -711,7 +713,6 @@ module TSOS
                 }
             }
 
-            _Kernel.krnTrace("here 3");
             // Return block, or null if no free
             return block;
         }

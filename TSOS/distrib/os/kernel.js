@@ -41,9 +41,15 @@ var TSOS;
             _krnKeyboardDriver = new TSOS.DeviceDriverKeyboard(); // Construct it.
             _krnKeyboardDriver.driverEntry(); // Call the driverEntry() initialization routine.
             this.krnTrace(_krnKeyboardDriver.status);
-            //
-            // ... more?
-            //
+            // Creae new hard drive driver with:
+            // 4 tracks, 8 sectors, and 8 blocks per sector. Sectors are 64 bytes long.
+            // totals 16,384 bytes
+            this.krnTrace("Loading the hard driver device driver.");
+            _HDDriver = new TSOS.HardDriveDriver(4, 8, 8, 64);
+            this.krnTrace("Hard drive device driver loaded with " + _HDDriver.tracks.toString() + " tracks, "
+                + _HDDriver.sectors.toString() + " sectors, " + _HDDriver.blocksPerSector.toString() + " blocks per sector, "
+                + _HDDriver.blockSize.toString() + " byte block size, total space "
+                + (_HDDriver.tracks * _HDDriver.sectors * _HDDriver.blocksPerSector * _HDDriver.blockSize).toString() + " bytes");
             // Enable the OS Interrupts.  (Not the CPU clock interrupt, as that is done in the hardware sim.)
             this.krnTrace("Enabling the interrupts.");
             this.krnEnableInterrupts();
@@ -51,7 +57,6 @@ var TSOS;
             this.krnTrace("Creating and Launching the shell.");
             _OsShell = new TSOS.Shell();
             _OsShell.init();
-            this.krnTrace("cr sh");
             // Finally, initiate student testing protocol.
             if (_GLaDOS) {
                 _GLaDOS.afterStartup();
@@ -136,7 +141,7 @@ var TSOS;
                 case CREATE_PROCESS_IRQ:
                     pcb = _ProcessScheduler.createProcess(params[0], params[1]);
                     if (pcb != null)
-                        _OsShell.outputMessage("Loaded process with PID " + pcb.pid.toString() + ", with priority " + params[1].toString() + ".");
+                        _OsShell.outputMessage("Loaded process with PID " + pcb.pid.toString() + ", with priority " + pcb.priority.toString() + ".");
                     else
                         _OsShell.outputMessage("Memory full. To load more process's, format drive to allow swapping.");
                     break;
@@ -157,9 +162,9 @@ var TSOS;
                 case UNKNOWN_OP_CODE_IRQ:
                     //pcb =  _ProcessScheduler.runningProcess;
                     var pid = _MemoryManager.getLoadedPID(params[0]);
-                    this.krnTrace("Unknown op code at 0x" + TSOS.Utils.padString((params[1]).toString(16), 4) + " in process PID " + pid.toString() + ".");
+                    this.krnTrace("Unknown op code " + params[2] + " at 0x" + TSOS.Utils.padString((params[1]).toString(16), 4) + " in process PID " + pid.toString() + ".");
                     _ProcessScheduler.exitProcess(pid);
-                    _OsShell.outputMessage("Process pid " + pid.toString() + " terminated due to unknown op code at 0x" + TSOS.Utils.padString((params[1]).toString(16), 4) + ".");
+                    _OsShell.outputMessage("Process pid " + pid.toString() + " terminated due to unknown op code " + params[2] + " at 0x" + TSOS.Utils.padString((params[1]).toString(16), 4) + ".");
                     break;
                 case MEMORY_ACCESS_VIOLATION_IRQ:
                     //pcb =  _ProcessScheduler.runningProcess;
@@ -207,6 +212,10 @@ var TSOS;
                     _ProcessScheduler.contextSwitch();
                     break;
                 case CLEAR_MEMORY_IRQ:
+                    if (_ProcessScheduler.runningProcess != null) {
+                        _OsShell.outputMessage("Programs are running, cannot clear memory.");
+                        break;
+                    }
                     if (params < 0) {
                         _MemoryManager.freeAllPartitions(true);
                         _OsShell.outputMessage("Cleared all memory of loaded processess.");
@@ -258,6 +267,11 @@ var TSOS;
                         if (i != 0)
                             msg += " , ";
                         msg += loaded[i].toString();
+                    }
+                    for (i = 0; i < running.length; i++) {
+                        if (i != 0)
+                            msg += " , ";
+                        msg += running[i].toString();
                     }
                     _OsShell.outputMessage(msg);
                     this.krnTrace(msg);

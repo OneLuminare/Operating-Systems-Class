@@ -101,6 +101,7 @@ var TSOS;
         // to remaining bits. File name can be no longer than 60 characters.
         //
         // Params:  fileName <string> - Name of file
+        //          updateHDDisplay - if true updates display table
         // Returns: CR_SUCCESS on success,
         //          CR_DRIVE_NOT_FORMATED if drive not formated,
         //          CR_FILE_LENGTH_TO_LONG if file name to long,
@@ -108,7 +109,8 @@ var TSOS;
         //          CR_FILE_DIRECTORY_FULL  if no more space in file directory,
         //          CR_DUPLICATE_FILE_NAME if duplicate file name,
         //          CR_DRIVE_FULL if no free blocks.
-        HardDriveDriver.prototype.createFile = function (fileName) {
+        HardDriveDriver.prototype.createFile = function (fileName, updateHDDisplay) {
+            if (updateHDDisplay === void 0) { updateHDDisplay = true; }
             // Inits
             var firstBlock = null;
             var directoryBlock = null;
@@ -143,7 +145,8 @@ var TSOS;
             // Clear data in file block
             firstBlock.clearData();
             // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
+            if (updateHDDisplay)
+                TSOS.Control.updateHardDriveDisplay();
             // Return success value
             return CR_SUCCESS;
         };
@@ -151,12 +154,14 @@ var TSOS;
         //
         // Params:  fileName <string> - name of file
         //          text <string> - text to be written
+        //          updateHDDisplay - if true updates display table
         // Returns: CR_SUCCESS on success,
         //          CR_FILE_NOT_FOUND on file not found,
         //          CR_DRIVE_NOT_FORMATED if drive not formatted,
         //          CR_DID_NOT_WRITE_ALL_DATA  if text uses more space than available.
         //          CR_CORRUPTED_FILE_BLOCK if missing a file block
-        HardDriveDriver.prototype.writeToFile = function (fileName, text) {
+        HardDriveDriver.prototype.writeToFile = function (fileName, text, updateHDDisplay) {
+            if (updateHDDisplay === void 0) { updateHDDisplay = true; }
             // Inits
             var block = null;
             var curBlock = new TSOS.FileBlock(0, 0, 0, false);
@@ -240,7 +245,8 @@ var TSOS;
                     block.writeFileHeader(true, -1, -1, -1);
             }
             // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
+            if (updateHDDisplay)
+                TSOS.Control.updateHardDriveDisplay();
             // If drive full return CR_DID_NOT_WRITE_ALL_DATA
             if (driveFull)
                 return CR_DID_NOT_WRITE_ALL_DATA;
@@ -251,12 +257,14 @@ var TSOS;
         //
         // Params:  fileName <string> - name of file
         //          text <string> - text to be written
+        //          updateHDDisplay - if true updates display table
         // Returns: CR_SUCCESS on success,
         //          CR_FILE_NOT_FOUND on file not found,
         //          CR_DRIVE_NOT_FORMATED if drive not formatted,
         //          CR_DID_NOT_WRITE_ALL_DATA  if text uses more space than available.
         //          CR_CORRUPTED_FILE_BLOCK if missing a file block
-        HardDriveDriver.prototype.writeToFileBytes = function (fileName, data) {
+        HardDriveDriver.prototype.writeToFileBytes = function (fileName, data, updateHDDisplay) {
+            if (updateHDDisplay === void 0) { updateHDDisplay = true; }
             // Inits
             var block = null;
             var curBlock = new TSOS.FileBlock(0, 0, 0, false);
@@ -342,7 +350,8 @@ var TSOS;
                     block.writeFileHeader(true, -1, -1, -1);
             }
             // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
+            if (updateHDDisplay)
+                TSOS.Control.updateHardDriveDisplay();
             // If drive full return CR_DID_NOT_WRITE_ALL_DATA
             if (driveFull)
                 return CR_DID_NOT_WRITE_ALL_DATA;
@@ -379,8 +388,6 @@ var TSOS;
                 // Get next block
                 fBlock = fBlock.nextBlock();
             }
-            // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
             // Return file text
             return [CR_SUCCESS, buffer];
         };
@@ -418,8 +425,6 @@ var TSOS;
                 // Get next block
                 fBlock = fBlock.nextBlock();
             }
-            // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
             // Return file text
             return [CR_SUCCESS, buffer];
         };
@@ -427,10 +432,12 @@ var TSOS;
         // then does the same for the directory block.
         //
         // Params: fileName <string> - name of file to read
+        //          updateHDDisplay - if true updates display table
         // Returns: CR_SUCCESS on success,
         //          CR_FILE_NOT_FOUND on no file found,
         //          CR_DRIVE_NOT_FORMATED if not formatted
-        HardDriveDriver.prototype.deleteFile = function (fileName) {
+        HardDriveDriver.prototype.deleteFile = function (fileName, updateHDDisplay) {
+            if (updateHDDisplay === void 0) { updateHDDisplay = true; }
             // Inits
             var dirBlock = null;
             var fBlock = null;
@@ -454,7 +461,8 @@ var TSOS;
             // Set directory block not in use
             dirBlock.setInUse(false);
             // Update hard drive display
-            TSOS.Control.updateHardDriveDisplay();
+            if (updateHDDisplay)
+                TSOS.Control.updateHardDriveDisplay();
             // Return success
             return CR_SUCCESS;
         };
@@ -522,7 +530,6 @@ var TSOS;
                         block = curBlock;
                 }
             }
-            _Kernel.krnTrace("here 3");
             // Return block, or null if no free
             return block;
         };

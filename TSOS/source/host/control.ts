@@ -28,9 +28,10 @@ module TSOS {
 
     export class Control {
 
+        // Data Members
         public static msg : string;
 
-
+        // Document init method
         public static hostInit(): void {
             // This is called from index.html's onLoad event via the onDocumentLoad function pointer.
 
@@ -113,11 +114,12 @@ module TSOS {
             // .. and call the OS Kernel Bootstrap routine.
             _Kernel = new Kernel();
 
-            // Creae new hard drive driver with:
-            // 4 tracks, 8 sectors, and 8 blocks per sector. Sectors are 64 bytes long.
-            // totals 16,384 bytes
-            _HDDriver = new TSOS.HardDriveDriver(4,8,8,64);
+            // Set status
+            this.updateHostStatus("OS running.");
 
+            _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
+
+            // If not first start, create display tables
             if( !_FirstStart )
             {
                 // Create table
@@ -130,13 +132,6 @@ module TSOS {
 
                 _FirstStart = true;
             }
-
-
-
-            // Set status
-            this.updateHostStatus("OS running.");
-
-            _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
         }
 
         public static hostBtnHaltOS_click(btn): void {
@@ -254,6 +249,8 @@ module TSOS {
             var cellIndex : number = 1;
             var paramsLeft : number = params;
             var inParams : boolean = false;
+
+
 
             // Cycle through memory
             for( var i = 0; i < _MemoryMax; i++)
@@ -598,8 +595,8 @@ module TSOS {
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Priority' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Created' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'Turn Around Time' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'Wait Time' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Turn Around' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Wait' + '</b>';
 
         }
 
@@ -644,6 +641,7 @@ module TSOS {
             var row : HTMLTableRowElement = null;
             var cell : HTMLTableCellElement = null;
             var data : string = '00';
+
 
             row = (<HTMLTableRowElement>tbl.insertRow());
 

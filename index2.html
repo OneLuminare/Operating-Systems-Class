@@ -50,7 +50,7 @@
    <!-- Other Routines -->
    <script type="text/javascript" src="TSOS/distrib/utils.js"></script>
    <!-- Uncomment this line below to enable GLaDOS testing -->
-
+    <!--<script type="text/javascript" src="http://www.labouseur.com/courses/os/projects/glados.js"></script>-->
 </head>
 
 <body onload="onDocumentLoad()">
@@ -167,9 +167,9 @@
 
         <!-------------------------------------- Memory/HD Tab List  -------------------------------------------------->
 
-        <ul class="nav nav-tabs">
-            <li class="active"><a data-toggle="tab" href="#divMemory">Memory</a></li>
-            <li><a data-toggle="tab" href="#divHD">Hard Drive</a></li>
+        <ul class="nav nav-tabs" id="MemoryAndHDDTabs">
+            <li class="active" id="tabMemory"><a data-toggle="tab" href="#divMemory">Memory</a></li>
+            <li id="tabHD"><a data-toggle="tab" href="#divHD">Hard Drive</a></li>
         </ul>
 
         <!------------------------------------- Memory/HD Tab Content  ------------------------------------------------>
@@ -177,7 +177,7 @@
         <div class="tab-content">
 
             <div id="divMemory" class="tab-pane fade in active">
-                <div style="border-style:solid;border-width:1px;background-color:white;width:255px;height:208px;overflow:auto;">
+                <div id="scrollMemory" style="border-style:solid;border-width:1px;background-color:white;width:255px;height:208px;overflow:auto;">
                     <table id="tblMemory" style="background-color:white;">
                     </table>
                 </div>
@@ -219,7 +219,7 @@
         </div>
 
         <!--------------------------------- Ready/Terminated Queue Tab List  ------------------------------------------>
-
+        <br>
         <ul class="nav nav-tabs">
             <li class="active"><a data-toggle="tab" href="#divReadyQueue">Ready Queue</a></li>
             <li><a data-toggle="tab" href="#divTerminatedQueue">Terminated</a></li>
@@ -230,14 +230,14 @@
         <div class="tab-content">
 
             <div id="divReadyQueue" class="tab-pane fade in active">
-                <div style="border-style:solid;border-width:1px;background-color:white;width:500px;height:150px;overflow:auto;">
+                <div style="border-style:solid;border-width:1px;background-color:white;width:534px;height:97px;overflow:auto;">
                     <table id="tblReadyQueue" style="background-color:white;">
                     </table>
                 </div>
             </div>
 
             <div id="divTerminatedQueue" class="tab-pane fade">
-                <div style="border-style:solid;border-width:1px;background-color:white;height:120px;overflow:auto;">
+                <div style="border-style:solid;border-width:1px;background-color:white;width:539px;height:100px;overflow:auto;">
                     <table id="tblTerminatedQueue" style="background-color:white">
                     </table>
                 </div>

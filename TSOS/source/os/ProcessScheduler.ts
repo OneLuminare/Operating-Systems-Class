@@ -292,9 +292,6 @@ module TSOS {
                 }
                 else
                 {
-                    // Send interrupt
-                    _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_FULL_IRQ, this.nextPID));
-
                     // Return null
                     return null;
                 }
@@ -719,7 +716,10 @@ module TSOS {
 
                         // Update memory display with highlighted code
                         TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
+
+                        document.getElementById("scrollMemory").scrollTop = ((pcb.base ) / 8) * scrollPoints;
                     }
+
 
                     // Start executing again
                     _CPU.isExecuting = true;
@@ -816,6 +816,7 @@ module TSOS {
                     // Set as running process
                     this.runningProcess = pcb;
 
+
                     if( pcb.PC < pcb.limit )
                     {
 
@@ -824,7 +825,10 @@ module TSOS {
 
                         // Update memory display with highlighted code
                         TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
+
+                        document.getElementById("scrollMemory").scrollTop = ((pcb.base) / 8) * scrollPoints;
                     }
+
 
                     if( _ScheduleMethod == SM_ROUND_ROBIN )
                     {
@@ -867,15 +871,23 @@ module TSOS {
 
         public highestPriorityInReadyQueue() : TSOS.ProcessControlBlock
         {
-            var low = 9999;
+            var low : number = 9999;
             var pcb = null;
+            var curPcb : TSOS.ProcessControlBlock = null;
+            var pri : number = 0;
 
             for( var i = this.readyQueue.q.length - 1; i >= 0; i--)
             {
-                if( this.readyQueue.q[i].priority <= low )
+                curPcb = this.readyQueue.q[i];
+
+                pri = curPcb.priority;
+
+                if( curPcb.priority <= low )
                 {
-                    pcb = this.readyQueue.q[i];
-                    low = pcb.priority;
+
+                    pcb = curPcb;
+
+                    low = curPcb.priority;
                 }
             }
 
@@ -888,8 +900,10 @@ module TSOS {
             var found = false;
 
             for( var i = 0; (i < this.readyQueue.q.length) && !found; i++)
-                if( this.readyQueue.q[i].priority < priority)
+            {
+                if (this.readyQueue.q[i].priority < priority)
                     found = true;
+            }
 
             return found;
         }

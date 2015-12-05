@@ -216,8 +216,6 @@ var TSOS;
                     swapfile = true;
                 }
                 else {
-                    // Send interrupt
-                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_FULL_IRQ, this.nextPID));
                     // Return null
                     return null;
                 }
@@ -511,6 +509,7 @@ var TSOS;
                         var inst = _Memory.getAddress(address).toString(16);
                         // Update memory display with highlighted code
                         TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
+                        document.getElementById("scrollMemory").scrollTop = ((pcb.base) / 8) * scrollPoints;
                     }
                     // Start executing again
                     _CPU.isExecuting = true;
@@ -583,6 +582,7 @@ var TSOS;
                         var inst = _Memory.getAddress(address).toString(16);
                         // Update memory display with highlighted code
                         TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
+                        document.getElementById("scrollMemory").scrollTop = ((pcb.base) / 8) * scrollPoints;
                     }
                     if (_ScheduleMethod == SM_ROUND_ROBIN) {
                         // Turn on timer
@@ -613,19 +613,24 @@ var TSOS;
         ProcessScheduler.prototype.highestPriorityInReadyQueue = function () {
             var low = 9999;
             var pcb = null;
+            var curPcb = null;
+            var pri = 0;
             for (var i = this.readyQueue.q.length - 1; i >= 0; i--) {
-                if (this.readyQueue.q[i].priority <= low) {
-                    pcb = this.readyQueue.q[i];
-                    low = pcb.priority;
+                curPcb = this.readyQueue.q[i];
+                pri = curPcb.priority;
+                if (curPcb.priority <= low) {
+                    pcb = curPcb;
+                    low = curPcb.priority;
                 }
             }
             return pcb;
         };
         ProcessScheduler.prototype.isHigherPriorityProcess = function (priority) {
             var found = false;
-            for (var i = 0; (i < this.readyQueue.q.length) && !found; i++)
+            for (var i = 0; (i < this.readyQueue.q.length) && !found; i++) {
                 if (this.readyQueue.q[i].priority < priority)
                     found = true;
+            }
             return found;
         };
         // Retrieves PID of process by given base, as running process might switch before termination
