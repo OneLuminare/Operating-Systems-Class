@@ -609,7 +609,8 @@ var TSOS;
                 inst = _Memory.getAddress(address).toString(16);
                 // Update memory display with highlighted code
                 TSOS.Control.updateMemoryDisplay(address, this.getParamCount(inst));
-                document.getElementById("scrollMemory").scrollTop = ((this.base) / 8) * scrollPoints;
+                if (document.getElementById("chkScrollToRun").checked)
+                    document.getElementById("scrollMemory").scrollTop = ((this.base) / 8) * scrollPoints;
             }
             else {
                 TSOS.Control.updateMemoryDisplay();

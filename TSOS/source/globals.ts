@@ -49,6 +49,7 @@ const DELETE_FILE_IRQ : number = 24;
 const LIST_FILES_IRQ: number = 25;
 const SWAP_ERROR_IRQ: number = 26;
 const CHANGE_SCHEDULING_METHOD_IRQ : number = 27;
+const GET_SCHEDULE_METHOD_IRQ : number = 28;
 
 // Scheduling Method
 var _ScheduleMethod : number = 500;

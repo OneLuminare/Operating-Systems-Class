@@ -843,7 +843,8 @@ module TSOS {
                     // Update memory display with highlighted code
                     TSOS.Control.updateMemoryDisplay(address, this.getParamCount(inst));
 
-                    document.getElementById("scrollMemory").scrollTop = ((this.base ) / 8) * scrollPoints;
+                    if( (<HTMLInputElement>document.getElementById("chkScrollToRun")).checked )
+                        document.getElementById("scrollMemory").scrollTop = ((this.base ) / 8) * scrollPoints;
             }
             // Else update mem with out highlight code
             else

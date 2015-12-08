@@ -527,6 +527,27 @@ module TSOS {
                     }
                     break;
 
+                case GET_SCHEDULE_METHOD_IRQ:
+                    switch(_ScheduleMethod)
+                    {
+                        case SM_ROUND_ROBIN:
+                            _OsShell.outputMessage("Scheduling method is Round Robin.");
+                            break;
+
+                        case SM_FJF:
+                            _OsShell.outputMessage("Scheduling method is First Job First.");
+                            break;
+
+                        case SM_PRIORITY:
+                            _OsShell.outputMessage("Scheduling method is Priority.");
+                            break;
+
+                        default:
+                            _OsShell.outputMessage("Unknown scheduling method.");
+                            break;
+                    }
+                    break;
+
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }
@@ -705,6 +726,11 @@ module TSOS {
         public ChangeSchedulingMethod(method : number) : void
         {
             _KernelInterruptQueue.enqueue(new Interrupt(CHANGE_SCHEDULING_METHOD_IRQ,method));
+        }
+
+        public GetSchedulingMethod() : void
+        {
+            _KernelInterruptQueue.enqueue(new Interrupt(GET_SCHEDULE_METHOD_IRQ,null));
         }
 
         //

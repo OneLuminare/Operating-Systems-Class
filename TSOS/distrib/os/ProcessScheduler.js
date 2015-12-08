@@ -509,7 +509,8 @@ var TSOS;
                         var inst = _Memory.getAddress(address).toString(16);
                         // Update memory display with highlighted code
                         TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
-                        document.getElementById("scrollMemory").scrollTop = ((pcb.base) / 8) * scrollPoints;
+                        if (document.getElementById("chkScrollToRun").checked)
+                            document.getElementById("scrollMemory").scrollTop = ((pcb.base) / 8) * scrollPoints;
                     }
                     // Start executing again
                     _CPU.isExecuting = true;
@@ -582,7 +583,8 @@ var TSOS;
                         var inst = _Memory.getAddress(address).toString(16);
                         // Update memory display with highlighted code
                         TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
-                        document.getElementById("scrollMemory").scrollTop = ((pcb.base) / 8) * scrollPoints;
+                        if (document.getElementById("chkScrollToRun").checked)
+                            document.getElementById("scrollMemory").scrollTop = ((pcb.base) / 8) * scrollPoints;
                     }
                     if (_ScheduleMethod == SM_ROUND_ROBIN) {
                         // Turn on timer

@@ -192,6 +192,11 @@ module TSOS {
                 "<string> : (rr,fjf, or priority) - changes scheduling method. ");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellGetSchedule,
+                "getschedule",
+                "Displays current scheduling method.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -494,6 +499,9 @@ module TSOS {
                         break;
                     case "setschedule":
                         _StdOut.putText("Changes scheduling method. Can be: rr (Round Robin), fjf (First Job First), or priority (priority scheduling). ");
+                        break;
+                    case "getschedule":
+                        _StdOut.putText("Displays current scheduling method.");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -857,6 +865,11 @@ module TSOS {
             }
             else
                 _StdOut.putText("Usage - setschedule <string> : can be rr, fjf, or priority.");
+        }
+
+        public shellGetSchedule(args)
+        {
+            _Kernel.GetSchedulingMethod();
         }
     }
 }

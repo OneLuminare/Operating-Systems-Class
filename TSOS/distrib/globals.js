@@ -45,6 +45,7 @@ var DELETE_FILE_IRQ = 24;
 var LIST_FILES_IRQ = 25;
 var SWAP_ERROR_IRQ = 26;
 var CHANGE_SCHEDULING_METHOD_IRQ = 27;
+var GET_SCHEDULE_METHOD_IRQ = 28;
 // Scheduling Method
 var _ScheduleMethod = 500;
 var SM_ROUND_ROBIN = 500;

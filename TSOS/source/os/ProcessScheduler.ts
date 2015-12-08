@@ -717,7 +717,8 @@ module TSOS {
                         // Update memory display with highlighted code
                         TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
 
-                        document.getElementById("scrollMemory").scrollTop = ((pcb.base ) / 8) * scrollPoints;
+                        if( (<HTMLInputElement>document.getElementById("chkScrollToRun")).checked )
+                            document.getElementById("scrollMemory").scrollTop = ((pcb.base ) / 8) * scrollPoints;
                     }
 
 
@@ -826,7 +827,8 @@ module TSOS {
                         // Update memory display with highlighted code
                         TSOS.Control.updateMemoryDisplay(address, _CPU.getParamCount(inst));
 
-                        document.getElementById("scrollMemory").scrollTop = ((pcb.base) / 8) * scrollPoints;
+                        if( (<HTMLInputElement>document.getElementById("chkScrollToRun")).checked )
+                            document.getElementById("scrollMemory").scrollTop = ((pcb.base) / 8) * scrollPoints;
                     }
 
 

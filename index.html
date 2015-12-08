@@ -3,7 +3,19 @@
 <head>
    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
    <meta name="author"             content="Alan G. Labouseur" />
-   <link rel="stylesheet" href="tsos.css" type="text/css" media="screen" />
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="tsos.css" type="text/css" media="screen" />
+
    <title>
       TSOS - a browser-based virtual Operating System in TypeScript
    </title>
@@ -11,7 +23,7 @@
    <!-- Globals CONSTANTS and _Variables. Must included be first. -->
    <script type="text/javascript" src="TSOS/distrib/globals.js"></script>
 
-   <!-- Host (Virtual Machine / Hardware Simulation) Routines -->
+    <!-- Host (Virtual Machine / Hardware Simulation) Routines -->
     <script type="text/javascript" src="TSOS/distrib/host/fileblock.js"></script>
     <script type="text/javascript" src="TSOS/distrib/host/harddrivedriver.js"></script>
    <script type="text/javascript" src="TSOS/distrib/host/control.js"></script>
@@ -38,183 +50,214 @@
    <!-- Other Routines -->
    <script type="text/javascript" src="TSOS/distrib/utils.js"></script>
    <!-- Uncomment this line below to enable GLaDOS testing -->
-   <!-- <script type="text/javascript" src="http://www.labouseur.com/courses/os/projects/glados.js"></script> -->
+    <script type="text/javascript" src="http://www.labouseur.com/courses/os/projects/glados.js"></script>
 </head>
 
 <body onload="onDocumentLoad()">
 
+<!------------------------------------------------ Main Division ------------------------------------------------------>
+
 <div id="divMain" style="width:100%;">
 
-   <div id="divButtonBar" style="margin:4px;">
-      <input type="button"
-             id = "btnStartOS"
-             name="brnStartOS"
-             class="normal_button"
-             value="Start"
-             tabindex="0"
-             onclick="TSOS.Control.hostBtnStartOS_click(this);">
+    <!--------------------------------------------- Button Bar -------------------------------------------------------->
 
-      <input type="button"
-             id = "btnHaltOS"
-             name="brnHaltOS"
-             class="normal_button"
-             disabled="disabled"
-             value="Halt"
-             tabindex="1"
-             onclick="TSOS.Control.hostBtnHaltOS_click(this);">
+    <div id="divButtonBar" style="margin:4px;">
+        <input type="button"
+               id = "btnStartOS"
+               name="brnStartOS"
+               class="btn btn-primary btn-md"
+               value="Start"
+               tabindex="0"
+               onclick="TSOS.Control.hostBtnStartOS_click(this);">
 
-      <input type="button"
-             id = "btnReset"
-             name="brnReset"
-             class="normal_button"
-             disabled="disabled"
-             value="Reset"
-             tabindex="2"
-             onclick="TSOS.Control.hostBtnReset_click(this);">
+        <input type="button"
+               id = "btnHaltOS"
+               name="brnHaltOS"
+               class="btn btn-primary btn-md"
+               disabled="disabled"
+               value="Halt"
+               tabindex="1"
+               onclick="TSOS.Control.hostBtnHaltOS_click(this);">
 
-       <input type="button"
-              id = "btnTrace"
-              name = "brnTrace"
-              class="normal_button"
-              disabled="disabled"
-              value="Trace On"
-              tabindex="3"
-              onclick="TSOS.Control.hostBtnTraceMode_click(this);">
+        <input type="button"
+               id = "btnReset"
+               name="brnReset"
+               class="btn btn-primary btn-md"
+               disabled="disabled"
+               value="Reset"
+               tabindex="2"
+               onclick="TSOS.Control.hostBtnReset_click(this);">
 
-       <input type="button"
-              id = "btnStep"
-              name = "brnStep"
-              class="normal_button"
-              value="Step"
-              disabled="disabled"
-              tabindex="4"
-              onclick="TSOS.Control.hostBtnStep_click(this);">
-   </div>
+        <input type="button"
+               id = "btnTrace"
+               name = "brnTrace"
+               class="btn btn-primary btn-md"
+               disabled="disabled"
+               value="Trace On"
+               tabindex="3"
+               onclick="TSOS.Control.hostBtnTraceMode_click(this);">
 
-   <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left;">
+        <input type="button"
+               id = "btnStep"
+               name = "brnStep"
+               class="btn btn-primary btn-md"
+               value="Step"
+               disabled="disabled"
+               tabindex="4"
+               onclick="TSOS.Control.hostBtnStep_click(this);">
+    </div>
 
-      <canvas id="display"
-              width="500px"
-              height="500px"
-              tabindex="3">
-      </canvas>
+    <!----------------------------------------------- Console --------------------------------------------------------->
 
-   </div>
+    <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left;">
 
+        <canvas id="display"
+                width="500px"
+                height="500px"
+                tabindex="3">
+        </canvas>
 
-   <div style="float:left;margin-left:20px">
-       <div id="divLog" style="">
-           <label>
-               Host Log
-               <br>
-         <textarea name="taHostLog"
+    </div>
+
+    <!------------------------------------------ Middle Column Div ---------------------------------------------------->
+
+    <div style="float:left;margin-left:20px">
+
+        <!--------------------------------------------- Log ----------------------------------------------------------->
+
+        <div id="divLog" style="">
+            <label>
+                Host Log
+                <br>
+                <textarea name="taHostLog"
                    id  ="taHostLog"
                    rows="26"
                    cols="48"
                  ></textarea>
-           </label>
-           <br>
-           <label id="lblHostStatusBar" style="display:inline-block;border-style:solid;border-width:1px;border-color:gray;width:405px;background-color:white">
-               OS not started.
-           </label>
+            </label>
+            <br>
 
-       </div>
+            <!---------------------------------------- Status Bar ----------------------------------------------------->
 
-       <div id="divUserProgramInput" style="">
-           <label>
-               User Program Input
-               <br>
-         <textarea name="taProgramInput"
+            <label id="lblHostStatusBar" style="display:inline-block;border-style:solid;border-width:1px;border-color:gray;width:405px;background-color:white">
+                OS not started.
+            </label>
+        </div>
+
+        <!----------------------------------------- Program Input ----------------------------------------------------->
+
+        <div id="divUserProgramInput" style="">
+            <label>
+                User Program Input
+                <br>
+                <textarea name="taProgramInput"
                    id  ="taProgramInput"
                    rows="8"
                    cols="48"
                  ></textarea>
-           </label>
-       </div>
-   </div>
+            </label>
+        </div>
 
-
-   <div style="float:left;margin-left:20px">
-       <div id="divMemory" style="">
-           <label>
-               Memory
-               <br>
-               <div style="border-style:solid;border-width:1px;background-color:white;width:255px;height:208px;overflow:auto;">
-                   <table id="tblMemory" style="background-color:white;">
-
-                   </table>
-               </div>
-           </label>
-       </div>
-
-
-
-       <br>
-       <div id="divCPU" style="">
-           <label>
-               CPU
-               <br>
-               <table id="tblCPU" style="border-style:solid;border-width:1px;background-color:white;width:300px;height:45px">
-               </table>
-           </label>
-       </div>
-       <br>
-       <div id="divRunningProcess" style="">
-           <label>
-               Running Process
-               <br>
-               <table id="tblRunningProcess" style="border-style:solid;border-width:1px;background-color:white;width:400px;height:30px">
-               </table>
-           </label>
-       </div>
-       <br>
-       <div id="divReadyQueue" style="border-style:solid;border-width:1px;background-color:white;width:500px;height:150px;overflow:auto;">
-           <label>
-               Ready Queue
-               <br>
-               <table id="tblReadyQueue" style="background-color:white;">
-               </table>
-           </label>
-       </div>
-       <br>
-       <div id="divTerminatedQueue" style="">
-           <label>
-               Terminated Queue
-               <br>
-               <div style="border-style:solid;border-width:1px;background-color:white;height:120px;overflow:auto;">
-                   <table id="tblTerminatedQueue" style="background-color:white">
-                   </table>
-               </div>
-           </label>
-       </div>
-
-   </div>
-
-    <div style="float:top;margin-left:20px;">
-        <label>
-            Hard Drive
-            <br>
-            <div style="border-style:solid;border-width:1px;background-color:white;height:200px;width:200px;overflow:auto;">
-                <table id="tblHardDrive" style="background-color:white">
-
-                </table>
-            </div>
-        </label>
-
+    <!-- End Div Middle Column -->
     </div>
 
+    <!------------------------------------------- Right Column Div ---------------------------------------------------->
+
+    <div style="float:left;margin-left:20px">
+
+        <!-------------------------------------- Memory/HD Tab List  -------------------------------------------------->
+
+        <ul class="nav nav-tabs" id="MemoryAndHDDTabs">
+            <li class="active" id="tabMemory"><a data-toggle="tab" href="#divMemory">Memory</a></li>
+            <li id="tabHD"><a data-toggle="tab" href="#divHD">Hard Drive</a></li>
+        </ul>
+
+        <!------------------------------------- Memory/HD Tab Content  ------------------------------------------------>
+
+        <div class="tab-content">
+
+            <div id="divMemory" class="tab-pane fade in active">
+                <div id="scrollMemory" style="border-style:solid;border-width:1px;background-color:white;width:255px;height:208px;overflow:auto;">
+                    <table id="tblMemory" style="background-color:white;">
+                    </table>
+                </div>
+            </div>
+
+            <div id="divHD" class="tab-pane fade">
+                <div style="border-style:solid;border-width:1px;background-color:white;height:200px;width:350px;overflow:auto;">
+                    <table id="tblHardDrive" style="background-color:white">
+
+                    </table>
+                </div>
+            </div>
+
+        <!-- End Div Memory/Hard Drive Tab Content -->
+        </div>
 
 
+        <input type="checkbox" id="chkScrollToRun" checked=true>Scroll To Running Instruction</input>
+        <br>
+        <!----------------------------------------- CPU Display ------------------------------------------------------->
 
+        <br>
+        <div id="divCPU" style="">
+            <label>
+                CPU
+                <br>
+                <table id="tblCPU" style="border-style:solid;border-width:1px;background-color:white;width:300px;height:45px">
+                </table>
+            </label>
+        </div>
 
+        <!------------------------------------ Running Process Display ------------------------------------------------>
+
+        <br>
+        <div id="divRunningProcess" style="">
+            <label>
+                Running Process
+                <br>
+                <table id="tblRunningProcess" style="border-style:solid;border-width:1px;background-color:white;width:400px;height:30px">
+                </table>
+            </label>
+        </div>
+
+        <!--------------------------------- Ready/Terminated Queue Tab List  ------------------------------------------>
+        <br>
+        <ul class="nav nav-tabs">
+            <li class="active"><a data-toggle="tab" href="#divReadyQueue">Ready Queue</a></li>
+            <li><a data-toggle="tab" href="#divTerminatedQueue">Terminated</a></li>
+        </ul>
+
+        <!-------------------------------- Ready/Terminated Queue Tab Content  ---------------------------------------->
+
+        <div class="tab-content">
+
+            <div id="divReadyQueue" class="tab-pane fade in active">
+                <div style="border-style:solid;border-width:1px;background-color:white;width:534px;height:150px;overflow:auto;">
+                    <table id="tblReadyQueue" style="background-color:white;">
+                    </table>
+                </div>
+            </div>
+
+            <div id="divTerminatedQueue" class="tab-pane fade">
+                <div style="border-style:solid;border-width:1px;background-color:white;width:539px;height:150px;overflow:auto;">
+                    <table id="tblTerminatedQueue" style="background-color:white">
+                    </table>
+                </div>
+            </div>
+
+        <!-- End Div Ready/Terminated Queue Tab Content -->
+        </div>
+
+    <!-- End Div Right Column -->
+    </div>
+
+<!-- End Div Main -->
 </div>
 
 
 
-
-
-
-
+<!---------------------------------------------------- Footer --------------------------------------------------------->
 
 <p class="footerText" style="clear:both;">
    <br>
